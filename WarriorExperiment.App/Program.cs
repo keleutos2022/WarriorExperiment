@@ -26,12 +26,19 @@ builder.Host.UseSerilog();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Configure SignalR for larger message sizes (for photo uploads)
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
+    options.EnableDetailedErrors = true;
+});
+
 // Add API controllers
 builder.Services.AddControllers();
 
-// Configure PostgreSQL connection
+// Configure PostgreSQL connection with transient lifetime to avoid concurrency issues
 builder.Services.AddDbContext<WaDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Transient);
 
 // Configure backup options
 builder.Services.Configure<WarriorExperiment.Core.Models.WaBackupOptions>(

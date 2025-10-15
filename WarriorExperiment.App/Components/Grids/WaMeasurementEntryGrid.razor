@@ -1,8 +1,8 @@
 @using Microsoft.EntityFrameworkCore
-@using WarriorExperiment.Persistence.Data
 @using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Core.Services
 @inherits WaBaseComponent
-@inject WaDbContext Context
+@inject WaMeasurementEntryService MeasurementService
 @inject NavigationManager Navigation
 @inject DialogService DialogService
 @inject NotificationService NotificationService
@@ -16,33 +16,39 @@
 else
 {
     <RadzenStack Gap="1rem">
-        <RadzenRow JustifyContent="JustifyContent.End">
+        <RadzenRow JustifyContent="JustifyContent.End" class="wa-grid-header">
             <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
                 <RadzenButton Text="New Measurement" Icon="add" ButtonStyle="ButtonStyle.Primary" 
                             Click="@(() => Navigation.NavigateTo("/measurement/edit"))" 
-                            Style="width: 100%;" />
+                            Style="width: 100%;" 
+                            class="wa-add-button" />
             </RadzenColumn>
         </RadzenRow>
         
         <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaMeasurementEntry" 
                       AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
-                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or"
+                      class="wa-responsive-grid">
             <Columns>
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Date" Title="Date" Width="120px">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Date" Title="Date" Width="120px" 
+                                    CssClass="wa-priority-1">
                     <Template Context="entry">
                         @entry.Date.ToString("yyyy-MM-dd")
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="MeasurementMethod.Name" Title="Method" Width="150px" />
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="MeasurementMethod.Name" Title="Method" Width="150px" 
+                                    CssClass="wa-priority-3" />
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Weight" Title="Weight (kg)" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Weight" Title="Weight (kg)" Width="100px" TextAlign="TextAlign.Right"
+                                    CssClass="wa-priority-1">
                     <Template Context="entry">
                         @entry.Weight?.ToString("F1") kg
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="BodyFat" Title="Body Fat %" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="BodyFat" Title="Body Fat %" Width="100px" TextAlign="TextAlign.Right"
+                                    CssClass="wa-priority-2">
                     <Template Context="entry">
                         @if (entry.BodyFat.HasValue)
                         {
@@ -51,7 +57,8 @@ else
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="MuscleMass" Title="Muscle (kg)" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="MuscleMass" Title="Muscle (kg)" Width="100px" TextAlign="TextAlign.Right"
+                                    CssClass="wa-priority-2">
                     <Template Context="entry">
                         @if (entry.MuscleMass.HasValue)
                         {
@@ -60,13 +67,15 @@ else
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="BMI" Title="BMI" Width="80px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="BMI" Title="BMI" Width="80px" TextAlign="TextAlign.Right"
+                                    CssClass="wa-priority-3">
                     <Template Context="entry">
                         @entry.BMI?.ToString("F1")
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="WaistCircumference" Title="Waist (cm)" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="WaistCircumference" Title="Waist (cm)" Width="100px" TextAlign="TextAlign.Right"
+                                    CssClass="wa-priority-3">
                     <Template Context="entry">
                         @if (entry.WaistCircumference.HasValue)
                         {
@@ -75,7 +84,8 @@ else
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="ChestCircumference" Title="Chest (cm)" Width="100px" TextAlign="TextAlign.Right">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="ChestCircumference" Title="Chest (cm)" Width="100px" TextAlign="TextAlign.Right"
+                                    CssClass="wa-priority-3">
                     <Template Context="entry">
                         @if (entry.ChestCircumference.HasValue)
                         {
@@ -84,7 +94,8 @@ else
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Notes" Title="Notes" Width="200px">
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Notes" Title="Notes" Width="200px"
+                                    CssClass="wa-priority-3">
                     <Template Context="entry">
                         @if (!string.IsNullOrWhiteSpace(entry.Notes))
                         {
@@ -96,14 +107,17 @@ else
                 </RadzenDataGridColumn>
                 
                 <RadzenDataGridColumn TItem="WaMeasurementEntry" Title="Actions" Frozen="true" 
-                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center"
+                                    CssClass="wa-priority-1">
                     <Template Context="entry">
                         <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                                     Click="@(() => Navigation.NavigateTo($"/measurement/edit/{entry.Id}"))"
-                                    title="Edit measurement" />
+                                    title="Edit measurement" 
+                                    class="wa-action-button" />
                         <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                     Click="@(() => DeleteEntry(entry))"
-                                    title="Delete measurement" />
+                                    title="Delete measurement" 
+                                    class="wa-action-button" />
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>
@@ -128,11 +142,7 @@ else
             isLoading = true;
             try
             {
-                Data = await Context.MeasurementEntries
-                    .Include(me => me.MeasurementMethod)
-                    .Where(me => me.UserId == CurrentUser.Id)
-                    .OrderByDescending(me => me.Date)
-                    .ToListAsync();
+                Data = await MeasurementService.GetAllAsync(CurrentUser.Id);
             }
             finally
             {
@@ -152,10 +162,9 @@ else
         {
             try
             {
-                Context.MeasurementEntries.Remove(entry);
-                await Context.SaveChangesAsync();
+                var success = await MeasurementService.DeleteAsync(entry.Id);
                 
-                if (Data != null)
+                if (success && Data != null)
                 {
                     Data.Remove(entry);
                     await grid!.Reload();
@@ -170,3 +179,95 @@ else
         }
     }
 }
+
+<style>
+    /* Mobile-friendly grid styles */
+    .wa-responsive-grid {
+        overflow-x: auto;
+        font-size: 0.9rem;
+    }
+
+    .wa-add-button {
+        min-height: 44px;
+        font-size: 0.9rem;
+    }
+
+    .wa-action-button {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        margin: 0.125rem;
+    }
+
+    /* Mobile responsive column hiding */
+    @@media (max-width: 1024px) {
+        .wa-priority-3 {
+            display: none !important;
+        }
+        
+        .wa-responsive-grid {
+            font-size: 0.8rem;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .wa-priority-2 {
+            display: none !important;
+        }
+        
+        .wa-responsive-grid {
+            font-size: 0.75rem;
+        }
+        
+        .wa-action-button {
+            min-width: 36px !important;
+            min-height: 36px !important;
+            font-size: 0.7rem;
+        }
+        
+        .wa-add-button {
+            font-size: 0.8rem;
+            padding: 0.75rem 1rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .wa-responsive-grid {
+            font-size: 0.7rem;
+        }
+        
+        .wa-responsive-grid .rz-datatable-data th,
+        .wa-responsive-grid .rz-datatable-data td {
+            padding: 0.25rem !important;
+        }
+        
+        .wa-action-button {
+            min-width: 32px !important;
+            min-height: 32px !important;
+            font-size: 0.6rem;
+            padding: 0.25rem !important;
+        }
+        
+        .wa-add-button {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    /* Landscape mobile adjustments */
+    @@media (max-width: 768px) and (orientation: landscape) {
+        .wa-priority-2 {
+            display: table-cell !important;
+        }
+    }
+
+    /* Touch-friendly improvements */
+    @@media (max-width: 768px) {
+        .wa-responsive-grid .rz-datatable-data tr {
+            min-height: 44px;
+        }
+        
+        .wa-responsive-grid .rz-datatable-data td {
+            vertical-align: middle;
+        }
+    }
+</style>

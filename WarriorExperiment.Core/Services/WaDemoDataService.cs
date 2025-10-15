@@ -231,9 +231,7 @@ public class WaDemoDataService
         var intensities = new[] { WaPracticeIntensity.Heavy, WaPracticeIntensity.Light, WaPracticeIntensity.Medium };
         int intensityIndex = 0;
         
-        // Starting values
-        int currentLadderSteps = 3;
-        int currentLadders = 3;
+        WaRiteOfPassagePracticeEntry? lastHeavyEntry = null;
         
         for (int week = 0; week < 8; week++)
         {
@@ -251,20 +249,8 @@ public class WaDemoDataService
                 var intensity = intensities[intensityIndex % 3];
                 intensityIndex++;
                 
-                // Progress logic for heavy days
-                if (intensity == WaPracticeIntensity.Heavy && week > 0)
-                {
-                    if (week % 2 == 0 && currentLadders < 5)
-                    {
-                        currentLadders++;
-                    }
-                    else if (week % 3 == 0 && currentLadderSteps < 5)
-                    {
-                        currentLadderSteps++;
-                    }
-                }
-
-                var (ladder1, ladder2, ladder3, ladder4, ladder5) = CalculateLadderValues(intensity, currentLadderSteps, currentLadders);
+                // Use the service to calculate proper ladder values
+                var (ladder1, ladder2, ladder3, ladder4, ladder5) = _practiceService.CalculateSuggestedLadderValues(lastHeavyEntry, intensity);
                 
                 var dice = _random.Next(2, 13); // 2-12 dice roll
                 var pullCount = CalculatePullCount(ladder1, ladder2, ladder3, ladder4, ladder5);
@@ -290,38 +276,21 @@ public class WaDemoDataService
                     Dice = dice,
                     PullCount = pullCount,
                     Weight = weight,
-                    Success = success,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    EnteredAt = DateTime.UtcNow
+                    Success = success
                 };
 
-                _context.RiteOfPassagePracticeEntries.Add(entry);
+                // Use the service to create the entry properly
+                var createdEntry = await _practiceService.CreateAsync(entry);
+                
+                // Track the last successful heavy entry for progression
+                if (intensity == WaPracticeIntensity.Heavy && success)
+                {
+                    lastHeavyEntry = createdEntry;
+                }
             }
         }
-        
-        await _context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Calculates ladder values based on intensity and progression
-    /// </summary>
-    private (int, int, int, int, int) CalculateLadderValues(WaPracticeIntensity intensity, int steps, int ladders)
-    {
-        var reduction = intensity == WaPracticeIntensity.Medium ? 1 : 
-                       intensity == WaPracticeIntensity.Light ? 2 : 0;
-
-        var adjustedSteps = Math.Max(1, steps - reduction);
-        
-        return ladders switch
-        {
-            >= 5 => (adjustedSteps, adjustedSteps, adjustedSteps, adjustedSteps, adjustedSteps),
-            4 => (adjustedSteps, adjustedSteps, adjustedSteps, adjustedSteps, 0),
-            3 => (adjustedSteps, adjustedSteps, adjustedSteps, 0, 0),
-            2 => (adjustedSteps, adjustedSteps, 0, 0, 0),
-            _ => (adjustedSteps, 0, 0, 0, 0)
-        };
-    }
 
     /// <summary>
     /// Calculates total pull count from ladder values

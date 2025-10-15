@@ -1,10 +1,10 @@
 @using Microsoft.EntityFrameworkCore
 @using WarriorExperiment.App.Components.Grids.Helpers
-@using WarriorExperiment.Persistence.Data
 @using WarriorExperiment.Persistence.Models
 @using WarriorExperiment.Persistence.Enums
+@using WarriorExperiment.Core.Services
 @inherits WaBaseComponent
-@inject WaDbContext Context
+@inject WaRiteOfPassagePracticeEntryService PracticeService
 @inject NavigationManager Navigation
 @inject DialogService DialogService
 @inject NotificationService NotificationService
@@ -134,10 +134,7 @@ else
             isLoading = true;
             try
             {
-                Data = await Context.RiteOfPassagePracticeEntries
-                    .Where(rpe => rpe.UserId == CurrentUser.Id)
-                    .OrderByDescending(rpe => rpe.Date)
-                    .ToListAsync();
+                Data = await PracticeService.GetAllAsync(CurrentUser.Id);
             }
             finally
             {
@@ -157,10 +154,9 @@ else
         {
             try
             {
-                Context.RiteOfPassagePracticeEntries.Remove(entry);
-                await Context.SaveChangesAsync();
+                var success = await PracticeService.DeleteAsync(entry.Id);
                 
-                if (Data != null)
+                if (success && Data != null)
                 {
                     Data.Remove(entry);
                     await grid!.Reload();

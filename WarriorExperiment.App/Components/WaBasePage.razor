@@ -1,20 +1,68 @@
 @inherits WaBaseComponent
 
-<div class="h-100 d-flex flex-column wa-page-layout" style="padding: @(Padding)rem;">
+<div class="h-100 d-flex flex-column wa-page-layout wa-responsive-padding" style="padding: @(Padding)rem;">
     <div class="d-flex flex-column h-25 flex-grow-1">
         @if (!string.IsNullOrEmpty(Title))
         {
-            <RadzenHeading class="mb-2" Text="@Title" Size="H1" />
+            <RadzenHeading class="mb-2 wa-page-title" Text="@Title" Size="H1" />
         }
         
         @if(!string.IsNullOrEmpty(SubTitle))
         {
-            <RadzenHeading class="mb-2" Text="@SubTitle" Size="H2" />
+            <RadzenHeading class="mb-2 wa-page-subtitle" Text="@SubTitle" Size="H2" />
         }
         
-        @ChildContent
+        <div class="wa-page-content">
+            @ChildContent
+        </div>
     </div>
 </div>
+
+<style>
+    /* Responsive padding for pages */
+    @@media (max-width: 768px) {
+        .wa-responsive-padding {
+            padding: 0.5rem !important;
+        }
+        
+        .wa-page-title {
+            font-size: 1.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .wa-page-subtitle {
+            font-size: 1.2rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .wa-page-content {
+            font-size: 0.9rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .wa-responsive-padding {
+            padding: 0.25rem !important;
+        }
+        
+        .wa-page-title {
+            font-size: 1.3rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .wa-page-subtitle {
+            font-size: 1.1rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+    }
+
+    /* Tablet adjustments */
+    @@media (max-width: 1024px) and (min-width: 769px) {
+        .wa-responsive-padding {
+            padding: 0.75rem !important;
+        }
+    }
+</style>
 
 @code {
     /// <summary>

@@ -187,3 +187,4 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Sinks.Console.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Sinks.Debug.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Sinks.File.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/compressed/c1b4zenv1g-apzv0inqky.gz

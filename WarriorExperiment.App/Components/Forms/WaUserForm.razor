@@ -31,6 +31,12 @@
                     <RadzenDatePicker @bind-Value="@Model.DateOfStart" ShowTime="false" DateFormat="yyyy-MM-dd" Placeholder="Optional start date..." />
                 </RadzenFormField>
                 
+                <!-- Default User -->
+                <RadzenFormField Text="Default User" AllowFloatingLabel="false">
+                    <RadzenCheckBox @bind-Value="@Model.IsDefault" Name="IsDefault" />
+                    <RadzenLabel Text="Set as default user" Component="IsDefault" Style="margin-left: 8px;" />
+                </RadzenFormField>
+                
                 <!-- Validation Summary -->
                 <ValidationSummary />
                 

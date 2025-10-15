@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WarriorExperiment.Persistence.Data;
@@ -11,9 +12,11 @@ using WarriorExperiment.Persistence.Data;
 namespace WarriorExperiment.Persistence.Migrations
 {
     [DbContext(typeof(WaDbContext))]
-    partial class WaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251015165555_AddIsDefaultToUser")]
+    partial class AddIsDefaultToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,8 +155,8 @@ namespace WarriorExperiment.Persistence.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("BMI")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
 
                     b.Property<string>("BackPhoto")
                         .HasColumnType("text");
@@ -162,24 +165,24 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("BicepCircumference")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
 
                     b.Property<decimal?>("BodyFat")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
 
                     b.Property<decimal?>("BoneMass")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
 
                     b.Property<decimal?>("CalfCircumference")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
 
                     b.Property<decimal?>("ChestCircumference")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -196,8 +199,8 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal?>("HipCircumference")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<int>("MeasurementMethodId")
                         .HasColumnType("integer");
@@ -206,8 +209,8 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("MuscleMass")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
@@ -217,8 +220,8 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal?>("ThighCircumference")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -232,16 +235,16 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("WaistCircumference")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
-
-                    b.Property<decimal?>("WaterPercentage")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
+                    b.Property<decimal?>("WaterPercentage")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
+
                     b.Property<decimal?>("Weight")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.HasKey("Id");
 

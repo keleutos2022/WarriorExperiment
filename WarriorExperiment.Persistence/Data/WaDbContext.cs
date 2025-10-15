@@ -73,6 +73,10 @@ public class WaDbContext : DbContext
             entity.Property(u => u.Height)
                 .HasPrecision(5, 2);
                 
+            entity.Property(u => u.IsDefault)
+                .IsRequired()
+                .HasDefaultValue(false);
+                
             entity.Property(u => u.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
@@ -200,21 +204,21 @@ public class WaDbContext : DbContext
             entity.Property(me => me.Date)
                 .IsRequired();
                 
-            // Configure decimal precision for measurements
-            entity.Property(me => me.Weight).HasPrecision(5, 2);
-            entity.Property(me => me.BodyFat).HasPrecision(4, 2);
-            entity.Property(me => me.MuscleMass).HasPrecision(5, 2);
-            entity.Property(me => me.WaterPercentage).HasPrecision(4, 2);
-            entity.Property(me => me.BoneMass).HasPrecision(4, 2);
-            entity.Property(me => me.BMI).HasPrecision(4, 2);
+            // Configure decimal precision for measurements (increased limits)
+            entity.Property(me => me.Weight).HasPrecision(6, 2); // max 9999.99 kg
+            entity.Property(me => me.BodyFat).HasPrecision(5, 2); // max 999.99%
+            entity.Property(me => me.MuscleMass).HasPrecision(6, 2); // max 9999.99 kg
+            entity.Property(me => me.WaterPercentage).HasPrecision(5, 2); // max 999.99%
+            entity.Property(me => me.BoneMass).HasPrecision(5, 2); // max 999.99 kg
+            entity.Property(me => me.BMI).HasPrecision(5, 2); // max 999.99
             
-            // Configure circumference measurements
-            entity.Property(me => me.ChestCircumference).HasPrecision(5, 2);
-            entity.Property(me => me.WaistCircumference).HasPrecision(5, 2);
-            entity.Property(me => me.HipCircumference).HasPrecision(5, 2);
-            entity.Property(me => me.BicepCircumference).HasPrecision(4, 2);
-            entity.Property(me => me.ThighCircumference).HasPrecision(5, 2);
-            entity.Property(me => me.CalfCircumference).HasPrecision(4, 2);
+            // Configure circumference measurements (increased limits)
+            entity.Property(me => me.ChestCircumference).HasPrecision(6, 2); // max 9999.99 cm
+            entity.Property(me => me.WaistCircumference).HasPrecision(6, 2); // max 9999.99 cm
+            entity.Property(me => me.HipCircumference).HasPrecision(6, 2); // max 9999.99 cm
+            entity.Property(me => me.BicepCircumference).HasPrecision(5, 2); // max 999.99 cm
+            entity.Property(me => me.ThighCircumference).HasPrecision(6, 2); // max 9999.99 cm
+            entity.Property(me => me.CalfCircumference).HasPrecision(5, 2); // max 999.99 cm
             
             entity.Property(me => me.Notes)
                 .HasMaxLength(1000);

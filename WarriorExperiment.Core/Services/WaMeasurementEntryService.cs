@@ -187,47 +187,60 @@ public class WaMeasurementEntryService
     }
     
     /// <summary>
-    /// Gets the latest body composition changes for a user (latest measurement by method compared to previous)
+    /// Gets the total body composition changes for a user from start to latest measurement
     /// </summary>
     /// <param name="userId">The user ID</param>
-    /// <returns>Body composition changes (negative body fat, positive muscle mass)</returns>
+    /// <returns>Body composition changes from start (negative body fat, positive muscle mass)</returns>
     public async Task<(decimal? BodyFatChange, decimal? MuscleMassChange)> GetLatestBodyCompositionChangesAsync(int userId)
     {
         decimal? bodyFatChange = null;
         decimal? muscleMassChange = null;
         
-        var methods = await GetMeasurementMethodsAsync();
-        
-        foreach (var method in methods)
-        {
-            var latestTwo = await _context.MeasurementEntries
-                .Where(me => me.UserId == userId && me.MeasurementMethodId == method.Id)
-                .Where(me => me.BodyFat.HasValue || me.MuscleMass.HasValue)
-                .OrderByDescending(me => me.Date)
-                .Take(2)
-                .ToListAsync();
-                
-            if (latestTwo.Count == 2)
+        // Get all entries with body composition data for this user in a single query
+        var entriesWithBodyComposition = await _context.MeasurementEntries
+            .Where(me => me.UserId == userId)
+            .Where(me => me.BodyFat.HasValue || me.MuscleMass.HasValue)
+            .Select(me => new 
             {
-                var latest = latestTwo[0];
-                var previous = latestTwo[1];
-                
-                if (latest.BodyFat.HasValue && previous.BodyFat.HasValue)
+                me.MeasurementMethodId,
+                me.BodyFat,
+                me.MuscleMass,
+                me.Date
+            })
+            .OrderBy(me => me.Date)
+            .ToListAsync();
+        
+        if (!entriesWithBodyComposition.Any())
+            return (null, null);
+        
+        // Group by measurement method and calculate changes from first to last
+        var methodGroups = entriesWithBodyComposition
+            .GroupBy(e => e.MeasurementMethodId)
+            .Where(g => g.Count() >= 2);
+        
+        foreach (var methodGroup in methodGroups)
+        {
+            var orderedEntries = methodGroup.OrderBy(e => e.Date).ToList();
+            var first = orderedEntries.First();
+            var latest = orderedEntries.Last();
+            
+            // Calculate body fat change (looking for reduction)
+            if (first.BodyFat.HasValue && latest.BodyFat.HasValue)
+            {
+                var change = latest.BodyFat.Value - first.BodyFat.Value;
+                if (change < 0 && (!bodyFatChange.HasValue || change < bodyFatChange.Value))
                 {
-                    var change = latest.BodyFat.Value - previous.BodyFat.Value;
-                    if (change < 0 && (!bodyFatChange.HasValue || change < bodyFatChange.Value))
-                    {
-                        bodyFatChange = change;
-                    }
+                    bodyFatChange = change;
                 }
-                
-                if (latest.MuscleMass.HasValue && previous.MuscleMass.HasValue)
+            }
+            
+            // Calculate muscle mass change (looking for increase)
+            if (first.MuscleMass.HasValue && latest.MuscleMass.HasValue)
+            {
+                var change = latest.MuscleMass.Value - first.MuscleMass.Value;
+                if (change > 0 && (!muscleMassChange.HasValue || change > muscleMassChange.Value))
                 {
-                    var change = latest.MuscleMass.Value - previous.MuscleMass.Value;
-                    if (change > 0 && (!muscleMassChange.HasValue || change > muscleMassChange.Value))
-                    {
-                        muscleMassChange = change;
-                    }
+                    muscleMassChange = change;
                 }
             }
         }

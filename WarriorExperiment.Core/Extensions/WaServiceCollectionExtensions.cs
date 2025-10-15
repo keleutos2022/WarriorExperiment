@@ -17,22 +17,22 @@ public static class WaServiceCollectionExtensions
     public static IServiceCollection AddWaCoreServices(this IServiceCollection services)
     {
         // Register services
-        services.AddScoped<WaEntryService>();
-        services.AddScoped<WaImageService>();
+        services.AddTransient<WaEntryService>();
+        services.AddTransient<WaImageService>();
         
         // Register CRUD services
-        services.AddScoped<WaDailySurveyEntryService>();
-        services.AddScoped<WaMeasurementEntryService>();
-        services.AddScoped<WaRiteOfPassagePracticeEntryService>();
-        services.AddScoped<WaVarietyPracticeEntryService>();
-        services.AddScoped<WaUserService>();
+        services.AddTransient<WaDailySurveyEntryService>();
+        services.AddTransient<WaMeasurementEntryService>();
+        services.AddTransient<WaRiteOfPassagePracticeEntryService>();
+        services.AddTransient<WaVarietyPracticeEntryService>();
+        services.AddTransient<WaUserService>();
         
         // Register demo data service
-        services.AddScoped<WaDemoDataService>();
+        services.AddTransient<WaDemoDataService>();
         
         // Register backup and restore services
-        services.AddScoped<IWaBackupService, WaBackupService>();
-        services.AddScoped<IWaUserDataService, WaUserDataService>();
+        services.AddTransient<IWaBackupService, WaBackupService>();
+        services.AddTransient<IWaUserDataService, WaUserDataService>();
         
         return services;
     }

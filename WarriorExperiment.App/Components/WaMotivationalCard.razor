@@ -19,33 +19,33 @@
     {
         @if (HasAnyMetrics)
         {
-            <RadzenCard Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem;">
+            <RadzenCard class="wa-hero-card">
                 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
-                    <RadzenIcon Icon="emoji_events" Style="font-size: 48px; color: #FFD700;" />
-                    <RadzenText TextStyle="TextStyle.H4" Style="margin: 0; text-align: center; font-weight: bold;">
+                    <RadzenIcon Icon="emoji_events" class="wa-hero-icon" />
+                    <RadzenText TextStyle="TextStyle.H4" class="wa-hero-title">
                         Your Warrior Achievements
                     </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body1" Style="text-align: center; opacity: 0.9;">
+                    <RadzenText TextStyle="TextStyle.Body1" class="wa-hero-subtitle">
                         Every step forward is a victory. Here's your progress:
                     </RadzenText>
                 </RadzenStack>
             </RadzenCard>
             
-            <RadzenRow Gap="1rem">
+            <RadzenRow Gap="1rem" class="wa-achievement-row">
                 @if (bodyFatChange.HasValue)
                 {
-                    <RadzenColumn SizeLG="6" SizeMD="12">
-                        <RadzenCard Style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 1.5rem; height: 100%;">
+                    <RadzenColumn SizeLG="6" SizeMD="12" Size="12" class="wa-achievement-column">
+                        <RadzenCard class="wa-achievement-card wa-bodyfat-card">
                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
-                                <RadzenIcon Icon="trending_down" Style="font-size: 36px;" />
-                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                <RadzenIcon Icon="trending_down" class="wa-achievement-icon" />
+                                <RadzenText TextStyle="TextStyle.H5" class="wa-achievement-title">
                                     Body Fat Reduced
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                <RadzenText TextStyle="TextStyle.H3" class="wa-achievement-value">
                                     @Math.Abs(bodyFatChange.Value).ToString("F1")%
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
-                                    You're melting away the excess! Keep up the excellent work!
+                                <RadzenText TextStyle="TextStyle.Body2" class="wa-achievement-description">
+                                    Total progress since you started! Keep up the excellent work!
                                 </RadzenText>
                             </RadzenStack>
                         </RadzenCard>
@@ -54,18 +54,18 @@
                 
                 @if (muscleMassChange.HasValue)
                 {
-                    <RadzenColumn SizeLG="6" SizeMD="12">
-                        <RadzenCard Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; height: 100%;">
+                    <RadzenColumn SizeLG="6" SizeMD="12" Size="12" class="wa-achievement-column">
+                        <RadzenCard class="wa-achievement-card wa-muscle-card">
                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
-                                <RadzenIcon Icon="fitness_center" Style="font-size: 36px;" />
-                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                <RadzenIcon Icon="fitness_center" class="wa-achievement-icon" />
+                                <RadzenText TextStyle="TextStyle.H5" class="wa-achievement-title">
                                     Muscle Mass Gained
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                <RadzenText TextStyle="TextStyle.H3" class="wa-achievement-value">
                                     +@muscleMassChange.Value.ToString("F1") kg
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
-                                    Building strength and power! Your dedication is paying off!
+                                <RadzenText TextStyle="TextStyle.Body2" class="wa-achievement-description">
+                                    Total muscle gained since you started! Your dedication is paying off!
                                 </RadzenText>
                             </RadzenStack>
                         </RadzenCard>
@@ -73,21 +73,21 @@
                 }
             </RadzenRow>
             
-            <RadzenRow Gap="1rem">
+            <RadzenRow Gap="1rem" class="wa-achievement-row">
                 @if (totalPulls > 0)
                 {
-                    <RadzenColumn SizeLG="6" SizeMD="12">
-                        <RadzenCard Style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; height: 100%;">
+                    <RadzenColumn SizeLG="6" SizeMD="12" Size="12" class="wa-achievement-column">
+                        <RadzenCard class="wa-achievement-card wa-pulls-card">
                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
-                                <RadzenIcon Icon="expand_less" Style="font-size: 36px;" />
-                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                <RadzenIcon Icon="expand_less" class="wa-achievement-icon" />
+                                <RadzenText TextStyle="TextStyle.H5" class="wa-achievement-title">
                                     Successful Pulls
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                <RadzenText TextStyle="TextStyle.H3" class="wa-achievement-value">
                                     @totalPulls.ToString("N0")
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
-                                    Every pull brings you closer to mastery! Outstanding effort!
+                                <RadzenText TextStyle="TextStyle.Body2" class="wa-achievement-description">
+                                    Total pulls since you started training! Outstanding effort!
                                 </RadzenText>
                             </RadzenStack>
                         </RadzenCard>
@@ -96,18 +96,18 @@
                 
                 @if (totalPushes > 0)
                 {
-                    <RadzenColumn SizeLG="6" SizeMD="12">
-                        <RadzenCard Style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem; height: 100%;">
+                    <RadzenColumn SizeLG="6" SizeMD="12" Size="12" class="wa-achievement-column">
+                        <RadzenCard class="wa-achievement-card wa-pushes-card">
                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
-                                <RadzenIcon Icon="trending_up" Style="font-size: 36px;" />
-                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                <RadzenIcon Icon="trending_up" class="wa-achievement-icon" />
+                                <RadzenText TextStyle="TextStyle.H5" class="wa-achievement-title">
                                     Total Ladder Pushes
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                <RadzenText TextStyle="TextStyle.H3" class="wa-achievement-value">
                                     @totalPushes.ToString("N0")
                                 </RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
-                                    Climbing the ladder of strength! Each rep builds character!
+                                <RadzenText TextStyle="TextStyle.Body2" class="wa-achievement-description">
+                                    Total pushes since you started! Each rep builds character!
                                 </RadzenText>
                             </RadzenStack>
                         </RadzenCard>
@@ -117,16 +117,16 @@
         }
         else
         {
-            <RadzenCard Style="padding: 2rem; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <RadzenCard class="wa-empty-state-card">
                 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
-                    <RadzenIcon Icon="rocket_launch" Style="font-size: 48px; color: #FFD700;" />
-                    <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                    <RadzenIcon Icon="rocket_launch" class="wa-empty-state-icon" />
+                    <RadzenText TextStyle="TextStyle.H5" class="wa-empty-state-title">
                         Your Journey Begins
                     </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body1" Style="text-align: center; opacity: 0.9;">
+                    <RadzenText TextStyle="TextStyle.Body1" class="wa-empty-state-description">
                         Start tracking your measurements and ROP practices to see your achievements here!
                     </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.8;">
+                    <RadzenText TextStyle="TextStyle.Body2" class="wa-empty-state-subtitle">
                         Every warrior's legend starts with a single step forward.
                     </RadzenText>
                 </RadzenStack>
@@ -194,3 +194,322 @@
         }
     }
 }
+
+<style>
+    /* Mobile-friendly motivational card styles */
+    .wa-hero-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .wa-hero-icon {
+        font-size: 48px;
+        color: #FFD700;
+    }
+
+    .wa-hero-title {
+        margin: 0;
+        text-align: center;
+        font-weight: bold;
+        color: white;
+    }
+
+    .wa-hero-subtitle {
+        text-align: center;
+        opacity: 0.9;
+        color: white;
+        margin: 0;
+    }
+
+    .wa-achievement-row {
+        margin-bottom: 1rem;
+    }
+
+    .wa-achievement-column {
+        margin-bottom: 1rem;
+    }
+
+    .wa-achievement-card {
+        color: white;
+        padding: 1.5rem;
+        height: 100%;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .wa-bodyfat-card {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .wa-muscle-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .wa-pulls-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .wa-pushes-card {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .wa-achievement-icon {
+        font-size: 36px;
+        color: white;
+    }
+
+    .wa-achievement-title {
+        margin: 0;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+    }
+
+    .wa-achievement-value {
+        margin: 0;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+    }
+
+    .wa-achievement-description {
+        text-align: center;
+        opacity: 0.9;
+        color: white;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .wa-empty-state-card {
+        padding: 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .wa-empty-state-icon {
+        font-size: 48px;
+        color: #FFD700;
+    }
+
+    .wa-empty-state-title {
+        margin: 0;
+        font-weight: bold;
+        color: white;
+    }
+
+    .wa-empty-state-description {
+        text-align: center;
+        opacity: 0.9;
+        color: white;
+        margin: 0;
+    }
+
+    .wa-empty-state-subtitle {
+        text-align: center;
+        opacity: 0.8;
+        color: white;
+        margin: 0;
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 768px) {
+        .wa-hero-card {
+            padding: 1.5rem;
+        }
+
+        .wa-hero-icon {
+            font-size: 36px;
+        }
+
+        .wa-hero-title {
+            font-size: 1.3rem;
+        }
+
+        .wa-hero-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .wa-achievement-card {
+            padding: 1rem;
+            min-height: 150px;
+        }
+
+        .wa-achievement-icon {
+            font-size: 28px;
+        }
+
+        .wa-achievement-title {
+            font-size: 1rem;
+        }
+
+        .wa-achievement-value {
+            font-size: 1.5rem;
+        }
+
+        .wa-achievement-description {
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .wa-empty-state-card {
+            padding: 1.5rem;
+        }
+
+        .wa-empty-state-icon {
+            font-size: 36px;
+        }
+
+        .wa-empty-state-title {
+            font-size: 1.2rem;
+        }
+
+        .wa-empty-state-description {
+            font-size: 0.9rem;
+        }
+
+        .wa-empty-state-subtitle {
+            font-size: 0.8rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .wa-hero-card {
+            padding: 1rem;
+        }
+
+        .wa-hero-icon {
+            font-size: 28px;
+        }
+
+        .wa-hero-title {
+            font-size: 1.1rem;
+        }
+
+        .wa-hero-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .wa-achievement-card {
+            padding: 0.75rem;
+            min-height: 120px;
+        }
+
+        .wa-achievement-icon {
+            font-size: 24px;
+        }
+
+        .wa-achievement-title {
+            font-size: 0.9rem;
+        }
+
+        .wa-achievement-value {
+            font-size: 1.3rem;
+        }
+
+        .wa-achievement-description {
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        .wa-empty-state-card {
+            padding: 1rem;
+        }
+
+        .wa-empty-state-icon {
+            font-size: 28px;
+        }
+
+        .wa-empty-state-title {
+            font-size: 1rem;
+        }
+
+        .wa-empty-state-description {
+            font-size: 0.8rem;
+        }
+
+        .wa-empty-state-subtitle {
+            font-size: 0.7rem;
+        }
+    }
+
+    /* Tablet adjustments */
+    @@media (max-width: 1024px) and (min-width: 769px) {
+        .wa-achievement-card {
+            padding: 1.25rem;
+            min-height: 180px;
+        }
+
+        .wa-achievement-icon {
+            font-size: 32px;
+        }
+
+        .wa-achievement-title {
+            font-size: 1.1rem;
+        }
+
+        .wa-achievement-value {
+            font-size: 1.8rem;
+        }
+
+        .wa-achievement-description {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Landscape mobile adjustments */
+    @@media (max-width: 768px) and (orientation: landscape) {
+        .wa-hero-card {
+            padding: 1rem;
+        }
+
+        .wa-hero-icon {
+            font-size: 32px;
+        }
+
+        .wa-achievement-card {
+            min-height: 120px;
+            padding: 0.75rem;
+        }
+
+        .wa-achievement-row {
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    /* Loading state improvements */
+    @@media (max-width: 768px) {
+        .wa-hero-card .rz-progressbar-circular {
+            width: 60px !important;
+            height: 60px !important;
+        }
+
+        .wa-empty-state-card .rz-progressbar-circular {
+            width: 40px !important;
+            height: 40px !important;
+        }
+    }
+
+    /* Animation improvements for mobile */
+    @@media (max-width: 768px) {
+        .wa-achievement-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .wa-achievement-card:active {
+            transform: scale(0.98);
+        }
+
+        .wa-achievement-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .wa-achievement-card:hover .wa-achievement-icon {
+            transform: scale(1.1);
+        }
+    }
+</style>

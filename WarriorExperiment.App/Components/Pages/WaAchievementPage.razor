@@ -1,0 +1,119 @@
+@page "/"
+@using WarriorExperiment.Persistence.Models
+
+<PageTitle>Achievements - Warrior Experiment</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <!-- Welcome Header -->
+    <RadzenCard Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem;">
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenIcon Icon="military_tech" Style="font-size: 64px; color: #FFD700;" />
+            <RadzenText TextStyle="TextStyle.H2" Style="margin: 0; text-align: center; font-weight: bold;">
+                Welcome, Warrior
+            </RadzenText>
+            @if (CurrentUser != null)
+            {
+                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; text-align: center; opacity: 0.9;">
+                    @CurrentUser.UserName
+                </RadzenText>
+            }
+            <RadzenText TextStyle="TextStyle.Body1" Style="text-align: center; opacity: 0.8; max-width: 600px;">
+                Your journey of transformation continues. Every challenge conquered, every limit pushed, every goal achieved - 
+                this is where your warrior spirit shines. Track your victories and let them fuel your next breakthrough.
+            </RadzenText>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Motivational Achievements Card -->
+    @if (CurrentUser != null)
+    {
+        <WaMotivationalCard UserId="@CurrentUser.Id" />
+    }
+
+    <!-- Quick Actions -->
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+            <RadzenText TextStyle="TextStyle.H5" Style="margin: 0;">
+                <RadzenIcon Icon="rocket_launch" Style="margin-right: 0.5rem;" />
+                Ready for Your Next Challenge?
+            </RadzenText>
+            
+            <RadzenRow Gap="1rem">
+                <RadzenColumn SizeLG="3" SizeMD="6" SizeXS="12">
+                    <RadzenCard Style="height: 100%; background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); color: white; text-align: center; padding: 1.5rem;">
+                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenIcon Icon="assignment" Style="font-size: 32px;" />
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin: 0; font-weight: bold;">Daily Survey</RadzenText>
+                            <RadzenButton Text="Log Today" ButtonStyle="ButtonStyle.Light" 
+                                        Click="@(() => NavigateTo("/daily-survey/edit"))" 
+                                        Style="width: 100%;" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                
+                <RadzenColumn SizeLG="3" SizeMD="6" SizeXS="12">
+                    <RadzenCard Style="height: 100%; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; padding: 1.5rem;">
+                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenIcon Icon="straighten" Style="font-size: 32px;" />
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin: 0; font-weight: bold;">Measurements</RadzenText>
+                            <RadzenButton Text="Record Progress" ButtonStyle="ButtonStyle.Primary" 
+                                        Click="@(() => NavigateTo("/measurement/edit"))" 
+                                        Style="width: 100%;" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                
+                <RadzenColumn SizeLG="3" SizeMD="6" SizeXS="12">
+                    <RadzenCard Style="height: 100%; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333; text-align: center; padding: 1.5rem;">
+                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenIcon Icon="emoji_events" Style="font-size: 32px;" />
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin: 0; font-weight: bold;">Rite of Passage</RadzenText>
+                            <RadzenButton Text="Practice" ButtonStyle="ButtonStyle.Warning" 
+                                        Click="@(() => NavigateTo("/rite-of-passage/edit"))" 
+                                        Style="width: 100%;" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                
+                <RadzenColumn SizeLG="3" SizeMD="6" SizeXS="12">
+                    <RadzenCard Style="height: 100%; background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); color: #333; text-align: center; padding: 1.5rem;">
+                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenIcon Icon="sports_gymnastics" Style="font-size: 32px;" />
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin: 0; font-weight: bold;">Variety Practice</RadzenText>
+                            <RadzenButton Text="Mix It Up" ButtonStyle="ButtonStyle.Secondary" 
+                                        Click="@(() => NavigateTo("/variety-practice/edit"))" 
+                                        Style="width: 100%;" />
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Navigation to Dashboard -->
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">
+                    Want to dive deeper into your data?
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; opacity: 0.7;">
+                    View detailed charts, calendars, and analytics on your dashboard.
+                </RadzenText>
+            </RadzenStack>
+            
+            <RadzenButton Text="View Dashboard" Icon="dashboard" ButtonStyle="ButtonStyle.Primary" 
+                        Click="@(() => NavigateTo("/dashboard"))" />
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    
+    private void NavigateTo(string path)
+    {
+        NavigationManager.NavigateTo(path);
+    }
+}

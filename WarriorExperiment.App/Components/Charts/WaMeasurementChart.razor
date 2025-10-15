@@ -17,8 +17,8 @@
     }
     else
     {
-        <RadzenCard Style="padding: 1rem;">
-            <RadzenChart Style="height: 300px;">
+        <RadzenCard Style="padding: 1rem;" class="wa-chart-card">
+            <RadzenChart class="wa-responsive-chart">
                 @if (ShowMethodLegend && GetMethodGroups().Count() > 1)
                 {
                     @foreach (var methodGroup in GetMethodGroups())
@@ -44,41 +44,42 @@
         </RadzenCard>
         
         <!-- Summary Stats -->
-        <RadzenRow Gap="0.5rem">
-            <RadzenColumn Size="3">
-                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+        <RadzenRow Gap="0.5rem" class="wa-stats-row">
+            <RadzenColumn Size="6" SizeMD="3" class="wa-stat-column">
+                <RadzenCard class="wa-stat-card">
                     <RadzenStack Gap="0.2rem">
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Current</RadzenText>
-                        <RadzenText TextStyle="TextStyle.H6" Style="margin: 0; color: var(--rz-primary);">
+                        <RadzenText TextStyle="TextStyle.Caption" class="wa-stat-label">Current</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6" class="wa-stat-value wa-stat-current">
                             @GetLatest().ToString(GetNumberFormat()) @Unit
                         </RadzenText>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="3">
-                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+            <RadzenColumn Size="6" SizeMD="3" class="wa-stat-column">
+                <RadzenCard class="wa-stat-card">
                     <RadzenStack Gap="0.2rem">
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Average</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;">
+                        <RadzenText TextStyle="TextStyle.Caption" class="wa-stat-label">Average</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body1" class="wa-stat-value">
                             @GetAverage().ToString(GetNumberFormat()) @Unit
                         </RadzenText>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="3">
-                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+            <RadzenColumn Size="6" SizeMD="3" class="wa-stat-column">
+                <RadzenCard class="wa-stat-card">
                     <RadzenStack Gap="0.2rem">
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">@(IsBetterHigher ? "Best" : "Lowest")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" class="wa-stat-label">@(IsBetterHigher ? "Best" : "Lowest")</RadzenText>
                         <RadzenBadge BadgeStyle="@GetTrendBadgeStyle(IsBetterHigher ? GetMax() : GetMin())" 
-                                   Text="@($"{(IsBetterHigher ? GetMax() : GetMin()).ToString(GetNumberFormat())} {Unit}")" />
+                                   Text="@($"{(IsBetterHigher ? GetMax() : GetMin()).ToString(GetNumberFormat())} {Unit}")" 
+                                   class="wa-stat-badge" />
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="3">
-                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+            <RadzenColumn Size="6" SizeMD="3" class="wa-stat-column">
+                <RadzenCard class="wa-stat-card">
                     <RadzenStack Gap="0.2rem">
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Change</RadzenText>
-                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Caption" class="wa-stat-label">Change</RadzenText>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0.25rem" class="wa-change-stack">
                             @{
                                 var change = GetTotalChange();
                                 var changePercent = GetPercentChange();
@@ -86,8 +87,10 @@
                                 var isGoodChange = (IsBetterHigher && isPositive) || (!IsBetterHigher && !isPositive);
                             }
                             <RadzenIcon Icon="@(isPositive ? "trending_up" : change < 0 ? "trending_down" : "trending_flat")" 
-                                      Style="@($"color: {(isGoodChange ? "var(--rz-success)" : change == 0 ? "var(--rz-text-secondary-color)" : "var(--rz-danger)")}")" />
-                            <RadzenText TextStyle="TextStyle.Body2" Style="@($"margin: 0; color: {(isGoodChange ? "var(--rz-success)" : change == 0 ? "var(--rz-text-secondary-color)" : "var(--rz-danger)")}")">
+                                      Style="@($"color: {(isGoodChange ? "var(--rz-success)" : change == 0 ? "var(--rz-text-secondary-color)" : "var(--rz-danger)")}")" 
+                                      class="wa-change-icon" />
+                            <RadzenText TextStyle="TextStyle.Body2" Style="@($"margin: 0; color: {(isGoodChange ? "var(--rz-success)" : change == 0 ? "var(--rz-text-secondary-color)" : "var(--rz-danger)")}")"
+                                      class="wa-change-text">
                                 @(change >= 0 ? "+" : "")@change.ToString(GetNumberFormat()) @Unit (@(changePercent >= 0 ? "+" : "")@changePercent.ToString("F1")%)
                             </RadzenText>
                         </RadzenStack>
@@ -216,3 +219,157 @@
         return hasDecimals ? "F1" : "F0";
     }
 }
+
+<style>
+    /* Mobile-friendly chart styles */
+    .wa-responsive-chart {
+        height: 300px;
+        width: 100%;
+    }
+
+    .wa-chart-card {
+        padding: 1rem;
+    }
+
+    .wa-stats-row {
+        gap: 0.5rem;
+    }
+
+    .wa-stat-card {
+        padding: 0.75rem;
+        text-align: center;
+        height: 100%;
+    }
+
+    .wa-stat-label {
+        color: var(--rz-text-secondary-color);
+        margin: 0;
+        font-size: 0.8rem;
+    }
+
+    .wa-stat-value {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .wa-stat-current {
+        color: var(--rz-primary);
+    }
+
+    .wa-change-stack {
+        flex-wrap: wrap;
+    }
+
+    .wa-change-text {
+        font-size: 0.8rem;
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 768px) {
+        .wa-responsive-chart {
+            height: 250px;
+        }
+
+        .wa-chart-card {
+            padding: 0.5rem;
+        }
+
+        .wa-stat-card {
+            padding: 0.5rem;
+        }
+
+        .wa-stat-label {
+            font-size: 0.7rem;
+        }
+
+        .wa-stat-value {
+            font-size: 0.9rem;
+        }
+
+        .wa-change-text {
+            font-size: 0.7rem;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .wa-change-stack {
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .wa-change-icon {
+            font-size: 1rem;
+        }
+
+        .wa-chart-axis {
+            font-size: 0.7rem;
+        }
+
+        .wa-chart-legend {
+            font-size: 0.7rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .wa-responsive-chart {
+            height: 200px;
+        }
+
+        .wa-chart-card {
+            padding: 0.25rem;
+        }
+
+        .wa-stat-card {
+            padding: 0.25rem;
+            min-height: 60px;
+        }
+
+        .wa-stats-row {
+            gap: 0.25rem;
+        }
+
+        .wa-stat-label {
+            font-size: 0.6rem;
+        }
+
+        .wa-stat-value {
+            font-size: 0.8rem;
+        }
+
+        .wa-change-text {
+            font-size: 0.6rem;
+        }
+
+        .wa-stat-badge {
+            font-size: 0.6rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+
+    /* Landscape mobile adjustments */
+    @@media (max-width: 768px) and (orientation: landscape) {
+        .wa-responsive-chart {
+            height: 180px;
+        }
+
+        .wa-stats-row .wa-stat-column {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+    }
+
+    /* Chart responsiveness improvements */
+    @@media (max-width: 768px) {
+        .wa-responsive-chart svg {
+            overflow: visible;
+        }
+
+        .wa-responsive-chart .rz-chart-legend {
+            font-size: 0.7rem;
+        }
+
+        .wa-responsive-chart .rz-chart-axis-label {
+            font-size: 0.6rem;
+        }
+    }
+</style>

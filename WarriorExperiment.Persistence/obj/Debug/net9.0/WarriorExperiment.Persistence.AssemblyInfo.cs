@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WarriorExperiment.Persistence")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+970da68015b41615741d625439387ccad66ff60d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+27a7c60ebbe96bbbe50ec809a7d4824db1a91b74")]
 [assembly: System.Reflection.AssemblyProductAttribute("WarriorExperiment.Persistence")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WarriorExperiment.Persistence")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

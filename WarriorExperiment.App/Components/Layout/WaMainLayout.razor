@@ -9,14 +9,20 @@
 <RadzenContextMenu />
 <RadzenTooltip />
 
-<RadzenLayout Style="grid-template-columns: auto 1fr; grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body';">
-    <RadzenSidebar @bind-Expanded="@sidebarExpanded">
+<RadzenLayout class="wa-main-layout">
+    <!-- Mobile sidebar backdrop -->
+    @if (sidebarExpanded)
+    {
+        <div class="wa-sidebar-backdrop" @onclick="CloseSidebar" @onclick:stopPropagation="false"></div>
+    }
+    
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" class="wa-sidebar">
         <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="/" />
+            <RadzenPanelMenuItem Text="Achievements" Icon="military_tech" Path="/" />
+            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="/dashboard" />
             <RadzenPanelMenuItem Text="Daily Survey" Icon="assignment" Path="/daily-survey" />
             <RadzenPanelMenuItem Text="Measurements" Icon="straighten">
                 <RadzenPanelMenuItem Text="Body Measurements" Icon="monitor_weight" Path="/measurements" />
-                <RadzenPanelMenuItem Text="Measurement Progress" Icon="show_chart" Path="/measurement-progress" />
                 <RadzenPanelMenuItem Text="Measurement Methods" Icon="settings" Path="/measurement-methods" />
             </RadzenPanelMenuItem>
             <RadzenPanelMenuItem Text="Practice" Icon="fitness_center">
@@ -25,30 +31,41 @@
                 <RadzenPanelMenuItem Text="All Exercises" Icon="list" Path="/exercises" />
             </RadzenPanelMenuItem>
             <RadzenPanelMenuItem Text="Wellbeing Stats" Icon="trending_up" Path="/wellbeing" />
+                <RadzenPanelMenuItem Text="Measurement Progress" Icon="show_chart" Path="/measurement-progress" />
             <RadzenPanelMenuItem Text="Users" Icon="people" Path="/users" />
             <RadzenPanelMenuItem Text="Administration" Icon="admin_panel_settings" Path="/admin" />
             <RadzenPanelMenuItem Text="About" Icon="info" Path="/about" />
         </RadzenPanelMenu>
     </RadzenSidebar>
-    <RadzenHeader>
-        <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="1rem">
-            <RadzenColumn Size="4">
+    <RadzenHeader class="wa-header">
+        <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="0.5rem">
+            <RadzenColumn Size="6" SizeMD="4" class="wa-header-left">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-                    <RadzenText Text="Warrior Experiment" TextStyle="TextStyle.H5" style="margin: 0;" />
+                    <RadzenSidebarToggle Click="@ToggleSidebar" class="wa-sidebar-toggle" />
+                    <RadzenText Text="Warrior Experiment" TextStyle="TextStyle.H5" class="wa-app-title" style="margin: 0;" />
                 </RadzenStack>
             </RadzenColumn>
-            <RadzenColumn Size="8">
+            <RadzenColumn Size="6" SizeMD="8" class="wa-header-right">
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center">
                     <WaUserSelector OnCurrentUserChanged="@HandleCurrentUserChanged" />
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
     </RadzenHeader>
-    <RadzenBody Style="padding: 1rem;">
-        <CascadingValue Value="@currentUser">
-            @Body
-        </CascadingValue>
+    <RadzenBody class="wa-body">
+        @if (currentUser != null)
+        {
+            <CascadingValue Value="@currentUser">
+                @Body
+            </CascadingValue>
+        }
+        else
+        {
+            <div class="wa-loading-container">
+                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+                <RadzenText Text="Loading user..." TextStyle="TextStyle.Body1" class="wa-loading-text" />
+            </div>
+        }
     </RadzenBody>
 </RadzenLayout>
 
@@ -69,6 +86,15 @@
         
         // Subscribe to user service events to update cascaded value
         UserService.CurrentUserChanged += HandleUserServiceChanged;
+        
+        // Set initial sidebar state based on screen size
+        sidebarExpanded = IsMobileDevice() == false;
+    }
+    
+    private bool IsMobileDevice()
+    {
+        // This is a simplified check - in a real app you might use JS interop
+        return false; // Default to desktop behavior, CSS will handle mobile
     }
     
     /// <summary>
@@ -92,8 +118,151 @@
         InvokeAsync(StateHasChanged);
     }
     
+    /// <summary>
+    /// Toggles the sidebar expanded state
+    /// </summary>
+    private void ToggleSidebar()
+    {
+        sidebarExpanded = !sidebarExpanded;
+        StateHasChanged();
+    }
+    
+    /// <summary>
+    /// Closes the sidebar (used for backdrop clicks on mobile)
+    /// </summary>
+    private void CloseSidebar()
+    {
+        sidebarExpanded = false;
+        StateHasChanged();
+    }
+    
     public void Dispose()
     {
         UserService.CurrentUserChanged -= HandleUserServiceChanged;
     }
 }
+
+<style>
+    /* Mobile-first responsive layout */
+    .wa-main-layout {
+        grid-template-columns: auto 1fr;
+        grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body';
+    }
+
+    /* Mobile styles */
+    @@media (max-width: 768px) {
+        .wa-main-layout {
+            grid-template-columns: 1fr;
+            grid-template-areas: 'rz-header' 'rz-body';
+        }
+        
+        .wa-sidebar {
+            position: fixed !important;
+            z-index: 1000;
+            height: 100vh;
+            width: 280px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .wa-sidebar.rz-sidebar-expanded {
+            transform: translateX(0);
+        }
+        
+        .wa-header {
+            padding: 0.5rem 1rem !important;
+        }
+        
+        .wa-header-left {
+            justify-content: flex-start !important;
+        }
+        
+        .wa-header-right {
+            justify-content: flex-end !important;
+        }
+        
+        .wa-app-title {
+            font-size: 1.1rem !important;
+            display: none; /* Hide title on very small screens */
+        }
+        
+        .wa-sidebar-toggle {
+            min-width: 44px;
+            min-height: 44px; /* Touch-friendly size */
+        }
+        
+        .wa-body {
+            padding: 0.5rem !important;
+            overflow-x: hidden;
+        }
+    }
+
+    /* Tablet styles */
+    @@media (max-width: 1024px) and (min-width: 769px) {
+        .wa-sidebar {
+            width: 200px;
+        }
+        
+        .wa-body {
+            padding: 0.75rem !important;
+        }
+        
+        .wa-app-title {
+            font-size: 1.2rem !important;
+        }
+    }
+
+    /* Very small screens */
+    @@media (max-width: 480px) {
+        .wa-header {
+            padding: 0.25rem 0.5rem !important;
+        }
+        
+        .wa-header .rz-row {
+            gap: 0.25rem !important;
+        }
+        
+        .wa-body {
+            padding: 0.25rem !important;
+        }
+        
+        .wa-app-title {
+            display: none !important;
+        }
+    }
+
+    /* Mobile sidebar backdrop */
+    .wa-sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        cursor: pointer;
+    }
+
+    /* Loading container styles */
+    .wa-loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 1rem;
+        padding: 2rem;
+    }
+
+    .wa-loading-text {
+        color: var(--rz-text-secondary-color, #666);
+        margin: 0;
+    }
+
+    /* Hide backdrop on desktop */
+    @@media (min-width: 769px) {
+        .wa-sidebar-backdrop {
+            display: none;
+        }
+    }
+</style>

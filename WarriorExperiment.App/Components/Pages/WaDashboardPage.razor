@@ -1,4 +1,4 @@
-@page "/"
+@page "/dashboard"
 @using WarriorExperiment.Core.Services
 @using WarriorExperiment.Core.Enums
 @using WarriorExperiment.Core.Interfaces
@@ -9,69 +9,82 @@
 <PageTitle>Dashboard - Warrior Experiment</PageTitle>
 
 <RadzenStack Gap="1rem">
-    <RadzenCard>
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-            <RadzenText TextStyle="TextStyle.H4">Wellness Dashboard</RadzenText>
-            
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <!-- Add New Entry Button -->
-                <RadzenSplitButton Text="Add Entry" Icon="add_circle" ButtonStyle="ButtonStyle.Success" 
-                                 Click="@OnAddEntryClick">
-                    <ChildContent>
-                        <RadzenSplitButtonItem Text="Daily Survey" Icon="assignment" 
-                                             Value="daily-survey" />
-                        <RadzenSplitButtonItem Text="Measurement" Icon="straighten" 
-                                             Value="measurement" />
-                        <RadzenSplitButtonItem Text="Rite of Passage" Icon="emoji_events" 
-                                             Value="rite-of-passage" />
-                        <RadzenSplitButtonItem Text="Variety Practice" Icon="sports_gymnastics" 
-                                             Value="variety-practice" />
-                    </ChildContent>
-                </RadzenSplitButton>
-                
-                <!-- View Toggle -->
-                <RadzenToggleButton Text="Calendar" Icon="calendar_month" 
-                                   @bind-Value="isCalendarView" 
-                                   Change="@(async () => await LoadData())"
-                                   ButtonStyle="@(isCalendarView ? ButtonStyle.Primary : ButtonStyle.Light)" />
-                <RadzenToggleButton Text="Table" Icon="table_chart" 
-                                   Value="!isCalendarView" 
-                                   Change="@(async () => { isCalendarView = false; await LoadData(); })"
-                                   ButtonStyle="@(!isCalendarView ? ButtonStyle.Primary : ButtonStyle.Light)" />
-            </RadzenStack>
+    <RadzenCard class="wa-dashboard-header">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="wa-header-stack">
+            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenColumn Size="12" SizeMD="6">
+                    <RadzenText TextStyle="TextStyle.H4" class="wa-dashboard-title">Wellness Dashboard</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="6" class="wa-dashboard-controls">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Wrap="FlexWrap.Wrap">
+                        <!-- Add New Entry Button -->
+                        <RadzenSplitButton Text="Add Entry" Icon="add_circle" ButtonStyle="ButtonStyle.Success" 
+                                         Click="@OnAddEntryClick" class="wa-add-entry-button">
+                            <ChildContent>
+                                <RadzenSplitButtonItem Text="Daily Survey" Icon="assignment" 
+                                                     Value="daily-survey" />
+                                <RadzenSplitButtonItem Text="Measurement" Icon="straighten" 
+                                                     Value="measurement" />
+                                <RadzenSplitButtonItem Text="Rite of Passage" Icon="emoji_events" 
+                                                     Value="rite-of-passage" />
+                                <RadzenSplitButtonItem Text="Variety Practice" Icon="sports_gymnastics" 
+                                                     Value="variety-practice" />
+                            </ChildContent>
+                        </RadzenSplitButton>
+                        
+                        <!-- View Toggle -->
+                        <div class="wa-view-toggle">
+                            <RadzenToggleButton Text="Calendar" Icon="calendar_month" 
+                                               @bind-Value="isCalendarView" 
+                                               Change="@(async () => await LoadData())"
+                                               ButtonStyle="@(isCalendarView ? ButtonStyle.Primary : ButtonStyle.Light)" 
+                                               class="wa-toggle-button" />
+                            <RadzenToggleButton Text="Table" Icon="table_chart" 
+                                               Value="!isCalendarView" 
+                                               Change="@(async () => { isCalendarView = false; await LoadData(); })"
+                                               ButtonStyle="@(!isCalendarView ? ButtonStyle.Primary : ButtonStyle.Light)" 
+                                               class="wa-toggle-button" />
+                        </div>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
         </RadzenStack>
     </RadzenCard>
 
     <!-- Entry Type Filters -->
-    <RadzenCard>
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
-            <RadzenText TextStyle="TextStyle.Subtitle2" Class="rz-mt-1">Show:</RadzenText>
+    <RadzenCard class="wa-filters-card">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem">
+            <RadzenText TextStyle="TextStyle.Subtitle2" class="wa-filters-title">Show:</RadzenText>
             
-            <RadzenCheckBox @bind-Value="showDailySurvey" Name="dailySurvey" Change="@(async (bool value) => await LoadData())" />
-            <RadzenLabel Text="Daily Surveys" Component="dailySurvey" Style="margin-left: 0.25rem; margin-right: 1rem;" />
-            
-            <RadzenCheckBox @bind-Value="showMeasurements" Name="measurements" Change="@(async (bool value) => await LoadData())" />
-            <RadzenLabel Text="Measurements" Component="measurements" Style="margin-left: 0.25rem; margin-right: 1rem;" />
-            
-            <RadzenCheckBox @bind-Value="showRiteOfPassage" Name="riteOfPassage" Change="@(async (bool value) => await LoadData())" />
-            <RadzenLabel Text="Rite of Passage" Component="riteOfPassage" Style="margin-left: 0.25rem; margin-right: 1rem;" />
-            
-            <RadzenCheckBox @bind-Value="showVarietyPractice" Name="varietyPractice" Change="@(async (bool value) => await LoadData())" />
-            <RadzenLabel Text="Variety Practice" Component="varietyPractice" Style="margin-left: 0.25rem;" />
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="wa-filters-container">
+                <div class="wa-filter-item">
+                    <RadzenCheckBox @bind-Value="showDailySurvey" Name="dailySurvey" Change="@(async (bool value) => await LoadData())" class="wa-filter-checkbox" />
+                    <RadzenLabel Text="Daily Surveys" Component="dailySurvey" class="wa-filter-label" />
+                </div>
+                
+                <div class="wa-filter-item">
+                    <RadzenCheckBox @bind-Value="showMeasurements" Name="measurements" Change="@(async (bool value) => await LoadData())" class="wa-filter-checkbox" />
+                    <RadzenLabel Text="Measurements" Component="measurements" class="wa-filter-label" />
+                </div>
+                
+                <div class="wa-filter-item">
+                    <RadzenCheckBox @bind-Value="showRiteOfPassage" Name="riteOfPassage" Change="@(async (bool value) => await LoadData())" class="wa-filter-checkbox" />
+                    <RadzenLabel Text="Rite of Passage" Component="riteOfPassage" class="wa-filter-label" />
+                </div>
+                
+                <div class="wa-filter-item">
+                    <RadzenCheckBox @bind-Value="showVarietyPractice" Name="varietyPractice" Change="@(async (bool value) => await LoadData())" class="wa-filter-checkbox" />
+                    <RadzenLabel Text="Variety Practice" Component="varietyPractice" class="wa-filter-label" />
+                </div>
+            </RadzenStack>
         </RadzenStack>
     </RadzenCard>
 
-    <!-- Motivational Achievements Card -->
-    @if (CurrentUser != null)
-    {
-        <WaMotivationalCard UserId="@CurrentUser.Id" />
-    }
-
     <!-- Main Content -->
-    <RadzenCard>
+    <RadzenCard class="wa-main-content">
         @if (isLoading)
         {
-            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" class="wa-loading-container">
                 <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
             </RadzenStack>
         }
@@ -82,17 +95,17 @@
                            StartProperty="Date" EndProperty="Date" TextProperty="Title"
                            SelectedIndex="0"
                            SlotSelect="@OnSlotSelect" AppointmentSelect="@OnAppointmentSelect"
-                           Style="height: 600px;">
+                           class="wa-scheduler">
                 <ChildContent>
                     <RadzenMonthView />
                 </ChildContent>
                 
                 <Template Context="data">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: 600;">
+                        <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: 600;" class="wa-calendar-entry-title">
                             @GetEntryIcon(data.EntryType) @data.Title
                         </RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">@data.Description</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" class="wa-calendar-entry-desc">@data.Description</RadzenText>
                     </RadzenStack>
                 </Template>
             </RadzenScheduler>
@@ -103,40 +116,46 @@
             <RadzenDataGrid Data="@calendarEntries" TItem="IWaCalendarEntry" 
                           AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
                           ExpandMode="DataGridExpandMode.Single"
-                          @ref="grid">
+                          @ref="grid" class="wa-dashboard-grid">
                 <Columns>
                     <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Date" Title="Date" Width="150px" 
-                                        FormatString="{0:yyyy-MM-dd}" />
+                                        FormatString="{0:yyyy-MM-dd}" CssClass="wa-priority-1" />
                     
-                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="EntryType" Title="Type" Width="150px">
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="EntryType" Title="Type" Width="150px"
+                                        CssClass="wa-priority-2">
                         <Template Context="entry">
                             <RadzenBadge Text="@GetEntryTypeText(entry.EntryType)" 
-                                       Style="@GetEntryTypeBadgeStyle(entry.EntryType)" />
+                                       Style="@GetEntryTypeBadgeStyle(entry.EntryType)" 
+                                       class="wa-entry-badge" />
                         </Template>
                     </RadzenDataGridColumn>
                     
-                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Title" Title="Title" />
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Title" Title="Title" 
+                                        CssClass="wa-priority-1" />
                     
-                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Description" Title="Description" />
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Description" Title="Description" 
+                                        CssClass="wa-priority-3" />
                     
                     <RadzenDataGridColumn TItem="IWaCalendarEntry" Title="Actions" Frozen="true" 
-                                        Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                                        Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center"
+                                        CssClass="wa-priority-1">
                         <Template Context="entry">
                             <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                                         Click="@(() => ViewEntry(entry))" 
-                                        MouseEnter="@(args => ShowTooltip(args, "View details"))" />
+                                        MouseEnter="@(args => ShowTooltip(args, "View details"))"
+                                        class="wa-action-button" />
                         </Template>
                     </RadzenDataGridColumn>
                 </Columns>
                 
                 <!-- Expandable detail template -->
                 <Template Context="entry">
-                    <RadzenCard Style="margin: 1rem;">
+                    <RadzenCard class="wa-detail-card">
                         <RadzenStack Gap="0.5rem">
                             <RadzenText TextStyle="TextStyle.Subtitle1">Additional Details</RadzenText>
                             @if (entry is WaCalendarEntryDto dto && dto.AdditionalData != null)
                             {
-                                <pre>@System.Text.Json.JsonSerializer.Serialize(dto.AdditionalData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                <pre class="wa-detail-json">@System.Text.Json.JsonSerializer.Serialize(dto.AdditionalData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
                             }
                         </RadzenStack>
                     </RadzenCard>
@@ -338,3 +357,320 @@
         NavigationManager.NavigateTo(route);
     }
 }
+
+<style>
+    /* Mobile-friendly dashboard styles */
+    .wa-dashboard-header {
+        padding: 1rem;
+    }
+
+    .wa-dashboard-title {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .wa-dashboard-controls {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .wa-add-entry-button {
+        min-height: 44px;
+        white-space: nowrap;
+    }
+
+    .wa-view-toggle {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .wa-toggle-button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .wa-filters-card {
+        padding: 0.75rem;
+    }
+
+    .wa-filters-title {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .wa-filters-container {
+        align-items: center;
+    }
+
+    .wa-filter-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        min-height: 44px;
+    }
+
+    .wa-filter-checkbox {
+        min-width: 20px;
+        min-height: 20px;
+    }
+
+    .wa-filter-label {
+        margin: 0;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .wa-main-content {
+        padding: 1rem;
+    }
+
+    .wa-loading-container {
+        height: 400px;
+    }
+
+    .wa-scheduler {
+        height: 600px;
+        width: 100%;
+    }
+
+    .wa-calendar-entry-title {
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
+    .wa-calendar-entry-desc {
+        font-size: 0.8rem;
+        line-height: 1.1;
+    }
+
+    .wa-dashboard-grid {
+        overflow-x: auto;
+    }
+
+    .wa-entry-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .wa-detail-card {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .wa-detail-json {
+        font-size: 0.8rem;
+        background: var(--rz-base-800);
+        color: var(--rz-text-color);
+        padding: 0.5rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        border: 1px solid var(--rz-base-600);
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 768px) {
+        .wa-dashboard-header {
+            padding: 0.5rem;
+        }
+
+        .wa-dashboard-title {
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .wa-dashboard-controls {
+            justify-content: center;
+        }
+
+        .wa-header-stack {
+            gap: 0.5rem;
+        }
+
+        .wa-add-entry-button {
+            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .wa-toggle-button {
+            font-size: 0.7rem;
+            min-width: 40px;
+            min-height: 40px;
+            padding: 0.5rem;
+        }
+
+        .wa-view-toggle {
+            flex-direction: column;
+            gap: 0.25rem;
+            min-width: 120px;
+        }
+
+        .wa-filters-card {
+            padding: 0.5rem;
+        }
+
+        .wa-filters-container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .wa-filter-item {
+            width: 100%;
+            padding: 0.25rem;
+            border-radius: 4px;
+            min-height: 40px;
+        }
+
+        .wa-filter-label {
+            font-size: 0.9rem;
+        }
+
+        .wa-main-content {
+            padding: 0.5rem;
+        }
+
+        .wa-loading-container {
+            height: 200px;
+        }
+
+        .wa-scheduler {
+            height: 400px;
+        }
+
+        .wa-calendar-entry-title {
+            font-size: 0.75rem;
+        }
+
+        .wa-calendar-entry-desc {
+            font-size: 0.7rem;
+        }
+
+        .wa-dashboard-grid {
+            font-size: 0.8rem;
+        }
+
+        .wa-priority-2 {
+            display: none !important;
+        }
+
+        .wa-priority-3 {
+            display: none !important;
+        }
+
+        .wa-action-button {
+            min-width: 36px !important;
+            min-height: 36px !important;
+            font-size: 0.7rem;
+        }
+
+        .wa-entry-badge {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .wa-detail-card {
+            margin: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        .wa-detail-json {
+            font-size: 0.7rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .wa-dashboard-header {
+            padding: 0.25rem;
+        }
+
+        .wa-dashboard-title {
+            font-size: 1.1rem;
+        }
+
+        .wa-add-entry-button {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .wa-toggle-button {
+            font-size: 0.6rem;
+            min-width: 36px;
+            min-height: 36px;
+            padding: 0.4rem;
+        }
+
+        .wa-filters-card {
+            padding: 0.25rem;
+        }
+
+        .wa-filter-item {
+            min-height: 36px;
+            padding: 0.2rem;
+        }
+
+        .wa-filter-label {
+            font-size: 0.8rem;
+        }
+
+        .wa-scheduler {
+            height: 300px;
+        }
+
+        .wa-dashboard-grid {
+            font-size: 0.7rem;
+        }
+
+        .wa-dashboard-grid .rz-datatable-data th,
+        .wa-dashboard-grid .rz-datatable-data td {
+            padding: 0.25rem !important;
+        }
+
+        .wa-action-button {
+            min-width: 32px !important;
+            min-height: 32px !important;
+            font-size: 0.6rem;
+            padding: 0.25rem !important;
+        }
+    }
+
+    /* Landscape mobile adjustments */
+    @@media (max-width: 768px) and (orientation: landscape) {
+        .wa-view-toggle {
+            flex-direction: row;
+        }
+
+        .wa-filters-container {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .wa-filter-item {
+            width: auto;
+            flex: 1 1 auto;
+        }
+
+        .wa-scheduler {
+            height: 250px;
+        }
+
+        .wa-priority-2 {
+            display: table-cell !important;
+        }
+    }
+
+    /* Touch-friendly improvements */
+    @@media (max-width: 768px) {
+        .wa-dashboard-grid .rz-datatable-data tr {
+            min-height: 44px;
+        }
+
+        .wa-scheduler .rz-scheduler-table td {
+            min-height: 40px;
+        }
+
+        .wa-filter-item:hover {
+            background: var(--rz-base-200);
+        }
+    }
+</style>

@@ -85,6 +85,12 @@ public class WaUserService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         
+        // Handle default user logic
+        if (user.IsDefault)
+        {
+            await EnsureSingleDefaultUserAsync(user.Id);
+        }
+        
         return user;
     }
     
@@ -99,6 +105,12 @@ public class WaUserService
         
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
+        
+        // Handle default user logic
+        if (user.IsDefault)
+        {
+            await EnsureSingleDefaultUserAsync(user.Id);
+        }
         
         return user;
     }
@@ -121,7 +133,7 @@ public class WaUserService
     }
     
     /// <summary>
-    /// Gets the current user based on selection, or first user if none selected
+    /// Gets the current user based on selection, default user, or first user
     /// </summary>
     /// <returns>The current user</returns>
     public async Task<WaUser?> GetCurrentUserAsync()
@@ -135,18 +147,64 @@ public class WaUserService
             }
         }
         
-        // If no selection or selected user not found, return first user
+        // If no selection or selected user not found, get default user
+        var defaultUser = await GetDefaultUserAsync();
+        if (defaultUser != null && !_selectedUserId.HasValue)
+        {
+            _selectedUserId = defaultUser.Id;
+        }
+        
+        return defaultUser;
+    }
+    
+    
+    /// <summary>
+    /// Gets the default user, or first user if no default is set
+    /// </summary>
+    /// <returns>The default user or first user</returns>
+    public async Task<WaUser?> GetDefaultUserAsync()
+    {
+        // First try to get the user marked as default
+        var defaultUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.IsDefault);
+            
+        if (defaultUser != null)
+        {
+            return defaultUser;
+        }
+        
+        // If no default user, return first user and mark it as default
         var firstUser = await _context.Users
             .OrderBy(u => u.Id)
             .FirstOrDefaultAsync();
             
-        // Auto-select the first user if we found one
-        if (firstUser != null && !_selectedUserId.HasValue)
+        if (firstUser != null)
         {
-            _selectedUserId = firstUser.Id;
+            firstUser.IsDefault = true;
+            firstUser.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
         }
         
         return firstUser;
+    }
+    
+    
+    /// <summary>
+    /// Ensures only one user is marked as default
+    /// </summary>
+    /// <param name="defaultUserId">The ID of the user that should be default</param>
+    /// <returns>Task</returns>
+    public async Task EnsureSingleDefaultUserAsync(int defaultUserId)
+    {
+        // Set all users to not default
+        var users = await _context.Users.ToListAsync();
+        foreach (var user in users)
+        {
+            user.IsDefault = user.Id == defaultUserId;
+            user.UpdatedAt = DateTime.UtcNow;
+        }
+        
+        await _context.SaveChangesAsync();
     }
     
     /// <summary>

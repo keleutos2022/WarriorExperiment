@@ -205,49 +205,55 @@ public class WaRiteOfPassagePracticeEntryService
             };
         }
         
-        // Determine current ladder configuration from last heavy entry
-        var activeLadders = 0;
-        if (lastHeavyEntry.Ladder5Sets > 0) activeLadders = 5;
-        else if (lastHeavyEntry.Ladder4Sets > 0) activeLadders = 4;
-        else if (lastHeavyEntry.Ladder3Sets > 0) activeLadders = 3;
-        else if (lastHeavyEntry.Ladder2Sets > 0) activeLadders = 2;
-        else if (lastHeavyEntry.Ladder1Sets > 0) activeLadders = 1;
-        
-        // Get the maximum ladder height (steps) from last entry
-        var maxSteps = Math.Max(
-            lastHeavyEntry.Ladder1Sets,
-            Math.Max(lastHeavyEntry.Ladder2Sets,
-            Math.Max(lastHeavyEntry.Ladder3Sets,
-            Math.Max(lastHeavyEntry.Ladder4Sets, lastHeavyEntry.Ladder5Sets))));
-        
         // Progress logic for heavy days
         if (intensity == WaPracticeIntensity.Heavy)
         {
-            // If using 3 ladders (1,2,3), add a 4th ladder
-            if (activeLadders == 3)
+            // Define the 13-step progression pattern
+            var progressionSteps = new (int, int, int, int, int)[]
             {
-                return (maxSteps, maxSteps, maxSteps, maxSteps, 0);
-            }
-            // If using 4 ladders (1,2,3,4), add a 5th ladder
-            else if (activeLadders == 4)
+                (3, 3, 3, 0, 0), // W1
+                (3, 3, 3, 3, 0), // W2
+                (3, 3, 3, 3, 3), // W3
+                (4, 3, 3, 3, 3), // W4
+                (4, 4, 3, 3, 3), // W5
+                (4, 4, 4, 3, 3), // W6
+                (4, 4, 4, 4, 3), // W7
+                (4, 4, 4, 4, 4), // W8
+                (5, 4, 4, 4, 4), // W9
+                (5, 5, 4, 4, 4), // W10
+                (5, 5, 5, 4, 4), // W11
+                (5, 5, 5, 5, 4), // W12
+                (5, 5, 5, 5, 5)  // W13
+            };
+            
+            // Find current step based on last heavy entry configuration
+            var currentConfig = (lastHeavyEntry.Ladder1Sets, lastHeavyEntry.Ladder2Sets, 
+                               lastHeavyEntry.Ladder3Sets, lastHeavyEntry.Ladder4Sets, lastHeavyEntry.Ladder5Sets);
+            
+            var currentStepIndex = -1;
+            for (int i = 0; i < progressionSteps.Length; i++)
             {
-                return (maxSteps, maxSteps, maxSteps, maxSteps, maxSteps);
+                if (progressionSteps[i] == currentConfig)
+                {
+                    currentStepIndex = i;
+                    break;
+                }
             }
-            // If using 5 ladders and steps < 5, increment steps
-            else if (activeLadders == 5 && maxSteps < 5)
+            
+            // If current configuration matches a step, advance to next step
+            if (currentStepIndex >= 0 && currentStepIndex < progressionSteps.Length - 1)
             {
-                var newSteps = maxSteps + 1;
-                return (newSteps, newSteps, newSteps, newSteps, newSteps);
+                return progressionSteps[currentStepIndex + 1];
             }
-            // If at maximum (5 ladders with 5 steps each), stay there
-            else if (activeLadders == 5 && maxSteps >= 5)
+            // If at maximum step or configuration not found, stay at maximum
+            else if (currentStepIndex == progressionSteps.Length - 1)
             {
-                return (5, 5, 5, 5, 5);
+                return progressionSteps[currentStepIndex]; // Stay at W13
             }
-            // For other cases (1 or 2 ladders), progress to 3 ladders
+            // If configuration doesn't match any step, start from W1
             else
             {
-                return (3, 3, 3, 0, 0);
+                return progressionSteps[0];
             }
         }
         

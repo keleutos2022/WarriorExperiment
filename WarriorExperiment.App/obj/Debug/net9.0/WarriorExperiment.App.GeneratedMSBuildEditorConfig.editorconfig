@@ -100,6 +100,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYUFib3V0UGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaAchievementPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYUFjaGlldmVtZW50UGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaAdminPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYUFkbWluUGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

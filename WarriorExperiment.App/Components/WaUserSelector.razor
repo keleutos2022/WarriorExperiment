@@ -5,12 +5,12 @@
 @inherits WaBaseComponent
 @implements IDisposable
 
-<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="wa-user-selector">
     @if (isLoading)
     {
-        <RadzenIcon Icon="person" Style="color: var(--rz-text-color);" />
+        <RadzenIcon Icon="person" Style="color: var(--rz-text-color);" class="wa-user-icon" />
         <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.ExtraSmall" />
-        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Loading users...</RadzenText>
+        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);" class="wa-loading-text">Loading users...</RadzenText>
     }
     else if (users.Any())
     {
@@ -23,7 +23,7 @@
         }
         else
         {
-            <RadzenIcon Icon="person" Style="color: var(--rz-text-color);" />
+            <RadzenIcon Icon="person" Style="color: var(--rz-text-color);" class="wa-user-icon" />
         }
         
         <!-- User Selection Dropdown -->
@@ -33,19 +33,18 @@
                       ValueProperty="Id"
                       Change="@OnUserSelectionChanged"
                       Placeholder="Select User..."
-                      Style="min-width: 150px;"
-                      Class="rz-border-radius-1" />
+                      class="wa-user-dropdown" />
                       
         <!-- User Info Display -->
         @if (currentUser != null)
         {
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="line-height: 1.2;">
-                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="wa-user-info">
+                <RadzenText TextStyle="TextStyle.Caption" class="wa-user-details">
                     @GetUserDisplayInfo()
                 </RadzenText>
                 @if (currentUser.DateOfStart.HasValue)
                 {
-                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-tertiary-color); margin: 0; font-size: 0.7rem;">
+                    <RadzenText TextStyle="TextStyle.Caption" class="wa-user-start-date">
                         Started @currentUser.DateOfStart.Value.ToString("MMM yyyy")
                     </RadzenText>
                 }
@@ -54,14 +53,20 @@
     }
     else
     {
-        <RadzenIcon Icon="person_off" Style="color: var(--rz-text-secondary-color);" />
-        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+        <RadzenIcon Icon="person_off" Style="color: var(--rz-text-secondary-color);" class="wa-user-icon" />
+        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);" class="wa-no-users-text">
             No users found
         </RadzenText>
     }
 </RadzenStack>
 
 <style>
+    /* User selector responsive styles */
+    .wa-user-selector {
+        flex-wrap: wrap;
+        min-height: 44px;
+    }
+
     .user-avatar {
         width: 32px;
         height: 32px;
@@ -76,6 +81,158 @@
         text-transform: uppercase;
         border: 2px solid var(--rz-primary-light);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        flex-shrink: 0;
+    }
+
+    .wa-user-icon {
+        flex-shrink: 0;
+        font-size: 1.2rem;
+    }
+
+    .wa-user-dropdown {
+        min-width: 150px;
+        max-width: 200px;
+        border-radius: 4px;
+    }
+
+    .wa-user-info {
+        line-height: 1.2;
+        flex-shrink: 1;
+        min-width: 0; /* Allow text to truncate */
+    }
+
+    .wa-user-details {
+        color: var(--rz-text-secondary-color);
+        margin: 0;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .wa-user-start-date {
+        color: var(--rz-text-tertiary-color);
+        margin: 0;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .wa-loading-text,
+    .wa-no-users-text {
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 768px) {
+        .wa-user-selector {
+            gap: 0.25rem;
+            justify-content: flex-end;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 0.7rem;
+        }
+
+        .wa-user-icon {
+            font-size: 1rem;
+        }
+
+        .wa-user-dropdown {
+            min-width: 120px;
+            max-width: 150px;
+            font-size: 0.8rem;
+        }
+
+        .wa-user-info {
+            display: none; /* Hide detailed info on mobile to save space */
+        }
+
+        .wa-loading-text,
+        .wa-no-users-text {
+            font-size: 0.7rem;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wa-user-details {
+            font-size: 0.7rem;
+        }
+
+        .wa-user-start-date {
+            font-size: 0.6rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .wa-user-selector {
+            gap: 0.2rem;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            font-size: 0.6rem;
+            border-width: 1px;
+        }
+
+        .wa-user-icon {
+            font-size: 0.9rem;
+        }
+
+        .wa-user-dropdown {
+            min-width: 100px;
+            max-width: 120px;
+            font-size: 0.7rem;
+        }
+
+        .wa-loading-text,
+        .wa-no-users-text {
+            font-size: 0.6rem;
+            max-width: 80px;
+        }
+    }
+
+    /* Landscape mobile adjustments */
+    @@media (max-width: 768px) and (orientation: landscape) {
+        .wa-user-info {
+            display: flex; /* Show info in landscape */
+        }
+
+        .wa-user-details,
+        .wa-user-start-date {
+            max-width: 100px;
+        }
+    }
+
+    /* Touch-friendly improvements */
+    @@media (max-width: 768px) {
+        .wa-user-dropdown {
+            min-height: 40px;
+        }
+
+        .user-avatar {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .user-avatar:active {
+            transform: scale(0.95);
+        }
+    }
+
+    /* High DPI screen adjustments */
+    @@media (min-resolution: 2dppx) {
+        .user-avatar {
+            border-width: 1px;
+        }
     }
 </style>
 

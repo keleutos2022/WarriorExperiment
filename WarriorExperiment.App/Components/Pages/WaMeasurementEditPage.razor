@@ -6,6 +6,7 @@
 @inject WaDbContext Context
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
+@inject IJSRuntime JSRuntime
 
 <WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
     @if (isLoading)
@@ -54,32 +55,32 @@
                                 <RadzenStack Gap="0.5rem">
                                     <RadzenFormField Text="Weight (kg)" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.Weight" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Body Fat %" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.BodyFat" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="100" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Muscle Mass (kg)" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.MuscleMass" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Water %" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.WaterPercentage" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="100" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Bone Mass (kg)" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.BoneMass" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="BMI" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.BMI" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%;" />
                                     </RadzenFormField>
                                 </RadzenStack>
                             </RadzenFieldset>
@@ -92,32 +93,32 @@
                                 <RadzenStack Gap="0.5rem">
                                     <RadzenFormField Text="Chest" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.ChestCircumference" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Waist" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.WaistCircumference" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Hip" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.HipCircumference" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Bicep" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.BicepCircumference" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Thigh" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.ThighCircumference" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Calf" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.CalfCircumference" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%;" />
                                     </RadzenFormField>
                                 </RadzenStack>
                             </RadzenFieldset>
@@ -128,6 +129,95 @@
                                                   Style="width: 100%;" Rows="4" />
                                 </ChildContent>
                             </RadzenFormField>
+                            
+                            <RadzenFieldset Text="Progress Photos">
+                                @* Hidden file inputs *@
+                                <input @ref="frontPhotoInput" id="frontPhotoInput" type="file" accept="image/*" capture="environment" style="display: none;" @onchange="@((e) => HandleFileSelected(e, "front"))" />
+                                <input @ref="backPhotoInput" id="backPhotoInput" type="file" accept="image/*" capture="environment" style="display: none;" @onchange="@((e) => HandleFileSelected(e, "back"))" />
+                                <input @ref="sidePhotoInput" id="sidePhotoInput" type="file" accept="image/*" capture="environment" style="display: none;" @onchange="@((e) => HandleFileSelected(e, "side"))" />
+                                
+                                <RadzenStack Gap="1rem">
+                                    @* Front Photo *@
+                                    <RadzenFormField Text="Front Photo" Variant="Variant.Outlined">
+                                        <ChildContent>
+                                            <RadzenStack Gap="0.5rem">
+                                                @if (!string.IsNullOrEmpty(model.FrontPhoto))
+                                                {
+                                                    <div style="position: relative; display: inline-block;">
+                                                        <img src="data:image/jpeg;base64,@model.FrontPhoto" 
+                                                             style="max-width: 150px; max-height: 150px; border-radius: 4px;" />
+                                                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Danger" 
+                                                                    Size="ButtonSize.ExtraSmall" 
+                                                                    Style="position: absolute; top: -8px; right: -8px; border-radius: 50%;"
+                                                                    Click="@(() => DeletePhoto("front"))" />
+                                                    </div>
+                                                    <small style="color: #666;">Front Photo: @model.FrontPhoto.Length chars</small>
+                                                }
+                                                else
+                                                {
+                                                    <small style="color: #666;">No front photo</small>
+                                                }
+                                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                                    <RadzenButton Text="📷 Take Photo" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                                                Click="@(() => TriggerFileInput(frontPhotoInput))" />
+                                                    <RadzenButton Text="📁 Choose File" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                                                Click="@(() => TriggerFileInput(frontPhotoInput))" />
+                                                </RadzenStack>
+                                            </RadzenStack>
+                                        </ChildContent>
+                                    </RadzenFormField>
+                                    
+                                    @* Back Photo *@
+                                    <RadzenFormField Text="Back Photo" Variant="Variant.Outlined">
+                                        <ChildContent>
+                                            <RadzenStack Gap="0.5rem">
+                                                @if (!string.IsNullOrEmpty(model.BackPhoto))
+                                                {
+                                                    <div style="position: relative; display: inline-block;">
+                                                        <img src="data:image/jpeg;base64,@model.BackPhoto" 
+                                                             style="max-width: 150px; max-height: 150px; border-radius: 4px;" />
+                                                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Danger" 
+                                                                    Size="ButtonSize.ExtraSmall" 
+                                                                    Style="position: absolute; top: -8px; right: -8px; border-radius: 50%;"
+                                                                    Click="@(() => DeletePhoto("back"))" />
+                                                    </div>
+                                                }
+                                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                                    <RadzenButton Text="📷 Take Photo" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                                                Click="@(() => TriggerFileInput(backPhotoInput))" />
+                                                    <RadzenButton Text="📁 Choose File" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                                                Click="@(() => TriggerFileInput(backPhotoInput))" />
+                                                </RadzenStack>
+                                            </RadzenStack>
+                                        </ChildContent>
+                                    </RadzenFormField>
+                                    
+                                    @* Side Photo *@
+                                    <RadzenFormField Text="Side Photo" Variant="Variant.Outlined">
+                                        <ChildContent>
+                                            <RadzenStack Gap="0.5rem">
+                                                @if (!string.IsNullOrEmpty(model.SidePhoto))
+                                                {
+                                                    <div style="position: relative; display: inline-block;">
+                                                        <img src="data:image/jpeg;base64,@model.SidePhoto" 
+                                                             style="max-width: 150px; max-height: 150px; border-radius: 4px;" />
+                                                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Danger" 
+                                                                    Size="ButtonSize.ExtraSmall" 
+                                                                    Style="position: absolute; top: -8px; right: -8px; border-radius: 50%;"
+                                                                    Click="@(() => DeletePhoto("side"))" />
+                                                    </div>
+                                                }
+                                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                                    <RadzenButton Text="📷 Take Photo" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                                                Click="@(() => TriggerFileInput(sidePhotoInput))" />
+                                                    <RadzenButton Text="📁 Choose File" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                                                Click="@(() => TriggerFileInput(sidePhotoInput))" />
+                                                </RadzenStack>
+                                            </RadzenStack>
+                                        </ChildContent>
+                                    </RadzenFormField>
+                                </RadzenStack>
+                            </RadzenFieldset>
                         </RadzenStack>
                     </RadzenColumn>
                 </RadzenRow>
@@ -154,6 +244,10 @@
     private string pageTitle = "New Measurement";
     private string pageSubTitle = "Record body measurements";
     private string submitButtonText = "Save";
+    
+    private ElementReference frontPhotoInput;
+    private ElementReference backPhotoInput;
+    private ElementReference sidePhotoInput;
     
     protected override async Task OnInitializedAsync()
     {
@@ -229,6 +323,71 @@
         catch (Exception ex)
         {
             NotificationService.Notify(NotificationSeverity.Error, $"Error saving measurement: {ex.Message}");
+        }
+    }
+    
+    private async Task TriggerFileInput(ElementReference input)
+    {
+        await JSRuntime.InvokeVoidAsync("triggerFileInput", input);
+    }
+    
+    private async Task HandleFileSelected(ChangeEventArgs e, string photoType)
+    {
+        try
+        {
+            Console.WriteLine($"HandleFileSelected called for {photoType}");
+            var files = e.Value as string;
+            if (!string.IsNullOrEmpty(files))
+            {
+                // Process the file using JavaScript
+                var elementId = photoType == "front" ? "frontPhotoInput" : 
+                               photoType == "back" ? "backPhotoInput" : "sidePhotoInput";
+                var base64Image = await JSRuntime.InvokeAsync<string>("processSelectedFile", elementId);
+                Console.WriteLine($"Received base64 data: {(!string.IsNullOrEmpty(base64Image) ? $"Length {base64Image.Length}" : "null/empty")}");
+                
+                if (!string.IsNullOrEmpty(base64Image))
+                {
+                    SetPhoto(photoType, base64Image);
+                    Console.WriteLine($"Photo set for {photoType}, triggering StateHasChanged");
+                    StateHasChanged();
+                    NotificationService.Notify(NotificationSeverity.Success, $"{photoType} photo selected successfully!");
+                }
+                else
+                {
+                    Console.WriteLine("No image data received");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleFileSelected: {ex}");
+            NotificationService.Notify(NotificationSeverity.Error, $"Error processing photo: {ex.Message}");
+        }
+    }
+    
+    private void DeletePhoto(string photoType)
+    {
+        SetPhoto(photoType, null);
+        StateHasChanged();
+    }
+    
+    private void SetPhoto(string photoType, string? base64Data)
+    {
+        Console.WriteLine($"SetPhoto called: {photoType} = {(string.IsNullOrEmpty(base64Data) ? "null/empty" : $"data length {base64Data.Length}")}");
+        switch (photoType.ToLower())
+        {
+            case "front":
+                model.FrontPhoto = base64Data;
+                Console.WriteLine($"Set FrontPhoto: {(!string.IsNullOrEmpty(model.FrontPhoto) ? $"Length {model.FrontPhoto.Length}" : "null/empty")}");
+                break;
+            case "back":
+                model.BackPhoto = base64Data;
+                Console.WriteLine($"Set BackPhoto: {(!string.IsNullOrEmpty(model.BackPhoto) ? $"Length {model.BackPhoto.Length}" : "null/empty")}");
+                break;
+            case "side":
+                model.SidePhoto = base64Data;
+                Console.WriteLine($"Set SidePhoto: {(!string.IsNullOrEmpty(model.SidePhoto) ? $"Length {model.SidePhoto.Length}" : "null/empty")}");
+                break;
         }
     }
 }

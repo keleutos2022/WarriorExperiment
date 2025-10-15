@@ -26,6 +26,11 @@ public class WaUser : WaBase
     public DateTime? DateOfStart { get; set; }
     
     /// <summary>
+    /// Gets or sets whether this user is the default user
+    /// </summary>
+    public bool IsDefault { get; set; }
+    
+    /// <summary>
     /// Gets or sets the collection of daily surveys for this user
     /// </summary>
     public ICollection<WaDailySurveyEntry> DailySurveys { get; set; } = new List<WaDailySurveyEntry>();

@@ -1,11 +1,12 @@
 @page "/admin"
 @using WarriorExperiment.Core.Services
 @using WarriorExperiment.Persistence.Models
-@using WarriorExperiment.Persistence.Data
 @using Microsoft.EntityFrameworkCore
 @inject WaDemoDataService DemoDataService
-@inject WaDbContext DbContext
 @inject WaUserService UserService
+@inject WaDailySurveyEntryService DailySurveyService
+@inject WaMeasurementEntryService MeasurementService
+@inject WaRiteOfPassagePracticeEntryService PracticeService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 
@@ -200,7 +201,8 @@
     {
         try
         {
-            demoUser = await DbContext.Users.FirstOrDefaultAsync(u => u.UserName == "DemoWarrior");
+            var users = await UserService.GetAllAsync();
+            demoUser = users.FirstOrDefault(u => u.UserName == "DemoWarrior");
             demoUserExists = demoUser != null;
         }
         catch (Exception)
@@ -214,10 +216,35 @@
     {
         try
         {
-            systemStats.UserCount = await DbContext.Users.CountAsync();
-            systemStats.MeasurementCount = await DbContext.MeasurementEntries.CountAsync();
-            systemStats.SurveyCount = await DbContext.DailySurveys.CountAsync();
-            systemStats.PracticeCount = await DbContext.RiteOfPassagePracticeEntries.CountAsync();
+            systemStats.UserCount = await UserService.GetCountAsync();
+            
+            // Get current user to use for service calls that require userId
+            var currentUser = await UserService.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                // For system stats, we want global counts, but services are user-scoped
+                // So we'll get all users and sum their data
+                var allUsers = await UserService.GetAllAsync();
+                var allUserIds = allUsers.Select(u => u.Id).ToList();
+                
+                systemStats.MeasurementCount = 0;
+                systemStats.SurveyCount = 0;
+                systemStats.PracticeCount = 0;
+                
+                foreach (var userId in allUserIds)
+                {
+                    systemStats.MeasurementCount += await MeasurementService.GetCountAsync(userId);
+                    systemStats.SurveyCount += await DailySurveyService.GetCountAsync(userId);
+                    systemStats.PracticeCount += await PracticeService.GetCountAsync(userId);
+                }
+            }
+            else
+            {
+                systemStats.MeasurementCount = 0;
+                systemStats.SurveyCount = 0;
+                systemStats.PracticeCount = 0;
+            }
+            
             systemStats.LastUpdated = DateTime.Now;
         }
         catch (Exception ex)
@@ -230,7 +257,9 @@
     {
         try
         {
-            dbConnectionHealthy = await DbContext.Database.CanConnectAsync();
+            // Test database connectivity by trying to get user count
+            await UserService.GetCountAsync();
+            dbConnectionHealthy = true;
         }
         catch (Exception)
         {
