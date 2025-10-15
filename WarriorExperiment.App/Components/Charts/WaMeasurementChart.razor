@@ -25,16 +25,17 @@
                     {
                         <RadzenLineSeries Data="@methodGroup.Data" CategoryProperty="DateLabel" ValueProperty="Value" 
                                         Title="@methodGroup.MethodName"
-                                        LineType="LineType.Solid" MarkerType="MarkerType.Circle"
-                                        Stroke="@GetMethodColor(methodGroup.MethodId)" StrokeWidth="3" 
-                                        MarkerStroke="@GetMethodColor(methodGroup.MethodId)" MarkerFill="@GetMethodColor(methodGroup.MethodId)" />
+                                        LineType="LineType.Solid" Stroke="@GetMethodColor(methodGroup.MethodId)" StrokeWidth="3">
+                            <RadzenMarkers MarkerType="MarkerType.Circle" Stroke="@GetMethodColor(methodGroup.MethodId)" Fill="@GetMethodColor(methodGroup.MethodId)" />
+                        </RadzenLineSeries>
                     }
                 }
                 else
                 {
                     <RadzenLineSeries Data="@Data" CategoryProperty="DateLabel" ValueProperty="Value" 
-                                    LineType="LineType.Solid" MarkerType="MarkerType.Circle"
-                                    Stroke="@GetChartColor()" StrokeWidth="3" MarkerStroke="@GetChartColor()" MarkerFill="@GetChartColor()" />
+                                    LineType="LineType.Solid" Stroke="@GetChartColor()" StrokeWidth="3">
+                        <RadzenMarkers MarkerType="MarkerType.Circle" Stroke="@GetChartColor()" Fill="@GetChartColor()" />
+                    </RadzenLineSeries>
                 }
                 <RadzenCategoryAxis Padding="20" FormatString="{0}" />
                 <RadzenValueAxis FormatString="@GetValueFormat()" />

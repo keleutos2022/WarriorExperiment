@@ -20,8 +20,9 @@
         <RadzenCard Style="padding: 1rem;">
             <RadzenChart Style="height: 300px;">
                 <RadzenLineSeries Data="@Data" CategoryProperty="DateLabel" ValueProperty="Value" 
-                                LineType="LineType.Solid" MarkerType="MarkerType.Circle"
-                                Stroke="@GetChartColor()" StrokeWidth="3" MarkerStroke="@GetChartColor()" MarkerFill="@GetChartColor()" />
+                                LineType="LineType.Solid" Stroke="@GetChartColor()" StrokeWidth="3">
+                    <RadzenMarkers MarkerType="MarkerType.Circle" Stroke="@GetChartColor()" Fill="@GetChartColor()" />
+                </RadzenLineSeries>
                 <RadzenCategoryAxis Padding="20" FormatString="{0}" />
                 <RadzenValueAxis Min="0" Max="10" Step="1" FormatString="{0}" />
                 <RadzenLegend Visible="false" />

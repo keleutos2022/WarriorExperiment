@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using WarriorExperiment.Core.Interfaces;
 using WarriorExperiment.Core.Services;
 
 namespace WarriorExperiment.Core.Extensions;
@@ -25,6 +26,13 @@ public static class WaServiceCollectionExtensions
         services.AddScoped<WaRiteOfPassagePracticeEntryService>();
         services.AddScoped<WaVarietyPracticeEntryService>();
         services.AddScoped<WaUserService>();
+        
+        // Register demo data service
+        services.AddScoped<WaDemoDataService>();
+        
+        // Register backup and restore services
+        services.AddScoped<IWaBackupService, WaBackupService>();
+        services.AddScoped<IWaUserDataService, WaUserDataService>();
         
         return services;
     }

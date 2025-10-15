@@ -262,4 +262,59 @@ public class WaRiteOfPassagePracticeEntryService
             Math.Max(0, lastHeavyEntry.Ladder5Sets - reduction)
         );
     }
+    
+    /// <summary>
+    /// Gets total pull count from successful practices for a user
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Total pulls from successful practices</returns>
+    public async Task<int> GetTotalSuccessfulPullsAsync(int userId)
+    {
+        return await _context.RiteOfPassagePracticeEntries
+            .Where(rpe => rpe.UserId == userId && rpe.Success)
+            .SumAsync(rpe => rpe.PullCount);
+    }
+    
+    /// <summary>
+    /// Gets total push count from ladder calculations for a user
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Total pushes calculated using ladder formula: n*(n+1)/2 for each ladder</returns>
+    public async Task<int> GetTotalLadderPushesAsync(int userId)
+    {
+        var entries = await _context.RiteOfPassagePracticeEntries
+            .Where(rpe => rpe.UserId == userId)
+            .Select(rpe => new
+            {
+                rpe.Ladder1Sets,
+                rpe.Ladder2Sets,
+                rpe.Ladder3Sets,
+                rpe.Ladder4Sets,
+                rpe.Ladder5Sets
+            })
+            .ToListAsync();
+            
+        var totalPushes = 0;
+        
+        foreach (var entry in entries)
+        {
+            totalPushes += CalculateLadderPushes(entry.Ladder1Sets);
+            totalPushes += CalculateLadderPushes(entry.Ladder2Sets);
+            totalPushes += CalculateLadderPushes(entry.Ladder3Sets);
+            totalPushes += CalculateLadderPushes(entry.Ladder4Sets);
+            totalPushes += CalculateLadderPushes(entry.Ladder5Sets);
+        }
+        
+        return totalPushes;
+    }
+    
+    /// <summary>
+    /// Calculates pushes for a single ladder using the formula: n*(n+1)/2
+    /// </summary>
+    /// <param name="ladderSets">Number of sets in the ladder</param>
+    /// <returns>Total pushes for the ladder</returns>
+    private static int CalculateLadderPushes(int ladderSets)
+    {
+        return ladderSets * (ladderSets + 1) / 2;
+    }
 }

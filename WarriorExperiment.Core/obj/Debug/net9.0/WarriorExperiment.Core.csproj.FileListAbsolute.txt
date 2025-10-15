@@ -13,3 +13,4 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/refint/WarriorExperiment.Core.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.pdb
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/ref/WarriorExperiment.Core.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.sourcelink.json

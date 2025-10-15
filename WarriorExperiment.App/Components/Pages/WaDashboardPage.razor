@@ -61,6 +61,12 @@
         </RadzenStack>
     </RadzenCard>
 
+    <!-- Motivational Achievements Card -->
+    @if (CurrentUser != null)
+    {
+        <WaMotivationalCard UserId="@CurrentUser.Id" />
+    }
+
     <!-- Main Content -->
     <RadzenCard>
         @if (isLoading)

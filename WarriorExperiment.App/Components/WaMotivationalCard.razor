@@ -1,0 +1,196 @@
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@inject WaMeasurementEntryService MeasurementService
+@inject WaRiteOfPassagePracticeEntryService RopService
+@inject NotificationService NotificationService
+@inherits WaBaseComponent
+
+<RadzenStack Gap="1rem">
+    @if (isLoading)
+    {
+        <RadzenCard Style="padding: 2rem; text-align: center;">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                <RadzenText TextStyle="TextStyle.Body1">Loading your achievements...</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        @if (HasAnyMetrics)
+        {
+            <RadzenCard Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem;">
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenIcon Icon="emoji_events" Style="font-size: 48px; color: #FFD700;" />
+                    <RadzenText TextStyle="TextStyle.H4" Style="margin: 0; text-align: center; font-weight: bold;">
+                        Your Warrior Achievements
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1" Style="text-align: center; opacity: 0.9;">
+                        Every step forward is a victory. Here's your progress:
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+            
+            <RadzenRow Gap="1rem">
+                @if (bodyFatChange.HasValue)
+                {
+                    <RadzenColumn SizeLG="6" SizeMD="12">
+                        <RadzenCard Style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 1.5rem; height: 100%;">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                                <RadzenIcon Icon="trending_down" Style="font-size: 36px;" />
+                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                    Body Fat Reduced
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                    @Math.Abs(bodyFatChange.Value).ToString("F1")%
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
+                                    You're melting away the excess! Keep up the excellent work!
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+                
+                @if (muscleMassChange.HasValue)
+                {
+                    <RadzenColumn SizeLG="6" SizeMD="12">
+                        <RadzenCard Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; height: 100%;">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                                <RadzenIcon Icon="fitness_center" Style="font-size: 36px;" />
+                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                    Muscle Mass Gained
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                    +@muscleMassChange.Value.ToString("F1") kg
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
+                                    Building strength and power! Your dedication is paying off!
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+            
+            <RadzenRow Gap="1rem">
+                @if (totalPulls > 0)
+                {
+                    <RadzenColumn SizeLG="6" SizeMD="12">
+                        <RadzenCard Style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; height: 100%;">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                                <RadzenIcon Icon="expand_less" Style="font-size: 36px;" />
+                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                    Successful Pulls
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                    @totalPulls.ToString("N0")
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
+                                    Every pull brings you closer to mastery! Outstanding effort!
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+                
+                @if (totalPushes > 0)
+                {
+                    <RadzenColumn SizeLG="6" SizeMD="12">
+                        <RadzenCard Style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem; height: 100%;">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                                <RadzenIcon Icon="trending_up" Style="font-size: 36px;" />
+                                <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                                    Total Ladder Pushes
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H3" Style="margin: 0; font-weight: bold;">
+                                    @totalPushes.ToString("N0")
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.9;">
+                                    Climbing the ladder of strength! Each rep builds character!
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        }
+        else
+        {
+            <RadzenCard Style="padding: 2rem; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenIcon Icon="rocket_launch" Style="font-size: 48px; color: #FFD700;" />
+                    <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; font-weight: bold;">
+                        Your Journey Begins
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1" Style="text-align: center; opacity: 0.9;">
+                        Start tracking your measurements and ROP practices to see your achievements here!
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center; opacity: 0.8;">
+                        Every warrior's legend starts with a single step forward.
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public int UserId { get; set; }
+    
+    private bool isLoading = true;
+    private decimal? bodyFatChange = null;
+    private decimal? muscleMassChange = null;
+    private int totalPulls = 0;
+    private int totalPushes = 0;
+    
+    private bool HasAnyMetrics => bodyFatChange.HasValue || muscleMassChange.HasValue || totalPulls > 0 || totalPushes > 0;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMotivationalData();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        if (UserId > 0)
+        {
+            await LoadMotivationalData();
+        }
+    }
+    
+    private async Task LoadMotivationalData()
+    {
+        if (UserId <= 0) return;
+        
+        isLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            // Load body composition changes
+            var (bodyFatChange, muscleMassChange) = await MeasurementService.GetLatestBodyCompositionChangesAsync(UserId);
+            this.bodyFatChange = bodyFatChange;
+            this.muscleMassChange = muscleMassChange;
+            
+            // Load ROP statistics
+            totalPulls = await RopService.GetTotalSuccessfulPullsAsync(UserId);
+            totalPushes = await RopService.GetTotalLadderPushesAsync(UserId);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading motivational data: {ex.Message}");
+            
+            // Reset to default values on error
+            bodyFatChange = null;
+            muscleMassChange = null;
+            totalPulls = 0;
+            totalPushes = 0;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

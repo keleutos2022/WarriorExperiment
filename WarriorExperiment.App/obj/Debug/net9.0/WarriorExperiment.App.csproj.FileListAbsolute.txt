@@ -177,3 +177,13 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Blazored.FluentValidation.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/FluentValidation.AspNetCore.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/FluentValidation.DependencyInjectionExtensions.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/WarriorExperiment.App.sourcelink.json
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.AspNetCore.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Extensions.Hosting.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Extensions.Logging.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Formatting.Compact.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Settings.Configuration.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Sinks.Console.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Sinks.Debug.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Serilog.Sinks.File.dll

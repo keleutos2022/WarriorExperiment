@@ -1,0 +1,319 @@
+@page "/admin"
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Data
+@using Microsoft.EntityFrameworkCore
+@inject WaDemoDataService DemoDataService
+@inject WaDbContext DbContext
+@inject WaUserService UserService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+<WaBasePage Title="Administration" SubTitle="System administration and demo data management">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+            <RadzenText Text="Loading admin dashboard..." TextStyle="TextStyle.Body1" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="2rem">
+            <!-- Demo Data Management Section -->
+            <RadzenCard>
+                <RadzenHeading Text="Demo Data Management" Size="H3" class="mb-3" />
+                
+                <RadzenStack Gap="1rem">
+                    <RadzenRow AlignItems="AlignItems.Center">
+                        <RadzenColumn Size="8">
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenText TextStyle="TextStyle.Body1">
+                                    <strong>Demo User Status:</strong> 
+                                    @if (demoUserExists)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Active" />
+                                        <span> - Demo data is currently loaded in the system</span>
+                                    }
+                                    else
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="Not Found" />
+                                        <span> - No demo data found</span>
+                                    }
+                                </RadzenText>
+                                
+                                @if (demoUserExists && demoUser != null)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Body2" class="text-muted">
+                                        Demo user "@demoUser.UserName" created on @demoUser.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                                <RadzenButton Text="Generate Demo Data" 
+                                            Icon="add_circle" 
+                                            ButtonStyle="ButtonStyle.Success" 
+                                            Click="@GenerateDemoData"
+                                            Disabled="@(isGenerating || demoUserExists)" />
+                                            
+                                <RadzenButton Text="Clear Demo Data" 
+                                            Icon="delete_sweep" 
+                                            ButtonStyle="ButtonStyle.Danger" 
+                                            Click="@ClearDemoData"
+                                            Disabled="@(isClearing || !demoUserExists)" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    @if (isGenerating)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                                <RadzenText Text="Generating demo data... This may take a few moments." />
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
+                    
+                    @if (isClearing)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                                <RadzenText Text="Clearing demo data..." />
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            
+            <!-- System Statistics Section -->
+            <RadzenCard>
+                <RadzenHeading Text="System Statistics" Size="H3" class="mb-3" />
+                
+                <RadzenRow>
+                    <RadzenColumn Size="3">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem" class="text-center">
+                            <RadzenIcon Icon="people" Style="font-size: 2rem; color: var(--rz-primary);" />
+                            <RadzenText TextStyle="TextStyle.H4" Text="@systemStats.UserCount.ToString()" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Users" class="text-muted" />
+                        </RadzenStack>
+                    </RadzenColumn>
+                    
+                    <RadzenColumn Size="3">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem" class="text-center">
+                            <RadzenIcon Icon="monitor_weight" Style="font-size: 2rem; color: var(--rz-success);" />
+                            <RadzenText TextStyle="TextStyle.H4" Text="@systemStats.MeasurementCount.ToString()" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Measurements" class="text-muted" />
+                        </RadzenStack>
+                    </RadzenColumn>
+                    
+                    <RadzenColumn Size="3">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem" class="text-center">
+                            <RadzenIcon Icon="assignment" Style="font-size: 2rem; color: var(--rz-info);" />
+                            <RadzenText TextStyle="TextStyle.H4" Text="@systemStats.SurveyCount.ToString()" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Daily Surveys" class="text-muted" />
+                        </RadzenStack>
+                    </RadzenColumn>
+                    
+                    <RadzenColumn Size="3">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem" class="text-center">
+                            <RadzenIcon Icon="fitness_center" Style="font-size: 2rem; color: var(--rz-warning);" />
+                            <RadzenText TextStyle="TextStyle.H4" Text="@systemStats.PracticeCount.ToString()" />
+                            <RadzenText TextStyle="TextStyle.Body2" Text="Practice Sessions" class="text-muted" />
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenCard>
+            
+            <!-- Database Information Section -->
+            <RadzenCard>
+                <RadzenHeading Text="Database Information" Size="H3" class="mb-3" />
+                
+                <RadzenStack Gap="1rem">
+                    <RadzenRow AlignItems="AlignItems.Center">
+                        <RadzenColumn Size="6">
+                            <RadzenText TextStyle="TextStyle.Body1">
+                                <strong>Connection Status:</strong>
+                                @if (dbConnectionHealthy)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Connected" />
+                                }
+                                else
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Disconnected" />
+                                }
+                            </RadzenText>
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenText TextStyle="TextStyle.Body1">
+                                <strong>Last Updated:</strong> @systemStats.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss")
+                            </RadzenText>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    <RadzenButton Text="Refresh Statistics" 
+                                Icon="refresh" 
+                                ButtonStyle="ButtonStyle.Light" 
+                                Click="@LoadSystemStats" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    private bool isLoading = true;
+    private bool isGenerating = false;
+    private bool isClearing = false;
+    private bool demoUserExists = false;
+    private bool dbConnectionHealthy = true;
+    private WaUser? demoUser;
+    private SystemStatsModel systemStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAdminData();
+    }
+
+    private async Task LoadAdminData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            await Task.WhenAll(
+                CheckDemoUserExists(),
+                LoadSystemStats(),
+                CheckDatabaseConnection()
+            );
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CheckDemoUserExists()
+    {
+        try
+        {
+            demoUser = await DbContext.Users.FirstOrDefaultAsync(u => u.UserName == "DemoWarrior");
+            demoUserExists = demoUser != null;
+        }
+        catch (Exception)
+        {
+            demoUserExists = false;
+            demoUser = null;
+        }
+    }
+
+    private async Task LoadSystemStats()
+    {
+        try
+        {
+            systemStats.UserCount = await DbContext.Users.CountAsync();
+            systemStats.MeasurementCount = await DbContext.MeasurementEntries.CountAsync();
+            systemStats.SurveyCount = await DbContext.DailySurveys.CountAsync();
+            systemStats.PracticeCount = await DbContext.RiteOfPassagePracticeEntries.CountAsync();
+            systemStats.LastUpdated = DateTime.Now;
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading statistics: {ex.Message}");
+        }
+    }
+
+    private async Task CheckDatabaseConnection()
+    {
+        try
+        {
+            dbConnectionHealthy = await DbContext.Database.CanConnectAsync();
+        }
+        catch (Exception)
+        {
+            dbConnectionHealthy = false;
+        }
+    }
+
+    private async Task GenerateDemoData()
+    {
+        var confirmed = await DialogService.Confirm(
+            "This will create a demo user with 8 weeks of sample data including measurements, daily surveys, and practice sessions. Continue?",
+            "Generate Demo Data",
+            new ConfirmOptions { OkButtonText = "Generate", CancelButtonText = "Cancel" });
+
+        if (confirmed != true) return;
+
+        isGenerating = true;
+        StateHasChanged();
+
+        try
+        {
+            var generatedUser = await DemoDataService.GenerateAllDemoDataAsync();
+            demoUser = generatedUser;
+            demoUserExists = true;
+            
+            await LoadSystemStats();
+            
+            NotificationService.Notify(NotificationSeverity.Success, 
+                "Demo data generated successfully! 8 weeks of sample data has been created.");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, 
+                $"Error generating demo data: {ex.Message}");
+        }
+        finally
+        {
+            isGenerating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearDemoData()
+    {
+        var confirmed = await DialogService.Confirm(
+            "This will permanently delete the demo user and all associated data (measurements, surveys, practice sessions). This action cannot be undone. Continue?",
+            "Clear Demo Data",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+        if (confirmed != true) return;
+
+        isClearing = true;
+        StateHasChanged();
+
+        try
+        {
+            await DemoDataService.ClearDemoDataAsync();
+            demoUser = null;
+            demoUserExists = false;
+            
+            await LoadSystemStats();
+            
+            NotificationService.Notify(NotificationSeverity.Success, 
+                "Demo data cleared successfully! All demo user data has been removed.");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, 
+                $"Error clearing demo data: {ex.Message}");
+        }
+        finally
+        {
+            isClearing = false;
+            StateHasChanged();
+        }
+    }
+
+    private class SystemStatsModel
+    {
+        public int UserCount { get; set; }
+        public int MeasurementCount { get; set; }
+        public int SurveyCount { get; set; }
+        public int PracticeCount { get; set; }
+        public DateTime LastUpdated { get; set; } = DateTime.Now;
+    }
+}

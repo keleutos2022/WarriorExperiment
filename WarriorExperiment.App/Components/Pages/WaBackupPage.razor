@@ -1,0 +1,515 @@
+@page "/backup"
+@using WarriorExperiment.Core.Interfaces
+@using WarriorExperiment.Core.Models
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@using System.IO
+@inject IWaBackupService BackupService
+@inject IWaUserDataService UserDataService
+@inject WaUserService UserService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+<WaBasePage Title="Backup & Restore" SubTitle="Database backup and user data export/import">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+            <RadzenText Text="Loading backup dashboard..." TextStyle="TextStyle.Body1" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="2rem">
+            <!-- Database Backup Section -->
+            <RadzenCard>
+                <RadzenHeading Text="Database Backup" Size="H3" class="mb-3" />
+                
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.Body1" class="mb-2">
+                        Create a complete backup of all application data including all users, measurements, surveys, and practice sessions.
+                    </RadzenText>
+                    
+                    <RadzenRow AlignItems="AlignItems.Center">
+                        <RadzenColumn Size="8">
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenText TextStyle="TextStyle.Body1">
+                                    <strong>Available Backups:</strong> @availableBackups.Count backup files found
+                                </RadzenText>
+                                @if (lastBackupResult != null)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Body2" class="text-muted">
+                                        Last backup: @lastBackupResult.BackupDateTime.ToString("yyyy-MM-dd HH:mm") 
+                                        @if (lastBackupResult.FileSizeBytes.HasValue)
+                                        {
+                                            <span>(@FormatFileSize(lastBackupResult.FileSizeBytes.Value))</span>
+                                        }
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                                <RadzenButton Text="Create Backup" 
+                                            Icon="backup" 
+                                            ButtonStyle="ButtonStyle.Primary" 
+                                            Click="@CreateDatabaseBackup"
+                                            Disabled="@isCreatingBackup" />
+                                            
+                                <RadzenButton Text="View Backups" 
+                                            Icon="list" 
+                                            ButtonStyle="ButtonStyle.Light" 
+                                            Click="@LoadAvailableBackups" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    @if (isCreatingBackup)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                                <RadzenText Text="Creating database backup... This may take a few moments." />
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
+                    
+                    @if (availableBackups.Any())
+                    {
+                        <RadzenDataList Data="@availableBackups.Take(5)" TItem="string">
+                            <Template Context="backup">
+                                <RadzenRow AlignItems="AlignItems.Center" class="py-2 border-bottom">
+                                    <RadzenColumn Size="8">
+                                        <RadzenStack Gap="0.2rem">
+                                            <RadzenText TextStyle="TextStyle.Body1">@Path.GetFileName(backup)</RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Body2" class="text-muted">
+                                                Modified: @File.GetLastWriteTime(backup).ToString("yyyy-MM-dd HH:mm")
+                                                | Size: @FormatFileSize(new System.IO.FileInfo(backup).Length)
+                                            </RadzenText>
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                    <RadzenColumn Size="4">
+                                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                                            <RadzenButton Text="Restore" 
+                                                        Icon="restore" 
+                                                        ButtonStyle="ButtonStyle.Warning" 
+                                                        Size="ButtonSize.Small"
+                                                        Click="@(async () => await RestoreDatabaseBackup(backup))"
+                                                        Disabled="@isRestoringBackup" />
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </Template>
+                        </RadzenDataList>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            
+            <!-- User Data Export Section -->
+            <RadzenCard>
+                <RadzenHeading Text="User Data Export" Size="H3" class="mb-3" />
+                
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.Body1" class="mb-2">
+                        Export data for a specific user to JSON format for backup or transfer to another system.
+                    </RadzenText>
+                    
+                    <RadzenRow AlignItems="AlignItems.Center">
+                        <RadzenColumn Size="6">
+                            <RadzenLabel Text="Select User to Export:" />
+                            <RadzenDropDown @bind-Value="selectedUserForExport" 
+                                           Data="@allUsers" 
+                                           TextProperty="UserName" 
+                                           ValueProperty="Id"
+                                           Placeholder="Choose a user..."
+                                           AllowClear="true"
+                                           Style="width: 100%;" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="6">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" Style="margin-top: 1.5rem;">
+                                <RadzenButton Text="View Summary" 
+                                            Icon="info" 
+                                            ButtonStyle="ButtonStyle.Light" 
+                                            Click="@GetUserDataSummary"
+                                            Disabled="@(selectedUserForExport == null || isExportingUser)" />
+                                            
+                                <RadzenButton Text="Export User Data" 
+                                            Icon="download" 
+                                            ButtonStyle="ButtonStyle.Success" 
+                                            Click="@ExportUserData"
+                                            Disabled="@(selectedUserForExport == null || isExportingUser)" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    @if (isExportingUser)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                                <RadzenText Text="Exporting user data..." />
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
+                    
+                    @if (userDataSummary != null)
+                    {
+                        <RadzenCard class="bg-light">
+                            <RadzenHeading Text="Export Summary" Size="H4" class="mb-2" />
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenText TextStyle="TextStyle.Body2">
+                                    <strong>Total Records:</strong> @userDataSummary.TotalRecords
+                                </RadzenText>
+                                @foreach (var recordType in userDataSummary.RecordCounts)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Body2">
+                                        <strong>@recordType.Key:</strong> @recordType.Value records
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </RadzenCard>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            
+            <!-- User Data Import Section -->
+            <RadzenCard>
+                <RadzenHeading Text="User Data Import" Size="H3" class="mb-3" />
+                
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.Body1" class="mb-2">
+                        Import user data from a JSON export file. This will create a new user or overwrite existing data.
+                    </RadzenText>
+                    
+                    <RadzenRow AlignItems="AlignItems.Center">
+                        <RadzenColumn Size="6">
+                            <RadzenLabel Text="Import File Path:" />
+                            <RadzenTextBox @bind-Value="importFilePath" 
+                                         Placeholder="./backups/user_export_username_20241015_120000.json"
+                                         Style="width: 100%;" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="3">
+                            <RadzenCheckBox @bind-Value="overwriteExistingUser" Name="overwriteCheck" />
+                            <RadzenLabel Text="Overwrite Existing" Component="overwriteCheck" Style="margin-left: 0.5rem;" />
+                        </RadzenColumn>
+                        <RadzenColumn Size="3">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" Style="margin-top: 1.5rem;">
+                                <RadzenButton Text="Import Data" 
+                                            Icon="upload" 
+                                            ButtonStyle="ButtonStyle.Success" 
+                                            Click="@ImportUserData"
+                                            Disabled="@(string.IsNullOrWhiteSpace(importFilePath) || isImportingUser)" />
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    @if (isImportingUser)
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                                <RadzenText Text="Importing user data..." />
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
+                    
+                    @if (lastImportResult != null)
+                    {
+                        <RadzenAlert AlertStyle="@(lastImportResult.Success ? AlertStyle.Success : AlertStyle.Danger)" ShowIcon="true">
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenText TextStyle="TextStyle.Body1">
+                                    @if (lastImportResult.Success)
+                                    {
+                                        <span>Import completed successfully! @lastImportResult.RecordsRestored records imported.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Import failed: @lastImportResult.ErrorMessage</span>
+                                    }
+                                </RadzenText>
+                                @if (lastImportResult.ValidationMessages.Any())
+                                {
+                                    <RadzenText TextStyle="TextStyle.Body2">
+                                        <strong>Validation Messages:</strong>
+                                    </RadzenText>
+                                    @foreach (var message in lastImportResult.ValidationMessages)
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Body2" class="text-muted">• @message</RadzenText>
+                                    }
+                                }
+                            </RadzenStack>
+                        </RadzenAlert>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+            
+            @if (isRestoringBackup)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                        <RadzenText Text="Restoring database backup... This will replace all current data!" />
+                    </RadzenStack>
+                </RadzenAlert>
+            }
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    private bool isLoading = true;
+    private bool isCreatingBackup = false;
+    private bool isRestoringBackup = false;
+    private bool isExportingUser = false;
+    private bool isImportingUser = false;
+    private bool overwriteExistingUser = false;
+    
+    private List<string> availableBackups = new();
+    private List<WaUser> allUsers = new();
+    private WaBackupResult? lastBackupResult;
+    private WaRestoreResult? lastImportResult;
+    private WaExportMetadata? userDataSummary;
+    
+    private int? selectedUserForExport;
+    private string importFilePath = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            await Task.WhenAll(
+                LoadAvailableBackups(),
+                LoadUsers()
+            );
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadAvailableBackups()
+    {
+        try
+        {
+            availableBackups = await BackupService.GetAvailableBackupsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading backups: {ex.Message}");
+        }
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            allUsers = await UserService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading users: {ex.Message}");
+        }
+    }
+
+    private async Task CreateDatabaseBackup()
+    {
+        var confirmed = await DialogService.Confirm(
+            "This will create a complete backup of all application data. The backup will be compressed and stored in the backups directory. Continue?",
+            "Create Database Backup",
+            new ConfirmOptions { OkButtonText = "Create Backup", CancelButtonText = "Cancel" });
+
+        if (confirmed != true) return;
+
+        isCreatingBackup = true;
+        StateHasChanged();
+
+        try
+        {
+            lastBackupResult = await BackupService.CreateFullBackupAsync();
+            
+            if (lastBackupResult.Success)
+            {
+                await LoadAvailableBackups();
+                NotificationService.Notify(NotificationSeverity.Success, 
+                    $"Database backup created successfully! File: {Path.GetFileName(lastBackupResult.BackupPath)}");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, 
+                    $"Backup failed: {lastBackupResult.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, 
+                $"Error creating backup: {ex.Message}");
+        }
+        finally
+        {
+            isCreatingBackup = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RestoreDatabaseBackup(string backupPath)
+    {
+        var confirmed = await DialogService.Confirm(
+            $"This will restore the database from backup '{Path.GetFileName(backupPath)}' and REPLACE ALL CURRENT DATA. This action cannot be undone! Continue?",
+            "Restore Database",
+            new ConfirmOptions { OkButtonText = "Restore", CancelButtonText = "Cancel" });
+
+        if (confirmed != true) return;
+
+        isRestoringBackup = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await BackupService.RestoreFromBackupAsync(backupPath);
+            
+            if (result.Success)
+            {
+                await LoadUsers(); // Refresh user list
+                NotificationService.Notify(NotificationSeverity.Success, 
+                    $"Database restored successfully! {result.RecordsRestored} records restored.");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, 
+                    $"Restore failed: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, 
+                $"Error restoring backup: {ex.Message}");
+        }
+        finally
+        {
+            isRestoringBackup = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetUserDataSummary()
+    {
+        if (selectedUserForExport == null) return;
+
+        try
+        {
+            userDataSummary = await UserDataService.GetUserDataSummaryAsync(selectedUserForExport.Value);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error getting user data summary: {ex.Message}");
+        }
+    }
+
+    private async Task ExportUserData()
+    {
+        if (selectedUserForExport == null) return;
+
+        var selectedUser = allUsers.FirstOrDefault(u => u.Id == selectedUserForExport.Value);
+        if (selectedUser == null) return;
+
+        var confirmed = await DialogService.Confirm(
+            $"This will export all data for user '{selectedUser.UserName}' to a JSON file. Continue?",
+            "Export User Data",
+            new ConfirmOptions { OkButtonText = "Export", CancelButtonText = "Cancel" });
+
+        if (confirmed != true) return;
+
+        isExportingUser = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await UserDataService.ExportUserDataToFileAsync(selectedUserForExport.Value);
+            
+            if (result.Success)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, 
+                    $"User data exported successfully! File: {Path.GetFileName(result.BackupPath)}");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, 
+                    $"Export failed: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, 
+                $"Error exporting user data: {ex.Message}");
+        }
+        finally
+        {
+            isExportingUser = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ImportUserData()
+    {
+        var overwriteMessage = overwriteExistingUser ? "Existing user data will be overwritten!" : "A new user will be created if the username doesn't exist.";
+        var confirmed = await DialogService.Confirm(
+            $"This will import user data from '{importFilePath}'. {overwriteMessage} Continue?",
+            "Import User Data",
+            new ConfirmOptions { OkButtonText = "Import", CancelButtonText = "Cancel" });
+
+        if (confirmed != true) return;
+
+        isImportingUser = true;
+        lastImportResult = null;
+        StateHasChanged();
+
+        try
+        {
+            lastImportResult = await UserDataService.ImportUserDataFromFileAsync(importFilePath, overwriteExistingUser);
+            
+            if (lastImportResult.Success)
+            {
+                await LoadUsers(); // Refresh user list
+                NotificationService.Notify(NotificationSeverity.Success, 
+                    $"User data imported successfully! {lastImportResult.RecordsRestored} records imported.");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, 
+                    $"Import failed: {lastImportResult.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, 
+                $"Error importing user data: {ex.Message}");
+        }
+        finally
+        {
+            isImportingUser = false;
+            StateHasChanged();
+        }
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

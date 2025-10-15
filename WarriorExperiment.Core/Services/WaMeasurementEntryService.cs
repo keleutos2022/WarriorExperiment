@@ -185,4 +185,53 @@ public class WaMeasurementEntryService
             .OrderBy(mm => mm.Name)
             .ToListAsync();
     }
+    
+    /// <summary>
+    /// Gets the latest body composition changes for a user (latest measurement by method compared to previous)
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Body composition changes (negative body fat, positive muscle mass)</returns>
+    public async Task<(decimal? BodyFatChange, decimal? MuscleMassChange)> GetLatestBodyCompositionChangesAsync(int userId)
+    {
+        decimal? bodyFatChange = null;
+        decimal? muscleMassChange = null;
+        
+        var methods = await GetMeasurementMethodsAsync();
+        
+        foreach (var method in methods)
+        {
+            var latestTwo = await _context.MeasurementEntries
+                .Where(me => me.UserId == userId && me.MeasurementMethodId == method.Id)
+                .Where(me => me.BodyFat.HasValue || me.MuscleMass.HasValue)
+                .OrderByDescending(me => me.Date)
+                .Take(2)
+                .ToListAsync();
+                
+            if (latestTwo.Count == 2)
+            {
+                var latest = latestTwo[0];
+                var previous = latestTwo[1];
+                
+                if (latest.BodyFat.HasValue && previous.BodyFat.HasValue)
+                {
+                    var change = latest.BodyFat.Value - previous.BodyFat.Value;
+                    if (change < 0 && (!bodyFatChange.HasValue || change < bodyFatChange.Value))
+                    {
+                        bodyFatChange = change;
+                    }
+                }
+                
+                if (latest.MuscleMass.HasValue && previous.MuscleMass.HasValue)
+                {
+                    var change = latest.MuscleMass.Value - previous.MuscleMass.Value;
+                    if (change > 0 && (!muscleMassChange.HasValue || change > muscleMassChange.Value))
+                    {
+                        muscleMassChange = change;
+                    }
+                }
+            }
+        }
+        
+        return (bodyFatChange, muscleMassChange);
+    }
 }

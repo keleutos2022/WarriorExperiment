@@ -100,6 +100,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYUFib3V0UGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaAdminPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYUFkbWluUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaBackupPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYUJhY2t1cFBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaDailySurveyEditPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYURhaWx5U3VydmV5RWRpdFBhZ2UucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -182,6 +190,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/WaBasePage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9XYUJhc2VQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/WaMotivationalCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9XYU1vdGl2YXRpb25hbENhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/WaUserSelector.razor]

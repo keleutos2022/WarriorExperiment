@@ -2,20 +2,40 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
+using Serilog;
 using WarriorExperiment.App.Components;
 using WarriorExperiment.Core.Extensions;
 using WarriorExperiment.Persistence.Data;
 
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+    .WriteTo.Console()
+    .WriteTo.File("logs/app-.txt", 
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30)
+    .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog as the logging provider
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Add API controllers
+builder.Services.AddControllers();
+
 // Configure PostgreSQL connection
-var connectionString = "Host=localhost;Port=7777;Database=warrior_experiment;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<WaDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure backup options
+builder.Services.Configure<WarriorExperiment.Core.Models.WaBackupOptions>(
+    builder.Configuration.GetSection("BackupOptions"));
 
 // Register Core services
 builder.Services.AddWaCoreServices();
@@ -40,12 +60,11 @@ using (var scope = app.Services.CreateScope())
     {
         // Apply any pending migrations
         await dbContext.Database.MigrateAsync();
-        Console.WriteLine("Database migrations applied successfully.");
+        Log.Information("Database migrations applied successfully");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"An error occurred while migrating the database: {ex.Message}");
-        // In production, you might want to use a proper logging framework
+        Log.Error(ex, "An error occurred while migrating the database");
         throw;
     }
 }
@@ -67,4 +86,19 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+// Map API controllers
+app.MapControllers();
+
+try
+{
+    Log.Information("Starting WarriorExperiment application");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

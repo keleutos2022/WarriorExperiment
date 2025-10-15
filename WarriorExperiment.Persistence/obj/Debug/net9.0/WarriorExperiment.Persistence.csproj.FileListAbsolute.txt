@@ -12,3 +12,4 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Persistence/obj/Debug/net9.0/WarriorExperiment.Persistence.pdb
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Persistence/obj/Debug/net9.0/WarriorExperiment.Persistence.genruntimeconfig.cache
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Persistence/obj/Debug/net9.0/ref/WarriorExperiment.Persistence.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.Persistence/obj/Debug/net9.0/WarriorExperiment.Persistence.sourcelink.json

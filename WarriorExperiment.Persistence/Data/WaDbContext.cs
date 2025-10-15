@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WarriorExperiment.Persistence.Models;
 
 namespace WarriorExperiment.Persistence.Data;
@@ -312,5 +313,33 @@ public class WaDbContext : DbContext
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
         });
+    }
+
+    /// <summary>
+    /// Value converter that ensures DateTime values are treated as UTC for PostgreSQL compatibility
+    /// </summary>
+    public class DateTimeToDateTimeUtc : ValueConverter<DateTime, DateTime>
+    {
+        /// <summary>
+        /// Initializes a new instance of the DateTimeToDateTimeUtc converter
+        /// </summary>
+        public DateTimeToDateTimeUtc() : base(
+            convertToProviderExpression: dateTime => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc),
+            convertFromProviderExpression: dateTime => dateTime)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Configures global conventions for the database context
+    /// </summary>
+    /// <param name="configurationBuilder">The model configuration builder</param>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        // Apply UTC converter to all DateTime properties globally
+        configurationBuilder.Properties<DateTime>()
+            .HaveConversion(typeof(DateTimeToDateTimeUtc));
+            
+        base.ConfigureConventions(configurationBuilder);
     }
 }
