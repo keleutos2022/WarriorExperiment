@@ -1,0 +1,57 @@
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Core.Services
+@inject WaUserService UserService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+<WaUserForm Model="@User" 
+            OnValidSubmit="@HandleValidSubmit" 
+            OnCancel="@HandleCancel"
+            SubmitButtonText="@SubmitButtonText" />
+
+@code {
+    [Parameter] public WaUser User { get; set; } = new();
+    [Parameter] public string SubmitButtonText { get; set; } = "Save";
+    
+    private async Task HandleValidSubmit(WaUser user)
+    {
+        try
+        {
+            if (user.Id == 0)
+            {
+                // Check if username already exists
+                if (await UserService.UserNameExistsAsync(user.UserName))
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, "Username already exists");
+                    return;
+                }
+                
+                await UserService.CreateAsync(user);
+                NotificationService.Notify(NotificationSeverity.Success, "User created successfully");
+            }
+            else
+            {
+                // Check if username already exists for other users
+                if (await UserService.UserNameExistsAsync(user.UserName, user.Id))
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, "Username already exists");
+                    return;
+                }
+                
+                await UserService.UpdateAsync(user);
+                NotificationService.Notify(NotificationSeverity.Success, "User updated successfully");
+            }
+            
+            DialogService.Close(true);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving user: {ex.Message}");
+        }
+    }
+    
+    private void HandleCancel()
+    {
+        DialogService.Close(false);
+    }
+}

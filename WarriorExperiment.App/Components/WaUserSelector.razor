@@ -1,0 +1,208 @@
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@inject WaUserService UserService
+@inject NotificationService NotificationService
+@inherits WaBaseComponent
+@implements IDisposable
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+    @if (isLoading)
+    {
+        <RadzenIcon Icon="person" Style="color: var(--rz-text-color);" />
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.ExtraSmall" />
+        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Loading users...</RadzenText>
+    }
+    else if (users.Any())
+    {
+        <!-- User Avatar/Initials -->
+        @if (currentUser != null)
+        {
+            <div class="user-avatar" title="@currentUser.UserName">
+                @GetUserInitials()
+            </div>
+        }
+        else
+        {
+            <RadzenIcon Icon="person" Style="color: var(--rz-text-color);" />
+        }
+        
+        <!-- User Selection Dropdown -->
+        <RadzenDropDown @bind-Value="selectedUserId" 
+                      Data="@users" 
+                      TextProperty="UserName" 
+                      ValueProperty="Id"
+                      Change="@OnUserSelectionChanged"
+                      Placeholder="Select User..."
+                      Style="min-width: 150px;"
+                      Class="rz-border-radius-1" />
+                      
+        <!-- User Info Display -->
+        @if (currentUser != null)
+        {
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0" Style="line-height: 1.2;">
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">
+                    @GetUserDisplayInfo()
+                </RadzenText>
+                @if (currentUser.DateOfStart.HasValue)
+                {
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-tertiary-color); margin: 0; font-size: 0.7rem;">
+                        Started @currentUser.DateOfStart.Value.ToString("MMM yyyy")
+                    </RadzenText>
+                }
+            </RadzenStack>
+        }
+    }
+    else
+    {
+        <RadzenIcon Icon="person_off" Style="color: var(--rz-text-secondary-color);" />
+        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+            No users found
+        </RadzenText>
+    }
+</RadzenStack>
+
+<style>
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        border: 2px solid var(--rz-primary-light);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<WaUser?> OnCurrentUserChanged { get; set; }
+    
+    private List<WaUser> users = new();
+    private WaUser? currentUser;
+    private int? selectedUserId;
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+        await LoadCurrentUser();
+        
+        // Subscribe to user service events
+        UserService.CurrentUserChanged += HandleCurrentUserChanged;
+    }
+    
+    private async Task LoadUsers()
+    {
+        try
+        {
+            users = await UserService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading users: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadCurrentUser()
+    {
+        try
+        {
+            currentUser = await UserService.GetCurrentUserAsync();
+            selectedUserId = currentUser?.Id;
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading current user: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task OnUserSelectionChanged(object? value)
+    {
+        if (value is int userId)
+        {
+            try
+            {
+                var user = await UserService.SetCurrentUserAsync(userId);
+                if (user != null)
+                {
+                    currentUser = user;
+                    selectedUserId = userId;
+                    await OnCurrentUserChanged.InvokeAsync(user);
+                    NotificationService.Notify(NotificationSeverity.Success, $"Switched to user: {user.UserName}");
+                }
+                else
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, "User not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error switching user: {ex.Message}");
+            }
+        }
+    }
+    
+    private void HandleCurrentUserChanged(WaUser? user)
+    {
+        currentUser = user;
+        selectedUserId = user?.Id;
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private string GetUserInitials()
+    {
+        if (currentUser == null || string.IsNullOrEmpty(currentUser.UserName))
+            return "?";
+            
+        var parts = currentUser.UserName.Split(new[] { ' ', '_', '-', '.' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (parts.Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[1][0]}";
+        }
+        else if (parts.Length == 1 && parts[0].Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[0][1]}";
+        }
+        else
+        {
+            return parts[0][0].ToString();
+        }
+    }
+    
+    private string GetUserDisplayInfo()
+    {
+        if (currentUser == null) return "";
+        
+        var info = new List<string>();
+        
+        if (currentUser.Height.HasValue)
+        {
+            info.Add($"{currentUser.Height:0}cm");
+        }
+        
+        if (currentUser.BirthDate.HasValue)
+        {
+            var age = DateTime.Today.Year - currentUser.BirthDate.Value.Year;
+            if (currentUser.BirthDate.Value.Date > DateTime.Today.AddYears(-age))
+                age--;
+            info.Add($"Age {age}");
+        }
+        
+        return info.Any() ? string.Join(", ", info) : "No info";
+    }
+    
+    public void Dispose()
+    {
+        UserService.CurrentUserChanged -= HandleCurrentUserChanged;
+    }
+}

@@ -1,0 +1,39 @@
+@inherits WaBaseComponent
+
+<div class="h-100 d-flex flex-column wa-page-layout" style="padding: @(Padding)rem;">
+    <div class="d-flex flex-column h-25 flex-grow-1">
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <RadzenHeading class="mb-2" Text="@Title" Size="H1" />
+        }
+        
+        @if(!string.IsNullOrEmpty(SubTitle))
+        {
+            <RadzenHeading class="mb-2" Text="@SubTitle" Size="H2" />
+        }
+        
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the child content to be rendered within the page
+    /// </summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the main title of the page
+    /// </summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>
+    /// Gets or sets the subtitle of the page
+    /// </summary>
+    [Parameter] public string? SubTitle { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the padding in rem units. Default is 1rem.
+    /// </summary>
+    [Parameter] public decimal Padding { get; set; } = 1;
+}

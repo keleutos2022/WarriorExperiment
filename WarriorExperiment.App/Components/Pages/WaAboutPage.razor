@@ -1,0 +1,46 @@
+@page "/about"
+
+<PageTitle>About - Warrior Experiment</PageTitle>
+
+<RadzenCard>
+    <RadzenText TextStyle="TextStyle.H3">About Daily Wellness Tracker</RadzenText>
+    
+    <RadzenText TextStyle="TextStyle.H5" Class="mt-4">Technology Stack</RadzenText>
+    <RadzenList>
+        <RadzenListItem Icon="check_circle" Text=".NET 9" />
+        <RadzenListItem Icon="check_circle" Text="Blazor Server" />
+        <RadzenListItem Icon="check_circle" Text="Entity Framework Core 9" />
+        <RadzenListItem Icon="check_circle" Text="PostgreSQL" />
+        <RadzenListItem Icon="check_circle" Text="Radzen Blazor Components" />
+        <RadzenListItem Icon="check_circle" Text="Podman for containerization" />
+    </RadzenList>
+    
+    <RadzenText TextStyle="TextStyle.H5" Class="mt-4">Features</RadzenText>
+    <RadzenText TextStyle="TextStyle.Body1" Class="mt-2">
+        Track your daily wellness metrics:
+    </RadzenText>
+    <RadzenList Class="mt-2">
+        <RadzenListItem Icon="bedtime" Text="Sleep Quality (1-10 scale)" />
+        <RadzenListItem Icon="battery_charging_full" Text="Energy Levels (1-10 scale)" />
+        <RadzenListItem Icon="mood" Text="Mood Rating (1-10 scale)" />
+        <RadzenListItem Icon="fitness_center" Text="Muscle Soreness (1-10 scale)" />
+        <RadzenListItem Icon="schedule" Text="Bowel Movement Timing" />
+        <RadzenListItem Icon="psychology" Text="Stress Levels (1-10 scale)" />
+        <RadzenListItem Icon="restaurant" Text="Hunger During Undereating Phase (1-10 scale)" />
+        <RadzenListItem Icon="notes" Text="Daily Comments and Notes" />
+    </RadzenList>
+    
+    <RadzenText TextStyle="TextStyle.H5" Class="mt-4">Architecture</RadzenText>
+    <RadzenText TextStyle="TextStyle.Body1" Class="mt-2">
+        This application follows a clean architecture pattern with three layers:
+    </RadzenText>
+    <RadzenList Class="mt-2">
+        <RadzenListItem Icon="layers" Text="Persistence Layer - Domain models (User, DailySurvey), DbContext" />
+        <RadzenListItem Icon="business" Text="Core Layer - Business logic and services" />
+        <RadzenListItem Icon="web" Text="App Layer - Blazor Server UI with Radzen components" />
+    </RadzenList>
+    
+    <RadzenText TextStyle="TextStyle.Body2" Class="mt-4">
+        All components are prefixed with "Wa" for consistency.
+    </RadzenText>
+</RadzenCard>

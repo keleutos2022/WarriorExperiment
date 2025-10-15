@@ -1,0 +1,194 @@
+@using WarriorExperiment.Persistence.Models
+@inherits WaBaseComponent
+
+<RadzenStack Gap="1rem">
+    <!-- Photo Type Selector -->
+    <RadzenCard Style="padding: 1rem;">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenIcon Icon="photo_camera" Style="color: var(--rz-primary);" />
+                <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Progress Photos</RadzenText>
+            </RadzenStack>
+            
+            <RadzenSelectBar @bind-Value="@selectedPhotoType" Data="@photoTypes" TextProperty="Label" ValueProperty="Value" 
+                           Size="ButtonSize.Small" />
+        </RadzenStack>
+    </RadzenCard>
+
+    @if (!HasPhotosForType())
+    {
+        <RadzenCard Style="padding: 2rem; text-align: center;">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenIcon Icon="photo" Style="font-size: 64px; color: var(--rz-text-secondary-color); opacity: 0.5;" />
+                <RadzenText TextStyle="TextStyle.H6">No @GetPhotoTypeLabel() Photos Found</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+                    No @GetPhotoTypeLabel().ToLower() photos have been recorded for the selected time period.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <!-- Photo Timeline -->
+        <RadzenStack Gap="1rem">
+            @{
+                var photosForType = GetPhotosForType().Take(MaxPhotosToShow).ToList();
+                var isLimitedView = GetPhotosForType().Count() > MaxPhotosToShow;
+            }
+            
+            @if (isLimitedView)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenText Style="margin: 0;">
+                            Showing @MaxPhotosToShow most recent photos of @GetPhotosForType().Count() total
+                        </RadzenText>
+                        <RadzenButton Text="Show All" Size="ButtonSize.Small" Variant="Variant.Text" 
+                                    Click="@(() => MaxPhotosToShow = GetPhotosForType().Count())" />
+                    </RadzenStack>
+                </RadzenAlert>
+            }
+
+            <!-- Photo Grid -->
+            <RadzenRow Gap="1rem">
+                @foreach (var photoData in photosForType)
+                {
+                    <RadzenColumn SizeLG="3" SizeMD="4" SizeSM="6" Size="12">
+                        <RadzenCard Style="padding: 0; overflow: hidden; height: 100%;">
+                            <!-- Photo Header -->
+                            <div style="padding: 0.75rem; background: var(--rz-primary-lighter); border-bottom: 1px solid var(--rz-border-color);">
+                                <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                                    <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; font-weight: 600; color: var(--rz-primary);">
+                                        @photoData.Date.ToString("MMM dd, yyyy")
+                                    </RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-primary-dark);">
+                                        @photoData.MethodName
+                                    </RadzenText>
+                                </RadzenStack>
+                            </div>
+                            
+                            <!-- Photo -->
+                            <div style="position: relative; height: 300px; background: var(--rz-surface-alt);">
+                                @if (!string.IsNullOrEmpty(photoData.PhotoBase64))
+                                {
+                                    <img src="data:image/jpeg;base64,@photoData.PhotoBase64" 
+                                         alt="@GetPhotoTypeLabel() photo from @photoData.Date.ToString("MMM dd, yyyy")"
+                                         style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
+                                         @onclick="@(() => ShowPhotoModal(photoData))" />
+                                }
+                                else
+                                {
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                            <RadzenIcon Icon="photo" Style="font-size: 48px; color: var(--rz-text-secondary-color); opacity: 0.5;" />
+                                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                                No photo
+                                            </RadzenText>
+                                        </RadzenStack>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <!-- Photo Footer -->
+                            @if (ShowProgress && photosForType.Count > 1)
+                            {
+                                <div style="padding: 0.5rem; background: var(--rz-surface-alt); border-top: 1px solid var(--rz-border-color);">
+                                    @{
+                                        var daysDiff = GetDaysDifference(photosForType.First().Date, photoData.Date);
+                                    }
+                                    <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; text-align: center; color: var(--rz-text-secondary-color);">
+                                        @if (daysDiff == 0)
+                                        {
+                                            <text>Latest</text>
+                                        }
+                                        else
+                                        {
+                                            <text>@daysDiff days progress</text>
+                                        }
+                                    </RadzenText>
+                                </div>
+                            }
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        </RadzenStack>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public List<WaMeasurementEntry> MeasurementEntries { get; set; } = new();
+    [Parameter] public bool ShowProgress { get; set; } = true;
+    
+    private string selectedPhotoType = "front";
+    private int MaxPhotosToShow = 8;
+    
+    private readonly List<PhotoTypeOption> photoTypes = new()
+    {
+        new() { Value = "front", Label = "Front" },
+        new() { Value = "back", Label = "Back" },
+        new() { Value = "side", Label = "Side" }
+    };
+
+    public class PhotoData
+    {
+        public DateTime Date { get; set; }
+        public string PhotoBase64 { get; set; } = string.Empty;
+        public string MethodName { get; set; } = string.Empty;
+        public int MethodId { get; set; }
+    }
+
+    public class PhotoTypeOption
+    {
+        public string Value { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+    }
+
+    private bool HasPhotosForType()
+    {
+        return GetPhotosForType().Any();
+    }
+
+    private IEnumerable<PhotoData> GetPhotosForType()
+    {
+        return MeasurementEntries
+            .Where(me => GetPhotoForType(me) != null)
+            .Select(me => new PhotoData
+            {
+                Date = me.Date,
+                PhotoBase64 = GetPhotoForType(me) ?? string.Empty,
+                MethodName = me.MeasurementMethod?.Name ?? "Unknown Method",
+                MethodId = me.MeasurementMethodId
+            })
+            .OrderByDescending(pd => pd.Date);
+    }
+
+    private string? GetPhotoForType(WaMeasurementEntry entry)
+    {
+        return selectedPhotoType switch
+        {
+            "front" => entry.FrontPhoto,
+            "back" => entry.BackPhoto,
+            "side" => entry.SidePhoto,
+            _ => null
+        };
+    }
+
+    private string GetPhotoTypeLabel()
+    {
+        return photoTypes.FirstOrDefault(pt => pt.Value == selectedPhotoType)?.Label ?? "Unknown";
+    }
+
+    private int GetDaysDifference(DateTime earliestDate, DateTime currentDate)
+    {
+        return (int)(earliestDate - currentDate).TotalDays;
+    }
+
+    private async Task ShowPhotoModal(PhotoData photoData)
+    {
+        // This would open a modal dialog with the full-size photo
+        // For now, we'll just implement a basic alert, but this could be enhanced
+        // with a proper RadzenDialog showing the full image
+        await Task.CompletedTask;
+    }
+}

@@ -1,0 +1,217 @@
+@using WarriorExperiment.Persistence.Models
+@inherits WaBaseComponent
+
+<RadzenStack Gap="0.5rem">
+    <RadzenText TextStyle="TextStyle.H6" Text="@Title" Style="margin: 0; color: var(--rz-text-color);" />
+    
+    @if (!Data.Any())
+    {
+        <RadzenCard Style="height: 300px; display: flex; align-items: center; justify-content: center; background: var(--rz-surface);">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenIcon Icon="trending_up" Style="font-size: 48px; color: var(--rz-text-secondary-color); opacity: 0.5;" />
+                <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+                    No measurement data available for this period
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenCard Style="padding: 1rem;">
+            <RadzenChart Style="height: 300px;">
+                @if (ShowMethodLegend && GetMethodGroups().Count() > 1)
+                {
+                    @foreach (var methodGroup in GetMethodGroups())
+                    {
+                        <RadzenLineSeries Data="@methodGroup.Data" CategoryProperty="DateLabel" ValueProperty="Value" 
+                                        Title="@methodGroup.MethodName"
+                                        LineType="LineType.Solid" MarkerType="MarkerType.Circle"
+                                        Stroke="@GetMethodColor(methodGroup.MethodId)" StrokeWidth="3" 
+                                        MarkerStroke="@GetMethodColor(methodGroup.MethodId)" MarkerFill="@GetMethodColor(methodGroup.MethodId)" />
+                    }
+                }
+                else
+                {
+                    <RadzenLineSeries Data="@Data" CategoryProperty="DateLabel" ValueProperty="Value" 
+                                    LineType="LineType.Solid" MarkerType="MarkerType.Circle"
+                                    Stroke="@GetChartColor()" StrokeWidth="3" MarkerStroke="@GetChartColor()" MarkerFill="@GetChartColor()" />
+                }
+                <RadzenCategoryAxis Padding="20" FormatString="{0}" />
+                <RadzenValueAxis FormatString="@GetValueFormat()" />
+                <RadzenLegend Visible="@(ShowMethodLegend && GetMethodGroups().Count() > 1)" Position="LegendPosition.Bottom" />
+            </RadzenChart>
+        </RadzenCard>
+        
+        <!-- Summary Stats -->
+        <RadzenRow Gap="0.5rem">
+            <RadzenColumn Size="3">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Current</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6" Style="margin: 0; color: var(--rz-primary);">
+                            @GetLatest().ToString(GetNumberFormat()) @Unit
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="3">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Average</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;">
+                            @GetAverage().ToString(GetNumberFormat()) @Unit
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="3">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">@(IsBetterHigher ? "Best" : "Lowest")</RadzenText>
+                        <RadzenBadge BadgeStyle="@GetTrendBadgeStyle(IsBetterHigher ? GetMax() : GetMin())" 
+                                   Text="@($"{(IsBetterHigher ? GetMax() : GetMin()).ToString(GetNumberFormat())} {Unit}")" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="3">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Change</RadzenText>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="0.25rem">
+                            @{
+                                var change = GetTotalChange();
+                                var changePercent = GetPercentChange();
+                                var isPositive = change > 0;
+                                var isGoodChange = (IsBetterHigher && isPositive) || (!IsBetterHigher && !isPositive);
+                            }
+                            <RadzenIcon Icon="@(isPositive ? "trending_up" : change < 0 ? "trending_down" : "trending_flat")" 
+                                      Style="@($"color: {(isGoodChange ? "var(--rz-success)" : change == 0 ? "var(--rz-text-secondary-color)" : "var(--rz-danger)")}")" />
+                            <RadzenText TextStyle="TextStyle.Body2" Style="@($"margin: 0; color: {(isGoodChange ? "var(--rz-success)" : change == 0 ? "var(--rz-text-secondary-color)" : "var(--rz-danger)")}")">
+                                @(change >= 0 ? "+" : "")@change.ToString(GetNumberFormat()) @Unit (@(changePercent >= 0 ? "+" : "")@changePercent.ToString("F1")%)
+                            </RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public List<ChartDataItem> Data { get; set; } = new();
+    [Parameter] public string Unit { get; set; } = string.Empty;
+    [Parameter] public bool IsBetterHigher { get; set; } = true;
+    [Parameter] public bool ShowMethodLegend { get; set; } = false;
+
+    public class ChartDataItem
+    {
+        public DateTime Date { get; set; }
+        public string DateLabel { get; set; } = string.Empty;
+        public decimal Value { get; set; }
+        public int MethodId { get; set; }
+        public string MethodName { get; set; } = string.Empty;
+    }
+
+    public class MethodGroup
+    {
+        public int MethodId { get; set; }
+        public string MethodName { get; set; } = string.Empty;
+        public List<ChartDataItem> Data { get; set; } = new();
+    }
+
+    private string GetChartColor()
+    {
+        if (!Data.Any()) return "#6c757d";
+        
+        var trend = GetTrend();
+        return trend switch
+        {
+            > 0 when IsBetterHigher => "#28a745", // Green for positive when higher is better
+            > 0 when !IsBetterHigher => "#dc3545", // Red for positive when lower is better
+            < 0 when IsBetterHigher => "#dc3545", // Red for negative when higher is better
+            < 0 when !IsBetterHigher => "#28a745", // Green for negative when lower is better
+            _ => "#6c757d" // Gray for no change
+        };
+    }
+
+    private string GetMethodColor(int methodId)
+    {
+        var colors = new[] { "#007bff", "#28a745", "#dc3545", "#ffc107", "#6f42c1", "#fd7e14", "#20c997" };
+        return colors[methodId % colors.Length];
+    }
+
+    private IEnumerable<MethodGroup> GetMethodGroups()
+    {
+        return Data.GroupBy(d => new { d.MethodId, d.MethodName })
+                  .Select(g => new MethodGroup
+                  {
+                      MethodId = g.Key.MethodId,
+                      MethodName = g.Key.MethodName,
+                      Data = g.ToList()
+                  });
+    }
+
+    private BadgeStyle GetTrendBadgeStyle(decimal value)
+    {
+        return BadgeStyle.Success;
+    }
+
+    private decimal GetAverage()
+    {
+        return Data.Any() ? Data.Average(d => d.Value) : 0;
+    }
+
+    private decimal GetMin()
+    {
+        return Data.Any() ? Data.Min(d => d.Value) : 0;
+    }
+
+    private decimal GetMax()
+    {
+        return Data.Any() ? Data.Max(d => d.Value) : 0;
+    }
+
+    private decimal GetLatest()
+    {
+        return Data.Any() ? Data.OrderByDescending(d => d.Date).First().Value : 0;
+    }
+
+    private decimal GetEarliest()
+    {
+        return Data.Any() ? Data.OrderBy(d => d.Date).First().Value : 0;
+    }
+
+    private decimal GetTotalChange()
+    {
+        return GetLatest() - GetEarliest();
+    }
+
+    private decimal GetPercentChange()
+    {
+        var earliest = GetEarliest();
+        if (earliest == 0) return 0;
+        return (GetTotalChange() / earliest) * 100;
+    }
+
+    private decimal GetTrend()
+    {
+        if (Data.Count < 2) return 0;
+        
+        // Simple trend calculation: compare latest vs earliest
+        return GetTotalChange();
+    }
+
+    private string GetValueFormat()
+    {
+        // Determine if we need decimal places
+        var hasDecimals = Data.Any(d => d.Value % 1 != 0);
+        return hasDecimals ? "{0:F1}" : "{0:F0}";
+    }
+
+    private string GetNumberFormat()
+    {
+        var hasDecimals = Data.Any(d => d.Value % 1 != 0);
+        return hasDecimals ? "F1" : "F0";
+    }
+}

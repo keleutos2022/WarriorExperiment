@@ -1,0 +1,57 @@
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Validators
+@using Blazored.FluentValidation
+@inherits WaBaseComponent
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <FluentValidationValidator />
+    
+    <RadzenStack Gap="1rem">
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H5">User Information</RadzenText>
+                
+                <!-- Username -->
+                <RadzenFormField Text="Username" AllowFloatingLabel="false">
+                    <RadzenTextBox @bind-Value="@Model.UserName" Placeholder="Enter username..." />
+                </RadzenFormField>
+                
+                <!-- Height -->
+                <RadzenFormField Text="Height (cm)" AllowFloatingLabel="false">
+                    <RadzenNumeric @bind-Value="@Model.Height" Min="50M" Max="300M" Step="1M" Placeholder="Optional height..." />
+                </RadzenFormField>
+                
+                <!-- Birth Date -->
+                <RadzenFormField Text="Birth Date" AllowFloatingLabel="false">
+                    <RadzenDatePicker @bind-Value="@Model.BirthDate" ShowTime="false" DateFormat="yyyy-MM-dd" Placeholder="Optional birth date..." />
+                </RadzenFormField>
+                
+                <!-- Date of Start -->
+                <RadzenFormField Text="Program Start Date" AllowFloatingLabel="false">
+                    <RadzenDatePicker @bind-Value="@Model.DateOfStart" ShowTime="false" DateFormat="yyyy-MM-dd" Placeholder="Optional start date..." />
+                </RadzenFormField>
+                
+                <!-- Validation Summary -->
+                <ValidationSummary />
+                
+                <!-- Action Buttons -->
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@OnCancel" />
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@SubmitButtonText" ButtonStyle="ButtonStyle.Primary" Icon="save" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    [Parameter] public WaUser Model { get; set; } = new();
+    [Parameter] public EventCallback<WaUser> OnValidSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string SubmitButtonText { get; set; } = "Save";
+    
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(Model);
+    }
+}

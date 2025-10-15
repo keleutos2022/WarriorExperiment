@@ -1,0 +1,234 @@
+@page "/measurement/edit"
+@page "/measurement/edit/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else if (CurrentUser == null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" Variant="Variant.Flat" Shade="Shade.Lighter">
+            Please select a user first
+        </RadzenAlert>
+    }
+    else
+    {
+        <RadzenCard Style="max-width: 800px;">
+            <RadzenTemplateForm TItem="WaMeasurementEntry" Data="@model" Submit="@HandleSubmit">
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenStack Gap="1rem">
+                            <RadzenFormField Text="Date" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenDatePicker @bind-Value="@model.Date" Name="Date" 
+                                                    Style="width: 100%;" DateFormat="yyyy-MM-dd" />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="Date" Text="Date is required" />
+                                </Helper>
+                            </RadzenFormField>
+                            
+                            <RadzenFormField Text="Measurement Method" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenDropDown @bind-Value="@model.MeasurementMethodId" 
+                                                  Data="@measurementMethods" 
+                                                  TextProperty="Name" ValueProperty="Id"
+                                                  Name="Method" Style="width: 100%;"
+                                                  Placeholder="Select method..." />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="Method" Text="Method is required" />
+                                </Helper>
+                            </RadzenFormField>
+                            
+                            <RadzenFieldset Text="Body Composition">
+                                <RadzenStack Gap="0.5rem">
+                                    <RadzenFormField Text="Weight (kg)" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.Weight" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Body Fat %" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.BodyFat" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Muscle Mass (kg)" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.MuscleMass" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Water %" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.WaterPercentage" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Bone Mass (kg)" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.BoneMass" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="BMI" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.BMI" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                </RadzenStack>
+                            </RadzenFieldset>
+                        </RadzenStack>
+                    </RadzenColumn>
+                    
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenStack Gap="1rem">
+                            <RadzenFieldset Text="Circumference Measurements (cm)">
+                                <RadzenStack Gap="0.5rem">
+                                    <RadzenFormField Text="Chest" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.ChestCircumference" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Waist" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.WaistCircumference" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Hip" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.HipCircumference" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Bicep" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.BicepCircumference" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Thigh" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.ThighCircumference" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Calf" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.CalfCircumference" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                </RadzenStack>
+                            </RadzenFieldset>
+                            
+                            <RadzenFormField Text="Notes" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenTextArea @bind-Value="@model.Notes" Name="Notes" 
+                                                  Style="width: 100%;" Rows="4" />
+                                </ChildContent>
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.End" 
+                           AlignItems="AlignItems.Center" Style="margin-top: 2rem;">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" 
+                                Click="@(() => Navigation.NavigateTo("/measurements"))" />
+                    <RadzenButton Text="@submitButtonText" ButtonType="ButtonType.Submit" 
+                                ButtonStyle="ButtonStyle.Primary" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private WaMeasurementEntry model = new();
+    private List<WaMeasurementMethod> measurementMethods = new();
+    private bool isLoading = true;
+    private string pageTitle = "New Measurement";
+    private string pageSubTitle = "Record body measurements";
+    private string submitButtonText = "Save";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser == null)
+        {
+            isLoading = false;
+            return;
+        }
+        
+        // Load measurement methods
+        measurementMethods = await Context.MeasurementMethods
+            .OrderBy(mm => mm.Name)
+            .ToListAsync();
+        
+        if (Id.HasValue)
+        {
+            var entry = await Context.MeasurementEntries
+                .FirstOrDefaultAsync(me => me.Id == Id.Value && me.UserId == CurrentUser.Id);
+                
+            if (entry != null)
+            {
+                model = entry;
+                pageTitle = "Edit Measurement";
+                pageSubTitle = $"Update measurement from {entry.Date:yyyy-MM-dd}";
+                submitButtonText = "Update";
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Measurement not found");
+                Navigation.NavigateTo("/measurements");
+                return;
+            }
+        }
+        else
+        {
+            model.Date = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+            model.UserId = CurrentUser.Id;
+            
+            // Set default method if only one exists
+            if (measurementMethods.Count == 1)
+            {
+                model.MeasurementMethodId = measurementMethods[0].Id;
+            }
+        }
+        
+        isLoading = false;
+    }
+    
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if (Id.HasValue)
+            {
+                model.UpdatedAt = DateTime.UtcNow;
+                Context.MeasurementEntries.Update(model);
+            }
+            else
+            {
+                model.CreatedAt = DateTime.UtcNow;
+                model.UpdatedAt = DateTime.UtcNow;
+                model.EnteredAt = DateTime.UtcNow;
+                Context.MeasurementEntries.Add(model);
+            }
+            
+            await Context.SaveChangesAsync();
+            
+            NotificationService.Notify(NotificationSeverity.Success, 
+                Id.HasValue ? "Measurement updated successfully" : "Measurement saved successfully");
+                
+            Navigation.NavigateTo("/measurements");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving measurement: {ex.Message}");
+        }
+    }
+}

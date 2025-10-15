@@ -1,0 +1,170 @@
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inherits WaBaseComponent
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 200px;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+                <RadzenButton Text="New Exercise" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                            Click="@(() => Navigation.NavigateTo("/exercise/edit"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaExercise" 
+                      AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="WaExercise" Property="Name" Title="Exercise Name" Width="250px" />
+                
+                <RadzenDataGridColumn TItem="WaExercise" Property="Sets" Title="Sets" Width="80px" TextAlign="TextAlign.Center" />
+                
+                <RadzenDataGridColumn TItem="WaExercise" Property="Reps" Title="Reps" Width="80px" TextAlign="TextAlign.Center" />
+                
+                <RadzenDataGridColumn TItem="WaExercise" Title="Sets x Reps" Width="120px" TextAlign="TextAlign.Center">
+                    <Template Context="exercise">
+                        <RadzenBadge Text="@($"{exercise.Sets} x {exercise.Reps}")" Style="background-color: #17a2b8;" />
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaExercise" Property="Weight" Title="Weight (kg)" Width="120px" TextAlign="TextAlign.Right">
+                    <Template Context="exercise">
+                        @if (exercise.Weight.HasValue)
+                        {
+                            <span style="font-weight: 500;">@exercise.Weight.Value.ToString("F1") kg</span>
+                        }
+                        else
+                        {
+                            <span style="color: #6c757d;">Bodyweight</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaExercise" Title="Total Volume" Width="150px" TextAlign="TextAlign.Right">
+                    <Template Context="exercise">
+                        @{
+                            var volume = exercise.Sets * exercise.Reps * (exercise.Weight ?? 0);
+                        }
+                        @if (volume > 0)
+                        {
+                            <span style="font-weight: 600; color: #28a745;">@volume.ToString("F0") kg</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaExercise" Title="Practice Date" Width="150px">
+                    <Template Context="exercise">
+                        @if (exercise.VarietyPractice != null)
+                        {
+                            @exercise.VarietyPractice.Date.ToString("yyyy-MM-dd")
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaExercise" Property="CreatedAt" Title="Entered At" Width="150px">
+                    <Template Context="exercise">
+                        @exercise.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaExercise" Title="Actions" Frozen="true" 
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="exercise">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/exercise/edit/{exercise.Id}"))"
+                                    title="Edit exercise" />
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                    Click="@(() => DeleteEntry(exercise))"
+                                    title="Delete exercise" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<WaExercise>? Data { get; set; }
+    [Parameter] public bool AutoLoad { get; set; } = true;
+    [Parameter] public int? VarietyPracticeId { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private RadzenDataGrid<WaExercise>? grid;
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AutoLoad && Data == null)
+        {
+            isLoading = true;
+            try
+            {
+                IQueryable<WaExercise> query = Context.Exercises
+                    .Include(e => e.VarietyPractice);
+                
+                if (VarietyPracticeId.HasValue)
+                {
+                    // Filter by specific variety practice
+                    query = query.Where(e => e.VarietyPracticeId == VarietyPracticeId.Value);
+                }
+                else if (CurrentUser != null)
+                {
+                    // Filter by current user's exercises
+                    query = query.Where(e => e.VarietyPractice.UserId == CurrentUser.Id);
+                }
+                
+                Data = await query
+                    .OrderByDescending(e => e.CreatedAt)
+                    .ToListAsync();
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+    
+    private async Task DeleteEntry(WaExercise exercise)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the exercise '{exercise.Name}'?", 
+            "Delete Exercise", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                Context.Exercises.Remove(exercise);
+                await Context.SaveChangesAsync();
+                
+                if (Data != null)
+                {
+                    Data.Remove(exercise);
+                    await grid!.Reload();
+                }
+                
+                NotificationService.Notify(NotificationSeverity.Success, "Exercise deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting exercise: {ex.Message}");
+            }
+        }
+    }
+}

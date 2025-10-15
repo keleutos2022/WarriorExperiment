@@ -1,0 +1,113 @@
+@page "/measurement-method/edit"
+@page "/measurement-method/edit/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenCard Style="max-width: 600px;">
+            <RadzenTemplateForm TItem="WaMeasurementMethod" Data="@model" Submit="@HandleSubmit">
+                <RadzenStack Gap="1rem">
+                    <RadzenFormField Text="Name" Variant="Variant.Outlined">
+                        <ChildContent>
+                            <RadzenTextBox @bind-Value="@model.Name" Name="Name" Style="width: 100%;" />
+                        </ChildContent>
+                        <Helper>
+                            <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                        </Helper>
+                    </RadzenFormField>
+                    
+                    <RadzenFormField Text="Description" Variant="Variant.Outlined">
+                        <ChildContent>
+                            <RadzenTextArea @bind-Value="@model.Description" Name="Description" 
+                                          Style="width: 100%;" Rows="4" />
+                        </ChildContent>
+                    </RadzenFormField>
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.End">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" 
+                                    Click="@(() => Navigation.NavigateTo("/measurement-methods"))" />
+                        <RadzenButton Text="@submitButtonText" ButtonType="ButtonType.Submit" 
+                                    ButtonStyle="ButtonStyle.Primary" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private WaMeasurementMethod model = new();
+    private bool isLoading = true;
+    private string pageTitle = "Create Measurement Method";
+    private string pageSubTitle = "Add a new measurement method";
+    private string submitButtonText = "Create";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var method = await Context.MeasurementMethods
+                .FirstOrDefaultAsync(mm => mm.Id == Id.Value);
+                
+            if (method != null)
+            {
+                model = method;
+                pageTitle = "Edit Measurement Method";
+                pageSubTitle = $"Update {method.Name}";
+                submitButtonText = "Update";
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Measurement method not found");
+                Navigation.NavigateTo("/measurement-methods");
+                return;
+            }
+        }
+        
+        isLoading = false;
+    }
+    
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if (Id.HasValue)
+            {
+                model.UpdatedAt = DateTime.UtcNow;
+                Context.MeasurementMethods.Update(model);
+            }
+            else
+            {
+                model.CreatedAt = DateTime.UtcNow;
+                model.UpdatedAt = DateTime.UtcNow;
+                Context.MeasurementMethods.Add(model);
+            }
+            
+            await Context.SaveChangesAsync();
+            
+            NotificationService.Notify(NotificationSeverity.Success, 
+                Id.HasValue ? "Measurement method updated successfully" : "Measurement method created successfully");
+                
+            Navigation.NavigateTo("/measurement-methods");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving measurement method: {ex.Message}");
+        }
+    }
+}

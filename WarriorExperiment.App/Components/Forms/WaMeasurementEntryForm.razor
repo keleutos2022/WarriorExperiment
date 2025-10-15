@@ -1,0 +1,214 @@
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Validators
+@using Blazored.FluentValidation
+@inherits WaBaseComponent
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <FluentValidationValidator />
+    
+    <RadzenStack Gap="1rem">
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H5">Body Measurement Entry</RadzenText>
+                
+                <!-- Date -->
+                <RadzenFormField Text="Date" AllowFloatingLabel="false">
+                    <RadzenDatePicker @bind-Value="@Model.Date" ShowTime="false" DateFormat="yyyy-MM-dd" />
+                </RadzenFormField>
+                
+                <!-- Measurement Method (placeholder for now) -->
+                <RadzenFormField Text="Measurement Method ID" AllowFloatingLabel="false">
+                    <RadzenNumeric @bind-Value="@Model.MeasurementMethodId" Min="1" />
+                </RadzenFormField>
+                
+                <!-- Photos Section -->
+                <RadzenText TextStyle="TextStyle.H6">Photos (Optional)</RadzenText>
+                
+                <RadzenFormField Text="Front Photo" AllowFloatingLabel="false">
+                    <RadzenFileInput TValue="IReadOnlyList<IBrowserFile>" Change="@OnFrontPhotoChange" Accept="image/*" />
+                </RadzenFormField>
+                
+                <RadzenFormField Text="Back Photo" AllowFloatingLabel="false">
+                    <RadzenFileInput TValue="IReadOnlyList<IBrowserFile>" Change="@OnBackPhotoChange" Accept="image/*" />
+                </RadzenFormField>
+                
+                <RadzenFormField Text="Side Photo" AllowFloatingLabel="false">
+                    <RadzenFileInput TValue="IReadOnlyList<IBrowserFile>" Change="@OnSidePhotoChange" Accept="image/*" />
+                </RadzenFormField>
+                
+                <!-- Body Composition Section -->
+                <RadzenText TextStyle="TextStyle.H6">Body Composition (Optional)</RadzenText>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Weight (kg)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.Weight" Min="20M" Max="500M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Body Fat (%)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.BodyFat" Min="1M" Max="80M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Muscle Mass (kg)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.MuscleMass" Min="10M" Max="150M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Water Percentage (%)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.WaterPercentage" Min="20M" Max="80M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Bone Mass (kg)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.BoneMass" Min="0.5M" Max="10M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="BMI" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.BMI" Min="10M" Max="60M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Visceral Fat Level" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.VisceralFat" Min="1" Max="60" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Metabolic Age (years)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.MetabolicAge" Min="10" Max="100" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenFormField Text="Basal Metabolic Rate (calories)" AllowFloatingLabel="false">
+                    <RadzenNumeric @bind-Value="@Model.BasalMetabolicRate" Min="500" Max="5000" />
+                </RadzenFormField>
+                
+                <!-- Circumference Measurements Section -->
+                <RadzenText TextStyle="TextStyle.H6">Circumference Measurements (cm, Optional)</RadzenText>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Chest Circumference" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.ChestCircumference" Min="50M" Max="200M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Waist Circumference" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.WaistCircumference" Min="40M" Max="200M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Hip Circumference" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.HipCircumference" Min="50M" Max="200M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Bicep Circumference" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.BicepCircumference" Min="15M" Max="60M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Thigh Circumference" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.ThighCircumference" Min="30M" Max="100M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="Calf Circumference" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.CalfCircumference" Min="20M" Max="60M" Step="0.1M" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <!-- Notes -->
+                <RadzenFormField Text="Notes (Optional)" AllowFloatingLabel="false">
+                    <RadzenTextArea @bind-Value="@Model.Notes" Rows="3" Placeholder="Optional notes..." />
+                </RadzenFormField>
+                
+                <!-- Validation Summary -->
+                <ValidationSummary />
+                
+                <!-- Submit Button -->
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save Measurement" ButtonStyle="ButtonStyle.Primary" Icon="save" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    [Parameter] public WaMeasurementEntry Model { get; set; } = new();
+    [Parameter] public EventCallback<WaMeasurementEntry> OnValidSubmit { get; set; }
+    
+    private IReadOnlyList<IBrowserFile>? frontPhotoFiles;
+    private IReadOnlyList<IBrowserFile>? backPhotoFiles;
+    private IReadOnlyList<IBrowserFile>? sidePhotoFiles;
+    
+    private void OnFrontPhotoChange(IReadOnlyList<IBrowserFile> files)
+    {
+        frontPhotoFiles = files;
+    }
+    
+    private void OnBackPhotoChange(IReadOnlyList<IBrowserFile> files)
+    {
+        backPhotoFiles = files;
+    }
+    
+    private void OnSidePhotoChange(IReadOnlyList<IBrowserFile> files)
+    {
+        sidePhotoFiles = files;
+    }
+    
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            // Convert uploaded files to Base64 strings
+            if (frontPhotoFiles?.Any() == true)
+            {
+                Model.FrontPhoto = await ConvertToBase64(frontPhotoFiles.First());
+            }
+            
+            if (backPhotoFiles?.Any() == true)
+            {
+                Model.BackPhoto = await ConvertToBase64(backPhotoFiles.First());
+            }
+            
+            if (sidePhotoFiles?.Any() == true)
+            {
+                Model.SidePhoto = await ConvertToBase64(sidePhotoFiles.First());
+            }
+            
+            await OnValidSubmit.InvokeAsync(Model);
+        }
+        catch (Exception)
+        {
+            // Handle file processing errors
+            throw;
+        }
+    }
+    
+    private async Task<string> ConvertToBase64(IBrowserFile file)
+    {
+        using var stream = file.OpenReadStream(maxAllowedSize: 5242880L); // 5MB
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        return Convert.ToBase64String(memoryStream.ToArray());
+    }
+}

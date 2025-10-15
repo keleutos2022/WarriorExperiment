@@ -1,0 +1,271 @@
+@page "/variety-practice/edit"
+@page "/variety-practice/edit/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else if (CurrentUser == null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" Variant="Variant.Flat" Shade="Shade.Lighter">
+            Please select a user first
+        </RadzenAlert>
+    }
+    else
+    {
+        <RadzenCard Style="max-width: 800px;">
+            <RadzenTemplateForm TItem="WaVarietyPracticeEntry" Data="@model" Submit="@HandleSubmit">
+                <RadzenStack Gap="1rem">
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Date" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenDatePicker @bind-Value="@model.Date" Name="Date" 
+                                                    Style="width: 100%;" DateFormat="yyyy-MM-dd" />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="Date" Text="Date is required" />
+                                </Helper>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Notes" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenTextArea @bind-Value="@model.Notes" Name="Notes" 
+                                                  Style="width: 100%;" Rows="3" />
+                                </ChildContent>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    <RadzenFieldset Text="Exercises">
+                        <RadzenStack Gap="1rem">
+                            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="8">
+                                    <RadzenText TextStyle="TextStyle.H6">Exercise List</RadzenText>
+                                </RadzenColumn>
+                                <RadzenColumn Size="4">
+                                    <RadzenButton Text="Add Exercise" Icon="add" ButtonStyle="ButtonStyle.Secondary" 
+                                                Size="ButtonSize.Small" Click="@AddExercise" Style="width: 100%;" />
+                                </RadzenColumn>
+                            </RadzenRow>
+                            
+                            @if (model.Exercises.Any())
+                            {
+                                <RadzenDataGrid Data="@model.Exercises" TItem="WaExercise" 
+                                              AllowPaging="false" AllowSorting="false" AllowFiltering="false">
+                                    <Columns>
+                                        <RadzenDataGridColumn TItem="WaExercise" Title="Exercise Name" Width="250px">
+                                            <Template Context="exercise">
+                                                <RadzenTextBox @bind-Value="@exercise.Name" Style="width: 100%;" 
+                                                             Placeholder="Exercise name..." />
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                        
+                                        <RadzenDataGridColumn TItem="WaExercise" Title="Sets" Width="80px">
+                                            <Template Context="exercise">
+                                                <RadzenNumeric @bind-Value="@exercise.Sets" ShowUpDown="false" 
+                                                             Min="0" Style="width: 100%;" />
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                        
+                                        <RadzenDataGridColumn TItem="WaExercise" Title="Reps" Width="80px">
+                                            <Template Context="exercise">
+                                                <RadzenNumeric @bind-Value="@exercise.Reps" ShowUpDown="false" 
+                                                             Min="0" Style="width: 100%;" />
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                        
+                                        <RadzenDataGridColumn TItem="WaExercise" Title="Weight (kg)" Width="120px">
+                                            <Template Context="exercise">
+                                                <RadzenNumeric @bind-Value="@exercise.Weight" ShowUpDown="false" 
+                                                             Format="0.0" Step="0.5" Style="width: 100%;" />
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                        
+                                        <RadzenDataGridColumn TItem="WaExercise" Title="Actions" Width="80px" TextAlign="TextAlign.Center">
+                                            <Template Context="exercise">
+                                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" 
+                                                            Size="ButtonSize.Small" 
+                                                            Click="@(() => RemoveExercise(exercise))" 
+                                                            title="Remove exercise" />
+                                            </Template>
+                                        </RadzenDataGridColumn>
+                                    </Columns>
+                                </RadzenDataGrid>
+                            }
+                            else
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" Variant="Variant.Flat" Shade="Shade.Lighter">
+                                    No exercises added yet. Click "Add Exercise" to start building your workout.
+                                </RadzenAlert>
+                            }
+                            
+                            @if (model.Exercises.Any())
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Success" ShowIcon="true" Variant="Variant.Flat" Shade="Shade.Lighter">
+                                    <strong>Total:</strong> @model.Exercises.Count exercises, 
+                                    @model.Exercises.Sum(e => e.Sets) sets, 
+                                    @model.Exercises.Sum(e => e.Reps) reps
+                                </RadzenAlert>
+                            }
+                        </RadzenStack>
+                    </RadzenFieldset>
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.End" 
+                               AlignItems="AlignItems.Center" Style="margin-top: 2rem;">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" 
+                                    Click="@(() => Navigation.NavigateTo("/variety-practice"))" />
+                        <RadzenButton Text="@submitButtonText" ButtonType="ButtonType.Submit" 
+                                    ButtonStyle="ButtonStyle.Primary" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private WaVarietyPracticeEntry model = new();
+    private bool isLoading = true;
+    private string pageTitle = "New Variety Practice";
+    private string pageSubTitle = "Create a diverse workout session";
+    private string submitButtonText = "Save";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser == null)
+        {
+            isLoading = false;
+            return;
+        }
+        
+        if (Id.HasValue)
+        {
+            var entry = await Context.VarietyPractices
+                .Include(vp => vp.Exercises)
+                .FirstOrDefaultAsync(vp => vp.Id == Id.Value && vp.UserId == CurrentUser.Id);
+                
+            if (entry != null)
+            {
+                model = entry;
+                pageTitle = "Edit Variety Practice";
+                pageSubTitle = $"Update practice from {entry.Date:yyyy-MM-dd}";
+                submitButtonText = "Update";
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Variety practice not found");
+                Navigation.NavigateTo("/variety-practice");
+                return;
+            }
+        }
+        else
+        {
+            model.Date = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+            model.UserId = CurrentUser.Id;
+            model.Exercises = new List<WaExercise>();
+        }
+        
+        isLoading = false;
+    }
+    
+    private void AddExercise()
+    {
+        var exercise = new WaExercise
+        {
+            Name = "",
+            Sets = 1,
+            Reps = 1,
+            VarietyPracticeId = model.Id
+        };
+        
+        ((List<WaExercise>)model.Exercises).Add(exercise);
+        StateHasChanged();
+    }
+    
+    private void RemoveExercise(WaExercise exercise)
+    {
+        ((List<WaExercise>)model.Exercises).Remove(exercise);
+        StateHasChanged();
+    }
+    
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // Validate exercises
+            if (!model.Exercises.Any())
+            {
+                NotificationService.Notify(NotificationSeverity.Warning, "Please add at least one exercise");
+                return;
+            }
+            
+            var invalidExercises = model.Exercises.Where(e => string.IsNullOrWhiteSpace(e.Name)).ToList();
+            if (invalidExercises.Any())
+            {
+                NotificationService.Notify(NotificationSeverity.Warning, "Please provide names for all exercises");
+                return;
+            }
+            
+            if (Id.HasValue)
+            {
+                model.UpdatedAt = DateTime.UtcNow;
+                
+                // Update exercises
+                foreach (var exercise in model.Exercises)
+                {
+                    exercise.UpdatedAt = DateTime.UtcNow;
+                    if (exercise.Id == 0)
+                    {
+                        exercise.CreatedAt = DateTime.UtcNow;
+                        exercise.VarietyPracticeId = model.Id;
+                    }
+                }
+                
+                Context.VarietyPractices.Update(model);
+            }
+            else
+            {
+                model.CreatedAt = DateTime.UtcNow;
+                model.UpdatedAt = DateTime.UtcNow;
+                model.EnteredAt = DateTime.UtcNow;
+                
+                // Set timestamps for exercises
+                foreach (var exercise in model.Exercises)
+                {
+                    exercise.CreatedAt = DateTime.UtcNow;
+                    exercise.UpdatedAt = DateTime.UtcNow;
+                    exercise.EnteredAt = DateTime.UtcNow;
+                }
+                
+                Context.VarietyPractices.Add(model);
+            }
+            
+            await Context.SaveChangesAsync();
+            
+            NotificationService.Notify(NotificationSeverity.Success, 
+                Id.HasValue ? "Variety practice updated successfully" : "Variety practice saved successfully");
+                
+            Navigation.NavigateTo("/variety-practice");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving variety practice: {ex.Message}");
+        }
+    }
+}

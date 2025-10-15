@@ -1,0 +1,200 @@
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.App.Components.Grids.Helpers
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Enums
+@inherits WaBaseComponent
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 200px;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+                <RadzenButton Text="New Daily Survey" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                            Click="@(() => Navigation.NavigateTo("/daily-survey/edit"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaDailySurveyEntry" 
+                      AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Date" Title="Date" Width="120px">
+                    <Template Context="entry">
+                        @entry.Date.ToString("yyyy-MM-dd")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Title="Overall Score" Width="130px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @{
+                            var score = CalculateOverallScore(entry);
+                        }
+                        <div style="@ScaleColorHelper.GetStyle(score)">
+                            @score.ToString("F1")
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="SleepQuality" Title="Sleep" Width="80px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <div style="@ScaleColorHelper.GetStyle(entry.SleepQuality)">
+                            @entry.SleepQuality
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Energy" Title="Energy" Width="80px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <div style="@ScaleColorHelper.GetStyle(entry.Energy)">
+                            @entry.Energy
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Mood" Title="Mood" Width="80px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <div style="@ScaleColorHelper.GetStyle(entry.Mood)">
+                            @entry.Mood
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="MuscleSoreness" Title="Soreness" Width="90px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <div style="@ScaleColorHelper.GetStyle(11 - entry.MuscleSoreness)">
+                            @entry.MuscleSoreness
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="StressLevel" Title="Stress" Width="80px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <div style="@ScaleColorHelper.GetStyle(11 - entry.StressLevel)">
+                            @entry.StressLevel
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="HungerFeelingDuringUndereatingPhase" Title="Hunger" Width="80px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <div style="@ScaleColorHelper.GetStyle(11 - entry.HungerFeelingDuringUndereatingPhase)">
+                            @entry.HungerFeelingDuringUndereatingPhase
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="BowelMovement" Title="Bowel" Width="100px">
+                    <Template Context="entry">
+                        @entry.BowelMovement.ToString()
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Comment" Title="Comment" Width="200px">
+                    <Template Context="entry">
+                        @if (!string.IsNullOrWhiteSpace(entry.Comment))
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" title="@entry.Comment">
+                                @(entry.Comment.Length > 50 ? entry.Comment.Substring(0, 50) + "..." : entry.Comment)
+                            </RadzenText>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaDailySurveyEntry" Title="Actions" Frozen="true" 
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/daily-survey/edit/{entry.Id}"))"
+                                    title="Edit survey" />
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                    Click="@(() => DeleteEntry(entry))"
+                                    title="Delete survey" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<WaDailySurveyEntry>? Data { get; set; }
+    [Parameter] public bool AutoLoad { get; set; } = true;
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private RadzenDataGrid<WaDailySurveyEntry>? grid;
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AutoLoad && CurrentUser != null && Data == null)
+        {
+            isLoading = true;
+            try
+            {
+                Data = await Context.DailySurveys
+                    .Where(ds => ds.UserId == CurrentUser.Id)
+                    .OrderByDescending(ds => ds.Date)
+                    .ToListAsync();
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+    
+    private double CalculateOverallScore(WaDailySurveyEntry entry)
+    {
+        // Calculate average wellness score
+        // For positive metrics (higher is better): Sleep, Energy, Mood
+        // For negative metrics (lower is better): MuscleSoreness, StressLevel, Hunger - invert these
+        var positiveScores = new[] { entry.SleepQuality, entry.Energy, entry.Mood };
+        var negativeScores = new[] { entry.MuscleSoreness, entry.StressLevel, entry.HungerFeelingDuringUndereatingPhase };
+        
+        var totalScore = positiveScores.Sum() + negativeScores.Sum(score => 11 - score);
+        return totalScore / 6.0;
+    }
+    
+    private async Task DeleteEntry(WaDailySurveyEntry entry)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the daily survey from {entry.Date:yyyy-MM-dd}?", 
+            "Delete Daily Survey", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                Context.DailySurveys.Remove(entry);
+                await Context.SaveChangesAsync();
+                
+                if (Data != null)
+                {
+                    Data.Remove(entry);
+                    await grid!.Reload();
+                }
+                
+                NotificationService.Notify(NotificationSeverity.Success, "Daily survey deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting daily survey: {ex.Message}");
+            }
+        }
+    }
+}

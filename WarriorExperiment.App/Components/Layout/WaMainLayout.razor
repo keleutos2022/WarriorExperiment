@@ -1,0 +1,98 @@
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@inherits LayoutComponentBase
+@inject WaUserService UserService
+@implements IDisposable
+
+<RadzenDialog />
+<RadzenNotification />
+<RadzenContextMenu />
+<RadzenTooltip />
+
+<RadzenLayout Style="grid-template-columns: auto 1fr; grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body';">
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded">
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="/" />
+            <RadzenPanelMenuItem Text="Daily Survey" Icon="assignment" Path="/daily-survey" />
+            <RadzenPanelMenuItem Text="Measurements" Icon="straighten">
+                <RadzenPanelMenuItem Text="Body Measurements" Icon="monitor_weight" Path="/measurements" />
+                <RadzenPanelMenuItem Text="Measurement Progress" Icon="show_chart" Path="/measurement-progress" />
+                <RadzenPanelMenuItem Text="Measurement Methods" Icon="settings" Path="/measurement-methods" />
+            </RadzenPanelMenuItem>
+            <RadzenPanelMenuItem Text="Practice" Icon="fitness_center">
+                <RadzenPanelMenuItem Text="Rite of Passage" Icon="emoji_events" Path="/rite-of-passage" />
+                <RadzenPanelMenuItem Text="Variety Practice" Icon="sports_gymnastics" Path="/variety-practice" />
+                <RadzenPanelMenuItem Text="All Exercises" Icon="list" Path="/exercises" />
+            </RadzenPanelMenuItem>
+            <RadzenPanelMenuItem Text="Wellbeing Stats" Icon="trending_up" Path="/wellbeing" />
+            <RadzenPanelMenuItem Text="Users" Icon="people" Path="/users" />
+            <RadzenPanelMenuItem Text="About" Icon="info" Path="/about" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+    <RadzenHeader>
+        <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenColumn Size="4">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                    <RadzenText Text="Warrior Experiment" TextStyle="TextStyle.H5" style="margin: 0;" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="8">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center">
+                    <WaUserSelector OnCurrentUserChanged="@HandleCurrentUserChanged" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenHeader>
+    <RadzenBody Style="padding: 1rem;">
+        <CascadingValue Value="@currentUser">
+            @Body
+        </CascadingValue>
+    </RadzenBody>
+</RadzenLayout>
+
+@code {
+    /// <summary>
+    /// Tracks the expanded state of the sidebar
+    /// </summary>
+    bool sidebarExpanded = true;
+    
+    /// <summary>
+    /// The current user for cascading to child components
+    /// </summary>
+    private WaUser? currentUser;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await UserService.GetCurrentUserAsync();
+        
+        // Subscribe to user service events to update cascaded value
+        UserService.CurrentUserChanged += HandleUserServiceChanged;
+    }
+    
+    /// <summary>
+    /// Handles user selection changes from the user selector component
+    /// </summary>
+    /// <param name="user">The newly selected user</param>
+    private Task HandleCurrentUserChanged(WaUser? user)
+    {
+        currentUser = user;
+        StateHasChanged(); // Force refresh of cascaded value
+        return Task.CompletedTask;
+    }
+    
+    /// <summary>
+    /// Handles user changes from the user service directly
+    /// </summary>
+    /// <param name="user">The changed user</param>
+    private void HandleUserServiceChanged(WaUser? user)
+    {
+        currentUser = user;
+        InvokeAsync(StateHasChanged);
+    }
+    
+    public void Dispose()
+    {
+        UserService.CurrentUserChanged -= HandleUserServiceChanged;
+    }
+}

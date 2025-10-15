@@ -1,0 +1,176 @@
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inherits WaBaseComponent
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 200px;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+                <RadzenButton Text="New Variety Practice" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                            Click="@(() => Navigation.NavigateTo("/variety-practice/edit"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaVarietyPracticeEntry" 
+                      AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Property="Date" Title="Date" Width="120px">
+                    <Template Context="entry">
+                        @entry.Date.ToString("yyyy-MM-dd")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Title="Exercise Count" Width="130px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <RadzenBadge Text="@entry.Exercises.Count.ToString()" 
+                                   Style="background-color: #007bff; font-size: 1rem;" />
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Title="Exercises" Width="400px">
+                    <Template Context="entry">
+                        @if (entry.Exercises.Any())
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" Wrap="FlexWrap.Wrap">
+                                @foreach (var exercise in entry.Exercises.Take(5))
+                                {
+                                    <RadzenBadge Text="@GetExerciseDisplay(exercise)" Style="background-color: #6c757d;" />
+                                }
+                                @if (entry.Exercises.Count > 5)
+                                {
+                                    <RadzenBadge Text="@($"+{entry.Exercises.Count - 5} more")" Style="background-color: #17a2b8;" />
+                                }
+                            </RadzenStack>
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" Style="color: #6c757d;">No exercises recorded</RadzenText>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Title="Total Sets" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @entry.Exercises.Sum(e => e.Sets)
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Title="Total Reps" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @entry.Exercises.Sum(e => e.Reps)
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Property="Notes" Title="Notes" Width="300px">
+                    <Template Context="entry">
+                        @if (!string.IsNullOrWhiteSpace(entry.Notes))
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" title="@entry.Notes">
+                                @(entry.Notes.Length > 100 ? entry.Notes.Substring(0, 100) + "..." : entry.Notes)
+                            </RadzenText>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaVarietyPracticeEntry" Title="Actions" Frozen="true" 
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/variety-practice/edit/{entry.Id}"))"
+                                    title="Edit variety practice" />
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                    Click="@(() => DeleteEntry(entry))"
+                                    title="Delete variety practice" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<WaVarietyPracticeEntry>? Data { get; set; }
+    [Parameter] public bool AutoLoad { get; set; } = true;
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private RadzenDataGrid<WaVarietyPracticeEntry>? grid;
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AutoLoad && CurrentUser != null && Data == null)
+        {
+            isLoading = true;
+            try
+            {
+                Data = await Context.VarietyPractices
+                    .Include(vp => vp.Exercises)
+                    .Where(vp => vp.UserId == CurrentUser.Id)
+                    .OrderByDescending(vp => vp.Date)
+                    .ToListAsync();
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+    
+    private string GetExerciseDisplay(WaExercise exercise)
+    {
+        var parts = new List<string> { exercise.Name };
+        
+        if (exercise.Sets > 0)
+            parts.Add($"{exercise.Sets}x{exercise.Reps}");
+            
+        if (exercise.Weight.HasValue)
+            parts.Add($"{exercise.Weight.Value:F1}kg");
+            
+        return string.Join(" ", parts);
+    }
+    
+    private async Task DeleteEntry(WaVarietyPracticeEntry entry)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the variety practice from {entry.Date:yyyy-MM-dd}? This will also delete all associated exercises.", 
+            "Delete Variety Practice", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                Context.VarietyPractices.Remove(entry);
+                await Context.SaveChangesAsync();
+                
+                if (Data != null)
+                {
+                    Data.Remove(entry);
+                    await grid!.Reload();
+                }
+                
+                NotificationService.Notify(NotificationSeverity.Success, "Variety practice deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting variety practice: {ex.Message}");
+            }
+        }
+    }
+}

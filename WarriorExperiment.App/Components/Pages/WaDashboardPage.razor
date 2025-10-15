@@ -1,0 +1,334 @@
+@page "/"
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Core.Enums
+@using WarriorExperiment.Core.Interfaces
+@using WarriorExperiment.Core.Dtos
+@using WarriorExperiment.Persistence.Models
+@inject WaEntryService EntryService
+
+<PageTitle>Dashboard - Warrior Experiment</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenText TextStyle="TextStyle.H4">Wellness Dashboard</RadzenText>
+            
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <!-- Add New Entry Button -->
+                <RadzenSplitButton Text="Add Entry" Icon="add_circle" ButtonStyle="ButtonStyle.Success" 
+                                 Click="@OnAddEntryClick">
+                    <ChildContent>
+                        <RadzenSplitButtonItem Text="Daily Survey" Icon="assignment" 
+                                             Value="daily-survey" />
+                        <RadzenSplitButtonItem Text="Measurement" Icon="straighten" 
+                                             Value="measurement" />
+                        <RadzenSplitButtonItem Text="Rite of Passage" Icon="emoji_events" 
+                                             Value="rite-of-passage" />
+                        <RadzenSplitButtonItem Text="Variety Practice" Icon="sports_gymnastics" 
+                                             Value="variety-practice" />
+                    </ChildContent>
+                </RadzenSplitButton>
+                
+                <!-- View Toggle -->
+                <RadzenToggleButton Text="Calendar" Icon="calendar_month" 
+                                   @bind-Value="isCalendarView" 
+                                   Change="@(async () => await LoadData())"
+                                   ButtonStyle="@(isCalendarView ? ButtonStyle.Primary : ButtonStyle.Light)" />
+                <RadzenToggleButton Text="Table" Icon="table_chart" 
+                                   Value="!isCalendarView" 
+                                   Change="@(async () => { isCalendarView = false; await LoadData(); })"
+                                   ButtonStyle="@(!isCalendarView ? ButtonStyle.Primary : ButtonStyle.Light)" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Entry Type Filters -->
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <RadzenText TextStyle="TextStyle.Subtitle2" Class="rz-mt-1">Show:</RadzenText>
+            
+            <RadzenCheckBox @bind-Value="showDailySurvey" Name="dailySurvey" Change="@(async (bool value) => await LoadData())" />
+            <RadzenLabel Text="Daily Surveys" Component="dailySurvey" Style="margin-left: 0.25rem; margin-right: 1rem;" />
+            
+            <RadzenCheckBox @bind-Value="showMeasurements" Name="measurements" Change="@(async (bool value) => await LoadData())" />
+            <RadzenLabel Text="Measurements" Component="measurements" Style="margin-left: 0.25rem; margin-right: 1rem;" />
+            
+            <RadzenCheckBox @bind-Value="showRiteOfPassage" Name="riteOfPassage" Change="@(async (bool value) => await LoadData())" />
+            <RadzenLabel Text="Rite of Passage" Component="riteOfPassage" Style="margin-left: 0.25rem; margin-right: 1rem;" />
+            
+            <RadzenCheckBox @bind-Value="showVarietyPractice" Name="varietyPractice" Change="@(async (bool value) => await LoadData())" />
+            <RadzenLabel Text="Variety Practice" Component="varietyPractice" Style="margin-left: 0.25rem;" />
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Main Content -->
+    <RadzenCard>
+        @if (isLoading)
+        {
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+            </RadzenStack>
+        }
+        else if (isCalendarView)
+        {
+            <!-- Calendar View -->
+            <RadzenScheduler @ref="scheduler" Data="@calendarEntries" TItem="IWaCalendarEntry" 
+                           StartProperty="Date" EndProperty="Date" TextProperty="Title"
+                           SelectedIndex="0"
+                           SlotSelect="@OnSlotSelect" AppointmentSelect="@OnAppointmentSelect"
+                           Style="height: 600px;">
+                <ChildContent>
+                    <RadzenMonthView />
+                </ChildContent>
+                
+                <Template Context="data">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: 600;">
+                            @GetEntryIcon(data.EntryType) @data.Title
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@data.Description</RadzenText>
+                    </RadzenStack>
+                </Template>
+            </RadzenScheduler>
+        }
+        else
+        {
+            <!-- Table View -->
+            <RadzenDataGrid Data="@calendarEntries" TItem="IWaCalendarEntry" 
+                          AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                          ExpandMode="DataGridExpandMode.Single"
+                          @ref="grid">
+                <Columns>
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Date" Title="Date" Width="150px" 
+                                        FormatString="{0:yyyy-MM-dd}" />
+                    
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="EntryType" Title="Type" Width="150px">
+                        <Template Context="entry">
+                            <RadzenBadge Text="@GetEntryTypeText(entry.EntryType)" 
+                                       Style="@GetEntryTypeBadgeStyle(entry.EntryType)" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Title" Title="Title" />
+                    
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Property="Description" Title="Description" />
+                    
+                    <RadzenDataGridColumn TItem="IWaCalendarEntry" Title="Actions" Frozen="true" 
+                                        Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                        <Template Context="entry">
+                            <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                        Click="@(() => ViewEntry(entry))" 
+                                        MouseEnter="@(args => ShowTooltip(args, "View details"))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+                
+                <!-- Expandable detail template -->
+                <Template Context="entry">
+                    <RadzenCard Style="margin: 1rem;">
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenText TextStyle="TextStyle.Subtitle1">Additional Details</RadzenText>
+                            @if (entry is WaCalendarEntryDto dto && dto.AdditionalData != null)
+                            {
+                                <pre>@System.Text.Json.JsonSerializer.Serialize(dto.AdditionalData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                </Template>
+            </RadzenDataGrid>
+        }
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    /// <summary>
+    /// Reference to the scheduler component
+    /// </summary>
+    RadzenScheduler<IWaCalendarEntry>? scheduler;
+    
+    /// <summary>
+    /// Reference to the data grid component
+    /// </summary>
+    RadzenDataGrid<IWaCalendarEntry>? grid;
+    
+    /// <summary>
+    /// List of calendar entries to display
+    /// </summary>
+    List<IWaCalendarEntry> calendarEntries = new();
+    
+    /// <summary>
+    /// Whether to show calendar view (true) or table view (false)
+    /// </summary>
+    bool isCalendarView = true;
+    
+    /// <summary>
+    /// Loading state
+    /// </summary>
+    bool isLoading = true;
+    
+    // Filter states
+    /// <summary>
+    /// Whether to show daily survey entries
+    /// </summary>
+    bool showDailySurvey = true;
+    
+    /// <summary>
+    /// Whether to show measurement entries
+    /// </summary>
+    bool showMeasurements = true;
+    
+    /// <summary>
+    /// Whether to show rite of passage practice entries
+    /// </summary>
+    bool showRiteOfPassage = true;
+    
+    /// <summary>
+    /// Whether to show variety practice entries
+    /// </summary>
+    bool showVarietyPractice = true;
+    
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    [Inject] TooltipService TooltipService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    /// <summary>
+    /// Loads data when the component is initialized
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    /// <summary>
+    /// Loads calendar entries based on current filters
+    /// </summary>
+    async Task LoadData()
+    {
+        if (CurrentUser == null)
+        {
+            return;
+        }
+        
+        isLoading = true;
+        
+        try
+        {
+            // Build list of types to include
+            var includeTypes = new List<WaEntryType>();
+            if (showDailySurvey) includeTypes.Add(WaEntryType.DailySurvey);
+            if (showMeasurements) includeTypes.Add(WaEntryType.Measurement);
+            if (showRiteOfPassage) includeTypes.Add(WaEntryType.RiteOfPassagePractice);
+            if (showVarietyPractice) includeTypes.Add(WaEntryType.VarietyPractice);
+            
+            // Get entries for the last 90 days
+            var endDate = DateTime.UtcNow;
+            var startDate = endDate.AddDays(-90);
+            
+            calendarEntries = await EntryService.GetCalendarEntriesAsync(
+                CurrentUser.Id, 
+                startDate, 
+                endDate, 
+                includeTypes.Any() ? includeTypes.ToArray() : null);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    /// <summary>
+    /// Gets icon for entry type
+    /// </summary>
+    string GetEntryIcon(WaEntryType type) => type switch
+    {
+        WaEntryType.DailySurvey => "📋",
+        WaEntryType.Measurement => "📏",
+        WaEntryType.RiteOfPassagePractice => "🎯",
+        WaEntryType.VarietyPractice => "🏋️",
+        _ => "📌"
+    };
+    
+    /// <summary>
+    /// Gets display text for entry type
+    /// </summary>
+    string GetEntryTypeText(WaEntryType type) => type switch
+    {
+        WaEntryType.DailySurvey => "Daily Survey",
+        WaEntryType.Measurement => "Measurement",
+        WaEntryType.RiteOfPassagePractice => "Rite of Passage",
+        WaEntryType.VarietyPractice => "Variety Practice",
+        _ => "Unknown"
+    };
+    
+    /// <summary>
+    /// Gets badge style for entry type
+    /// </summary>
+    string GetEntryTypeBadgeStyle(WaEntryType type) => type switch
+    {
+        WaEntryType.DailySurvey => "background-color: #3f51b5; color: white;",
+        WaEntryType.Measurement => "background-color: #4caf50; color: white;",
+        WaEntryType.RiteOfPassagePractice => "background-color: #ff9800; color: white;",
+        WaEntryType.VarietyPractice => "background-color: #9c27b0; color: white;",
+        _ => ""
+    };
+    
+    /// <summary>
+    /// Handles calendar slot selection
+    /// </summary>
+    void OnSlotSelect(SchedulerSlotSelectEventArgs args)
+    {
+        // TODO: Navigate to create new entry based on selected date
+        Console.WriteLine($"Slot selected: {args.Start}");
+    }
+    
+    /// <summary>
+    /// Handles calendar appointment selection
+    /// </summary>
+    void OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<IWaCalendarEntry> args)
+    {
+        ViewEntry(args.Data);
+    }
+    
+    /// <summary>
+    /// Views entry details
+    /// </summary>
+    void ViewEntry(IWaCalendarEntry entry)
+    {
+        // Navigate to appropriate edit page based on entry type
+        var route = entry.EntryType switch
+        {
+            WaEntryType.DailySurvey => $"/daily-survey/edit/{entry.Id}",
+            WaEntryType.Measurement => $"/measurement/edit/{entry.Id}",
+            WaEntryType.RiteOfPassagePractice => $"/rite-of-passage/edit/{entry.Id}",
+            WaEntryType.VarietyPractice => $"/variety-practice/edit/{entry.Id}",
+            _ => "/"
+        };
+        
+        NavigationManager.NavigateTo(route);
+    }
+    
+    /// <summary>
+    /// Shows tooltip
+    /// </summary>
+    void ShowTooltip(ElementReference elementReference, string text)
+    {
+        TooltipService.Open(elementReference, text, new TooltipOptions { Position = TooltipPosition.Bottom });
+    }
+    
+    /// <summary>
+    /// Handles the add entry split button click
+    /// </summary>
+    void OnAddEntryClick(RadzenSplitButtonItem item)
+    {
+        var route = item.Value?.ToString() switch
+        {
+            "daily-survey" => "/daily-survey/edit",
+            "measurement" => "/measurement/edit",
+            "rite-of-passage" => "/rite-of-passage/edit",
+            "variety-practice" => "/variety-practice/edit",
+            _ => "/daily-survey/edit"
+        };
+        
+        NavigationManager.NavigateTo(route);
+    }
+}

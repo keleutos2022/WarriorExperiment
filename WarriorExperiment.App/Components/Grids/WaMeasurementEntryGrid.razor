@@ -1,0 +1,172 @@
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inherits WaBaseComponent
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 200px;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+                <RadzenButton Text="New Measurement" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                            Click="@(() => Navigation.NavigateTo("/measurement/edit"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaMeasurementEntry" 
+                      AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Date" Title="Date" Width="120px">
+                    <Template Context="entry">
+                        @entry.Date.ToString("yyyy-MM-dd")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="MeasurementMethod.Name" Title="Method" Width="150px" />
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Weight" Title="Weight (kg)" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @entry.Weight?.ToString("F1") kg
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="BodyFat" Title="Body Fat %" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @if (entry.BodyFat.HasValue)
+                        {
+                            <span>@entry.BodyFat.Value.ToString("F1")%</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="MuscleMass" Title="Muscle (kg)" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @if (entry.MuscleMass.HasValue)
+                        {
+                            <span>@entry.MuscleMass.Value.ToString("F1") kg</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="BMI" Title="BMI" Width="80px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @entry.BMI?.ToString("F1")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="WaistCircumference" Title="Waist (cm)" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @if (entry.WaistCircumference.HasValue)
+                        {
+                            <span>@entry.WaistCircumference.Value.ToString("F1") cm</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="ChestCircumference" Title="Chest (cm)" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @if (entry.ChestCircumference.HasValue)
+                        {
+                            <span>@entry.ChestCircumference.Value.ToString("F1") cm</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Property="Notes" Title="Notes" Width="200px">
+                    <Template Context="entry">
+                        @if (!string.IsNullOrWhiteSpace(entry.Notes))
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" title="@entry.Notes">
+                                @(entry.Notes.Length > 50 ? entry.Notes.Substring(0, 50) + "..." : entry.Notes)
+                            </RadzenText>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementEntry" Title="Actions" Frozen="true" 
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/measurement/edit/{entry.Id}"))"
+                                    title="Edit measurement" />
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                    Click="@(() => DeleteEntry(entry))"
+                                    title="Delete measurement" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<WaMeasurementEntry>? Data { get; set; }
+    [Parameter] public bool AutoLoad { get; set; } = true;
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private RadzenDataGrid<WaMeasurementEntry>? grid;
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AutoLoad && CurrentUser != null && Data == null)
+        {
+            isLoading = true;
+            try
+            {
+                Data = await Context.MeasurementEntries
+                    .Include(me => me.MeasurementMethod)
+                    .Where(me => me.UserId == CurrentUser.Id)
+                    .OrderByDescending(me => me.Date)
+                    .ToListAsync();
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+    
+    private async Task DeleteEntry(WaMeasurementEntry entry)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the measurement from {entry.Date:yyyy-MM-dd}?", 
+            "Delete Measurement", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                Context.MeasurementEntries.Remove(entry);
+                await Context.SaveChangesAsync();
+                
+                if (Data != null)
+                {
+                    Data.Remove(entry);
+                    await grid!.Reload();
+                }
+                
+                NotificationService.Notify(NotificationSeverity.Success, "Measurement deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting measurement: {ex.Message}");
+            }
+        }
+    }
+}

@@ -1,0 +1,173 @@
+@page "/measurement-progress"
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.App.Components.Stats
+@inherits WaBasePage
+
+<PageTitle>Measurement Progress - Warrior Experiment</PageTitle>
+
+<RadzenStack Gap="1.5rem">
+    <!-- Page Header -->
+    <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <RadzenColumn>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H4" Style="margin: 0; color: var(--rz-primary);">
+                    Measurement Progress
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                    Track your body composition and measurement progress over time
+                </RadzenText>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    
+    <!-- Date Range Controls -->
+    <RadzenCard Style="padding: 1rem;">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="date_range" Style="color: var(--rz-primary);" />
+                    <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;">Date Range:</RadzenText>
+                </RadzenStack>
+                
+                <RadzenDatePicker @bind-Value="@startDate" 
+                                ShowCalendarWeek="false" 
+                                DateFormat="MM/dd/yyyy"
+                                Change="@OnDateRangeChanged"
+                                Max="@DateTime.Today"
+                                Placeholder="Start Date" />
+                                
+                <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;">to</RadzenText>
+                
+                <RadzenDatePicker @bind-Value="@endDate" 
+                                ShowCalendarWeek="false" 
+                                DateFormat="MM/dd/yyyy"
+                                Change="@OnDateRangeChanged"
+                                Max="@DateTime.Today"
+                                Placeholder="End Date" />
+            </RadzenStack>
+            
+            <!-- Quick Date Range Buttons -->
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenButton Text="Last Month" 
+                            Variant="Variant.Text" 
+                            Size="ButtonSize.Small"
+                            Click="@(() => SetDateRange(30))" />
+                <RadzenButton Text="Last 3 Months" 
+                            Variant="Variant.Text" 
+                            Size="ButtonSize.Small"
+                            Click="@(() => SetDateRange(90))" />
+                <RadzenButton Text="Last 6 Months" 
+                            Variant="Variant.Text" 
+                            Size="ButtonSize.Small"
+                            Click="@(() => SetDateRange(180))" />
+                <RadzenButton Text="Last Year" 
+                            Variant="Variant.Text" 
+                            Size="ButtonSize.Small"
+                            Click="@(() => SetDateRange(365))" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+    
+    <!-- User Selection Notice -->
+    @if (currentUser == null)
+    {
+        <RadzenCard Style="padding: 2rem; text-align: center; border: 2px dashed var(--rz-primary-light);">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenIcon Icon="person_search" Style="font-size: 48px; color: var(--rz-primary);" />
+                <RadzenText TextStyle="TextStyle.H6">Select a User</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+                    Please select a user from the dropdown in the header to view their measurement progress.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <!-- Current User Info -->
+        <RadzenCard Style="padding: 1rem; background: linear-gradient(135deg, var(--rz-success-lighter) 0%, var(--rz-success-light) 100%);">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenIcon Icon="fitness_center" Style="font-size: 32px; color: var(--rz-success);" />
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0; color: var(--rz-success);">
+                        @currentUser.UserName's Progress
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; color: var(--rz-success-dark);">
+                        Measurement data from @startDate?.ToString("MMM dd") to @endDate?.ToString("MMM dd, yyyy")
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+        
+        <!-- Key Information Card -->
+        <RadzenCard Style="padding: 1rem; background: var(--rz-info-lighter);">
+            <RadzenStack Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="info" Style="color: var(--rz-info);" />
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0; color: var(--rz-info);">
+                        Analysis Options
+                    </RadzenText>
+                </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; color: var(--rz-info-dark);">
+                    <strong>Single Method Analysis:</strong> Compare body composition and advanced metrics from one measurement device (scale/scanner).
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; color: var(--rz-info-dark);">
+                    <strong>Cross-Method Comparison:</strong> View circumference measurements and photos from all measurement methods to see overall progress.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+        
+        <!-- Measurement Progress Stats Component -->
+        <WaMeasurementProgressStats UserId="@currentUser.Id" 
+                                  StartDate="@(startDate ?? DateTime.Today.AddMonths(-6))" 
+                                  EndDate="@(endDate ?? DateTime.Today)" />
+    }
+</RadzenStack>
+
+@code {
+    [CascadingParameter] private WaUser? currentUser { get; set; }
+    
+    private DateTime? startDate = DateTime.Today.AddMonths(-6);
+    private DateTime? endDate = DateTime.Today;
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        // Ensure valid date range (default to 6 months for weekly measurement data)
+        if (startDate == null) startDate = DateTime.Today.AddMonths(-6);
+        if (endDate == null) endDate = DateTime.Today;
+        
+        // Ensure start date is not after end date
+        if (startDate > endDate)
+        {
+            startDate = endDate.Value.AddMonths(-6);
+        }
+    }
+    
+    private void OnDateRangeChanged()
+    {
+        // Validate date range
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            if (startDate > endDate)
+            {
+                startDate = endDate.Value.AddMonths(-1); // Default to 1 month before end date
+            }
+            
+            // Limit to reasonable range (max 2 years for measurement data)
+            if ((endDate.Value - startDate.Value).Days > 730)
+            {
+                startDate = endDate.Value.AddDays(-730);
+            }
+        }
+        
+        StateHasChanged();
+    }
+    
+    private void SetDateRange(int days)
+    {
+        endDate = DateTime.Today;
+        startDate = DateTime.Today.AddDays(-days);
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,108 @@
+@using WarriorExperiment.App.Components.Grids.Helpers
+@inherits WaBaseComponent
+
+<RadzenStack Gap="0.5rem">
+    <RadzenText TextStyle="TextStyle.H6" Text="@Title" Style="margin: 0; color: var(--rz-text-color);" />
+    
+    @if (!Data.Any())
+    {
+        <RadzenCard Style="height: 300px; display: flex; align-items: center; justify-content: center; background: var(--rz-surface);">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenIcon Icon="trending_up" Style="font-size: 48px; color: var(--rz-text-secondary-color); opacity: 0.5;" />
+                <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+                    No data available for this period
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenCard Style="padding: 1rem;">
+            <RadzenChart Style="height: 300px;">
+                <RadzenLineSeries Data="@Data" CategoryProperty="DateLabel" ValueProperty="Value" 
+                                LineType="LineType.Solid" MarkerType="MarkerType.Circle"
+                                Stroke="@GetChartColor()" StrokeWidth="3" MarkerStroke="@GetChartColor()" MarkerFill="@GetChartColor()" />
+                <RadzenCategoryAxis Padding="20" FormatString="{0}" />
+                <RadzenValueAxis Min="0" Max="10" Step="1" FormatString="{0}" />
+                <RadzenLegend Visible="false" />
+            </RadzenChart>
+        </RadzenCard>
+        
+        <!-- Summary Stats -->
+        <RadzenRow Gap="0.5rem">
+            <RadzenColumn Size="4">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">Average</RadzenText>
+                        <RadzenBadge BadgeStyle="@GetBadgeStyle(GetAverage())" Text="@GetAverage().ToString("F1")" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="4">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">@(InvertedScale ? "Best" : "Highest")</RadzenText>
+                        <RadzenBadge BadgeStyle="@GetBadgeStyle(InvertedScale ? GetMin() : GetMax())" Text="@((InvertedScale ? GetMin() : GetMax()).ToString("F0"))" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="4">
+                <RadzenCard Style="padding: 0.75rem; text-align: center;">
+                    <RadzenStack Gap="0.2rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">@(InvertedScale ? "Worst" : "Lowest")</RadzenText>
+                        <RadzenBadge BadgeStyle="@GetBadgeStyle(InvertedScale ? GetMax() : GetMin())" Text="@((InvertedScale ? GetMax() : GetMin()).ToString("F0"))" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public List<ChartDataItem> Data { get; set; } = new();
+    [Parameter] public bool InvertedScale { get; set; } = false;
+
+    public class ChartDataItem
+    {
+        public DateTime Date { get; set; }
+        public string DateLabel { get; set; } = string.Empty;
+        public double Value { get; set; }
+    }
+
+    private string GetChartColor()
+    {
+        if (!Data.Any()) return "#6c757d";
+        
+        var avg = GetAverage();
+        var displayValue = InvertedScale ? (10 - avg) : avg;
+        return ScaleColorHelper.GetColor(displayValue);
+    }
+
+    private BadgeStyle GetBadgeStyle(double value)
+    {
+        var displayValue = InvertedScale ? (10 - value) : value;
+        return displayValue switch
+        {
+            >= 8 => BadgeStyle.Success,
+            >= 6 => BadgeStyle.Warning,
+            >= 4 => BadgeStyle.Light,
+            _ => BadgeStyle.Danger
+        };
+    }
+
+    private double GetAverage()
+    {
+        return Data.Any() ? Data.Average(d => d.Value) : 0;
+    }
+
+    private double GetMin()
+    {
+        return Data.Any() ? Data.Min(d => d.Value) : 0;
+    }
+
+    private double GetMax()
+    {
+        return Data.Any() ? Data.Max(d => d.Value) : 0;
+    }
+}

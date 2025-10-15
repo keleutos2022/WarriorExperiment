@@ -1,0 +1,140 @@
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@inherits WaBaseComponent
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 200px;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+                <RadzenButton Text="New Measurement Method" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                            Click="@(() => Navigation.NavigateTo("/measurement-method/edit"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaMeasurementMethod" 
+                      AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="WaMeasurementMethod" Property="Name" Title="Name" Width="200px" />
+                
+                <RadzenDataGridColumn TItem="WaMeasurementMethod" Property="Description" Title="Description">
+                    <Template Context="method">
+                        @if (!string.IsNullOrWhiteSpace(method.Description))
+                        {
+                            <RadzenText title="@method.Description">
+                                @method.Description
+                            </RadzenText>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementMethod" Property="CreatedAt" Title="Created" Width="150px">
+                    <Template Context="method">
+                        @method.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementMethod" Property="UpdatedAt" Title="Updated" Width="150px">
+                    <Template Context="method">
+                        @method.UpdatedAt.ToString("yyyy-MM-dd HH:mm")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaMeasurementMethod" Title="Actions" Frozen="true" 
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="method">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/measurement-method/edit/{method.Id}"))"
+                                    title="Edit measurement method" />
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                    Click="@(() => DeleteEntry(method))"
+                                    title="Delete measurement method" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<WaMeasurementMethod>? Data { get; set; }
+    [Parameter] public bool AutoLoad { get; set; } = true;
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private RadzenDataGrid<WaMeasurementMethod>? grid;
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AutoLoad && Data == null)
+        {
+            isLoading = true;
+            try
+            {
+                Data = await Context.MeasurementMethods
+                    .OrderBy(mm => mm.Name)
+                    .ToListAsync();
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+    
+    private async Task DeleteEntry(WaMeasurementMethod method)
+    {
+        // Check if this method is being used
+        var hasEntries = await Context.MeasurementEntries
+            .AnyAsync(me => me.MeasurementMethodId == method.Id);
+        
+        if (hasEntries)
+        {
+            await DialogService.Alert(
+                "Cannot delete this measurement method because it is being used by measurement entries.", 
+                "Cannot Delete");
+            return;
+        }
+        
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the measurement method '{method.Name}'?", 
+            "Delete Measurement Method", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                Context.MeasurementMethods.Remove(method);
+                await Context.SaveChangesAsync();
+                
+                if (Data != null)
+                {
+                    Data.Remove(method);
+                    await grid!.Reload();
+                }
+                
+                NotificationService.Notify(NotificationSeverity.Success, "Measurement method deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting measurement method: {ex.Message}");
+            }
+        }
+    }
+}

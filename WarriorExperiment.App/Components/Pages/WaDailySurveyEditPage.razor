@@ -1,0 +1,194 @@
+@page "/daily-survey/edit"
+@page "/daily-survey/edit/{id:int?}"
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@inject WaDailySurveyEntryService DailySurveyService
+@inject NavigationManager Navigation
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else if (isFormMode)
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenButton Text="← Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" 
+                        Click="@(() => Navigation.NavigateTo("/daily-survey"))" />
+            
+            <WaDailySurveyForm Model="@currentEntry" OnValidSubmit="@HandleFormSubmit" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenColumn Size="8">
+                    <RadzenText TextStyle="TextStyle.Body1">Manage your daily wellness surveys</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="4">
+                    <RadzenButton Text="New Survey" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                                Click="@(() => Navigation.NavigateTo("/daily-survey/new"))" />
+                </RadzenColumn>
+            </RadzenRow>
+            
+            <RadzenDataGrid Data="@entries" TItem="WaDailySurveyEntry" 
+                          AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Date" Title="Date" Width="150px" 
+                                        FormatString="{0:yyyy-MM-dd}" />
+                    
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="SleepQuality" Title="Sleep" Width="80px" />
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Energy" Title="Energy" Width="80px" />
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="Mood" Title="Mood" Width="80px" />
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="StressLevel" Title="Stress" Width="80px" />
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Property="BowelMovement" Title="Bowel Movement" Width="120px" />
+                    
+                    <RadzenDataGridColumn TItem="WaDailySurveyEntry" Title="Actions" Frozen="true" 
+                                        Sortable="false" Filterable="false" Width="120px" TextAlign="TextAlign.Center">
+                        <Template Context="entry">
+                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                        Click="@(() => Navigation.NavigateTo($"/daily-survey/{entry.Id}"))" 
+                                        MouseEnter="@(args => ShowTooltip(args, "Edit"))" />
+                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                        Click="@(() => DeleteEntry(entry.Id))" 
+                                        MouseEnter="@(args => ShowTooltip(args, "Delete"))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    [Inject] TooltipService TooltipService { get; set; } = default!;
+    [Inject] DialogService DialogService { get; set; } = default!;
+    [Inject] NotificationService NotificationService { get; set; } = default!;
+    
+    private List<WaDailySurveyEntry> entries = new();
+    private WaDailySurveyEntry currentEntry = new();
+    private bool isLoading = true;
+    private bool isFormMode => Id.HasValue || Navigation.Uri.Contains("/new");
+    private string pageTitle => isFormMode ? "Daily Survey" : "Daily Surveys";
+    private string pageSubTitle => isFormMode ? (Id.HasValue ? "Edit Entry" : "New Entry") : "";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        if (CurrentUser == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "No current user found");
+            return;
+        }
+        
+        isLoading = true;
+        
+        try
+        {
+            if (isFormMode)
+            {
+                if (Id.HasValue)
+                {
+                    // Load existing entry for editing
+                    var entry = await DailySurveyService.GetByIdAsync(Id.Value);
+                    if (entry != null)
+                    {
+                        currentEntry = entry;
+                    }
+                    else
+                    {
+                        NotificationService.Notify(NotificationSeverity.Error, "Entry not found");
+                        Navigation.NavigateTo("/daily-survey");
+                        return;
+                    }
+                }
+                else
+                {
+                    // New entry
+                    currentEntry = new WaDailySurveyEntry
+                    {
+                        UserId = CurrentUser.Id,
+                        Date = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc),
+                        SleepQuality = 5,
+                        Energy = 5,
+                        Mood = 5,
+                        MuscleSoreness = 5,
+                        StressLevel = 5,
+                        HungerFeelingDuringUndereatingPhase = 5
+                    };
+                }
+            }
+            else
+            {
+                // Load list of entries
+                entries = await DailySurveyService.GetAllAsync(CurrentUser.Id);
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleFormSubmit(WaDailySurveyEntry entry)
+    {
+        try
+        {
+            if (Id.HasValue)
+            {
+                await DailySurveyService.UpdateAsync(entry);
+                NotificationService.Notify(NotificationSeverity.Success, "Daily survey updated successfully");
+            }
+            else
+            {
+                await DailySurveyService.CreateAsync(entry);
+                NotificationService.Notify(NotificationSeverity.Success, "Daily survey created successfully");
+            }
+            
+            Navigation.NavigateTo("/daily-survey");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving survey: {ex.Message}");
+        }
+    }
+    
+    private async Task DeleteEntry(int entryId)
+    {
+        var result = await DialogService.Confirm("Are you sure you want to delete this daily survey?", "Delete Survey", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                await DailySurveyService.DeleteAsync(entryId);
+                NotificationService.Notify(NotificationSeverity.Success, "Daily survey deleted successfully");
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting survey: {ex.Message}");
+            }
+        }
+    }
+    
+    private void ShowTooltip(ElementReference elementReference, string text)
+    {
+        TooltipService.Open(elementReference, text, new TooltipOptions { Position = TooltipPosition.Bottom });
+    }
+}

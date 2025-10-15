@@ -1,0 +1,164 @@
+@page "/users"
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@inject WaUserService UserService
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+<WaBasePage Title="User Management" SubTitle="Manage system users">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenColumn Size="8">
+                    <RadzenText TextStyle="TextStyle.Body1">Manage users in the system</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="4">
+                    <RadzenButton Text="Add User" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                                Click="@(() => OpenUserDialog(null))" />
+                </RadzenColumn>
+            </RadzenRow>
+            
+            <RadzenDataGrid @ref="grid" Data="@users" TItem="WaUser" 
+                          AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <RadzenDataGridColumn TItem="WaUser" Property="UserName" Title="Username" Width="200px" />
+                    
+                    <RadzenDataGridColumn TItem="WaUser" Property="Height" Title="Height (cm)" Width="120px">
+                        <Template Context="user">
+                            @(user.Height?.ToString("0") ?? "-")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    
+                    <RadzenDataGridColumn TItem="WaUser" Property="BirthDate" Title="Birth Date" Width="150px">
+                        <Template Context="user">
+                            @(user.BirthDate?.ToString("yyyy-MM-dd") ?? "-")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    
+                    <RadzenDataGridColumn TItem="WaUser" Property="DateOfStart" Title="Start Date" Width="150px">
+                        <Template Context="user">
+                            @(user.DateOfStart?.ToString("yyyy-MM-dd") ?? "-")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    
+                    <RadzenDataGridColumn TItem="WaUser" Property="CreatedAt" Title="Created" Width="150px">
+                        <Template Context="user">
+                            @user.CreatedAt.ToString("yyyy-MM-dd")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    
+                    <RadzenDataGridColumn TItem="WaUser" Title="Actions" Frozen="true" 
+                                        Sortable="false" Filterable="false" Width="120px" TextAlign="TextAlign.Center">
+                        <Template Context="user">
+                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                        Click="@(() => OpenUserDialog(user))" 
+                                        MouseEnter="@(args => ShowTooltip(args, "Edit user"))" />
+                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                        Click="@(() => DeleteUser(user))" 
+                                        MouseEnter="@(args => ShowTooltip(args, "Delete user"))" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    [Inject] TooltipService TooltipService { get; set; } = default!;
+    
+    private RadzenDataGrid<WaUser>? grid;
+    private List<WaUser> users = new();
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            users = await UserService.GetAllAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task OpenUserDialog(WaUser? user)
+    {
+        var isEdit = user != null;
+        var dialogTitle = isEdit ? "Edit User" : "Create User";
+        var submitButtonText = isEdit ? "Update" : "Create";
+        
+        // Create a copy for editing to avoid modifying the original
+        var model = isEdit ? new WaUser 
+        {
+            Id = user!.Id,
+            UserName = user.UserName,
+            Height = user.Height,
+            BirthDate = user.BirthDate,
+            DateOfStart = user.DateOfStart
+        } : new WaUser();
+        
+        var result = await DialogService.OpenAsync<WaUserDialog>(dialogTitle, 
+            new Dictionary<string, object> 
+            { 
+                { "User", model },
+                { "SubmitButtonText", submitButtonText }
+            },
+            new DialogOptions 
+            { 
+                Width = "500px", 
+                Height = "auto",
+                Resizable = true,
+                Draggable = true
+            });
+        
+        if (result == true)
+        {
+            await LoadData();
+            await grid!.Reload();
+        }
+    }
+    
+    private async Task DeleteUser(WaUser user)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete user '{user.UserName}'?", 
+            "Delete User", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                await UserService.DeleteAsync(user.Id);
+                NotificationService.Notify(NotificationSeverity.Success, "User deleted successfully");
+                await LoadData();
+                await grid!.Reload();
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting user: {ex.Message}");
+            }
+        }
+    }
+    
+    private void ShowTooltip(ElementReference elementReference, string text)
+    {
+        TooltipService.Open(elementReference, text, new TooltipOptions { Position = TooltipPosition.Bottom });
+    }
+}

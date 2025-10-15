@@ -1,0 +1,172 @@
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.App.Components.Charts
+@inject WaDailySurveyEntryService DailySurveyService
+@inject NotificationService NotificationService
+@inherits WaBaseComponent
+
+<RadzenStack Gap="1rem">
+    @if (isLoading)
+    {
+        <RadzenCard Style="padding: 2rem; text-align: center;">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                <RadzenText TextStyle="TextStyle.Body1">Loading wellbeing data...</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else if (!surveyEntries.Any())
+    {
+        <RadzenCard Style="padding: 2rem; text-align: center;">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenIcon Icon="sentiment_dissatisfied" Style="font-size: 64px; color: var(--rz-text-secondary-color); opacity: 0.5;" />
+                <RadzenText TextStyle="TextStyle.H6">No Wellbeing Data Found</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+                    No daily survey entries were found for the selected date range.
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-tertiary-color);">
+                    Try adjusting the date range or ensure daily surveys have been completed.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <!-- Charts Grid -->
+        <RadzenRow Gap="1rem">
+            <!-- Sleep Quality -->
+            <RadzenColumn SizeLG="6" SizeMD="12">
+                <WaWellbeingChart Title="Sleep Quality" Data="@GetChartData(nameof(WaDailySurveyEntry.SleepQuality))" />
+            </RadzenColumn>
+            
+            <!-- Energy Level -->
+            <RadzenColumn SizeLG="6" SizeMD="12">
+                <WaWellbeingChart Title="Energy Level" Data="@GetChartData(nameof(WaDailySurveyEntry.Energy))" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenRow Gap="1rem">
+            <!-- Mood -->
+            <RadzenColumn SizeLG="6" SizeMD="12">
+                <WaWellbeingChart Title="Mood" Data="@GetChartData(nameof(WaDailySurveyEntry.Mood))" />
+            </RadzenColumn>
+            
+            <!-- Muscle Soreness (Inverted) -->
+            <RadzenColumn SizeLG="6" SizeMD="12">
+                <WaWellbeingChart Title="Muscle Soreness" Data="@GetChartData(nameof(WaDailySurveyEntry.MuscleSoreness))" InvertedScale="true" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenRow Gap="1rem">
+            <!-- Stress Level (Inverted) -->
+            <RadzenColumn SizeLG="6" SizeMD="12">
+                <WaWellbeingChart Title="Stress Level" Data="@GetChartData(nameof(WaDailySurveyEntry.StressLevel))" InvertedScale="true" />
+            </RadzenColumn>
+            
+            <!-- Hunger During Undereating -->
+            <RadzenColumn SizeLG="6" SizeMD="12">
+                <WaWellbeingChart Title="Hunger During Undereating" Data="@GetChartData(nameof(WaDailySurveyEntry.HungerFeelingDuringUndereatingPhase))" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <!-- Summary Information -->
+        <RadzenCard Style="padding: 1rem;">
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color); margin: 0;">
+                        Data Summary
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;">
+                        @surveyEntries.Count entries from @StartDate.ToString("MMM dd") to @EndDate.ToString("MMM dd, yyyy")
+                    </RadzenText>
+                </RadzenStack>
+                
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem" Style="text-align: center;">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">
+                            Date Range
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">
+                            @((EndDate - StartDate).Days + 1) days
+                        </RadzenText>
+                    </RadzenStack>
+                    
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem" Style="text-align: center;">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color); margin: 0;">
+                            Completion Rate
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">
+                            @(Math.Round((double)surveyEntries.Count / ((EndDate - StartDate).Days + 1) * 100, 1))%
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public int UserId { get; set; }
+    [Parameter] public DateTime StartDate { get; set; } = DateTime.Today.AddDays(-30);
+    [Parameter] public DateTime EndDate { get; set; } = DateTime.Today;
+    
+    private List<WaDailySurveyEntry> surveyEntries = new();
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        if (UserId <= 0) return;
+        
+        isLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            surveyEntries = await DailySurveyService.GetByUserAndDateRangeAsync(UserId, StartDate, EndDate);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error loading wellbeing data: {ex.Message}");
+            surveyEntries = new();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private List<WaWellbeingChart.ChartDataItem> GetChartData(string propertyName)
+    {
+        return surveyEntries.Select(entry => new WaWellbeingChart.ChartDataItem
+        {
+            Date = entry.Date,
+            DateLabel = entry.Date.ToString("MM/dd"),
+            Value = GetPropertyValue(entry, propertyName)
+        }).ToList();
+    }
+    
+    private double GetPropertyValue(WaDailySurveyEntry entry, string propertyName)
+    {
+        return propertyName switch
+        {
+            nameof(WaDailySurveyEntry.SleepQuality) => entry.SleepQuality,
+            nameof(WaDailySurveyEntry.Energy) => entry.Energy,
+            nameof(WaDailySurveyEntry.Mood) => entry.Mood,
+            nameof(WaDailySurveyEntry.MuscleSoreness) => entry.MuscleSoreness,
+            nameof(WaDailySurveyEntry.StressLevel) => entry.StressLevel,
+            nameof(WaDailySurveyEntry.HungerFeelingDuringUndereatingPhase) => entry.HungerFeelingDuringUndereatingPhase,
+            _ => 0
+        };
+    }
+}

@@ -1,0 +1,177 @@
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.App.Components.Grids.Helpers
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Enums
+@inherits WaBaseComponent
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+@if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 200px;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <RadzenRow JustifyContent="JustifyContent.End">
+            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+                <RadzenButton Text="New Practice Entry" Icon="add" ButtonStyle="ButtonStyle.Primary" 
+                            Click="@(() => Navigation.NavigateTo("/rite-of-passage/edit"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenDataGrid @ref="grid" Data="@Data" TItem="WaRiteOfPassagePracticeEntry" 
+                      AllowFiltering="true" AllowSorting="true" AllowPaging="true" PageSize="20"
+                      FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <Columns>
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="Date" Title="Date" Width="120px">
+                    <Template Context="entry">
+                        @entry.Date.ToString("yyyy-MM-dd")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="PracticeIntensity" Title="Intensity" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @{
+                            var intensityColor = entry.PracticeIntensity switch
+                            {
+                                WaPracticeIntensity.Light => "#28a745",
+                                WaPracticeIntensity.Medium => "#ffc107",
+                                WaPracticeIntensity.Heavy => "#dc3545",
+                                _ => "#6c757d"
+                            };
+                        }
+                        <div style="background-color: @intensityColor; color: white; padding: 4px 8px; border-radius: 4px;">
+                            @entry.PracticeIntensity
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Title="Ladders" Width="200px">
+                    <Template Context="entry">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+                            <RadzenBadge Text="@($"L1: {entry.Ladder1Sets}")" Style="background-color: #6c757d;" />
+                            <RadzenBadge Text="@($"L2: {entry.Ladder2Sets}")" Style="background-color: #6c757d;" />
+                            <RadzenBadge Text="@($"L3: {entry.Ladder3Sets}")" Style="background-color: #6c757d;" />
+                            <RadzenBadge Text="@($"L4: {entry.Ladder4Sets}")" Style="background-color: #6c757d;" />
+                            <RadzenBadge Text="@($"L5: {entry.Ladder5Sets}")" Style="background-color: #6c757d;" />
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="Dice" Title="Time (min)" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @entry.Dice min
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="PullCount" Title="Pulls" Width="80px" TextAlign="TextAlign.Center" />
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="PullsPerMinute" Title="Pulls/Min" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @entry.PullsPerMinute.ToString("F2")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="Weight" Title="Weight (kg)" Width="100px" TextAlign="TextAlign.Right">
+                    <Template Context="entry">
+                        @if (entry.Weight.HasValue)
+                        {
+                            <span>@entry.Weight.Value.ToString("F1") kg</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Property="Success" Title="Success" Width="80px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        @if (entry.Success)
+                        {
+                            <RadzenIcon Icon="check_circle" Style="color: #28a745;" />
+                        }
+                        else
+                        {
+                            <RadzenIcon Icon="cancel" Style="color: #dc3545;" />
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="WaRiteOfPassagePracticeEntry" Title="Actions" Frozen="true" 
+                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                    <Template Context="entry">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/rite-of-passage/edit/{entry.Id}"))"
+                                    title="Edit practice entry" />
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                    Click="@(() => DeleteEntry(entry))"
+                                    title="Delete practice entry" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public List<WaRiteOfPassagePracticeEntry>? Data { get; set; }
+    [Parameter] public bool AutoLoad { get; set; } = true;
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private RadzenDataGrid<WaRiteOfPassagePracticeEntry>? grid;
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        if (AutoLoad && CurrentUser != null && Data == null)
+        {
+            isLoading = true;
+            try
+            {
+                Data = await Context.RiteOfPassagePracticeEntries
+                    .Where(rpe => rpe.UserId == CurrentUser.Id)
+                    .OrderByDescending(rpe => rpe.Date)
+                    .ToListAsync();
+            }
+            finally
+            {
+                isLoading = false;
+            }
+        }
+    }
+    
+    private async Task DeleteEntry(WaRiteOfPassagePracticeEntry entry)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the practice entry from {entry.Date:yyyy-MM-dd}?", 
+            "Delete Practice Entry", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        
+        if (result == true)
+        {
+            try
+            {
+                Context.RiteOfPassagePracticeEntries.Remove(entry);
+                await Context.SaveChangesAsync();
+                
+                if (Data != null)
+                {
+                    Data.Remove(entry);
+                    await grid!.Reload();
+                }
+                
+                NotificationService.Notify(NotificationSeverity.Success, "Practice entry deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting practice entry: {ex.Message}");
+            }
+        }
+    }
+}

@@ -1,0 +1,133 @@
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Enums
+@using WarriorExperiment.Persistence.Validators
+@using Blazored.FluentValidation
+@inherits WaBaseComponent
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <FluentValidationValidator />
+    
+    <RadzenStack Gap="1rem">
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H5">Daily Survey</RadzenText>
+                
+                <!-- Date -->
+                <RadzenFormField Text="Date" AllowFloatingLabel="false">
+                    <RadzenDatePicker @bind-Value="@Model.Date" ShowTime="false" DateFormat="yyyy-MM-dd" />
+                </RadzenFormField>
+                
+                <!-- Sleep Quality -->
+                <RadzenFormField Text="Sleep Quality (1-10)" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var value = i;
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.SleepQuality == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.SleepQuality = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Energy -->
+                <RadzenFormField Text="Energy Level (1-10)" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var value = i;
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.Energy == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.Energy = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Mood -->
+                <RadzenFormField Text="Mood (1-10)" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var value = i;
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.Mood == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.Mood = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Muscle Soreness -->
+                <RadzenFormField Text="Muscle Soreness (1-10)" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var value = i;
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.MuscleSoreness == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.MuscleSoreness = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Stress Level -->
+                <RadzenFormField Text="Stress Level (1-10)" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var value = i;
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.StressLevel == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.StressLevel = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Hunger Feeling -->
+                <RadzenFormField Text="Hunger Feeling During Undereating Phase (1-10)" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @for (int i = 1; i <= 10; i++)
+                        {
+                            var value = i;
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.HungerFeelingDuringUndereatingPhase == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.HungerFeelingDuringUndereatingPhase = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Bowel Movement -->
+                <RadzenFormField Text="Bowel Movement Time" AllowFloatingLabel="false">
+                    <RadzenButtonGroup>
+                        @foreach (var value in Enum.GetValues<WaBowelMovementTime>())
+                        {
+                            <RadzenButton Text="@value.ToString()" 
+                                        ButtonStyle="@(Model.BowelMovement == value ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                        Click="@(() => Model.BowelMovement = value)" />
+                        }
+                    </RadzenButtonGroup>
+                </RadzenFormField>
+                
+                <!-- Comment -->
+                <RadzenFormField Text="Comment (Optional)" AllowFloatingLabel="false">
+                    <RadzenTextArea @bind-Value="@Model.Comment" Rows="3" Placeholder="Optional comment..." />
+                </RadzenFormField>
+                
+                <!-- Validation Summary -->
+                <ValidationSummary />
+                
+                <!-- Submit Button -->
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save Survey" ButtonStyle="ButtonStyle.Primary" Icon="save" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    [Parameter] public WaDailySurveyEntry Model { get; set; } = new();
+    [Parameter] public EventCallback<WaDailySurveyEntry> OnValidSubmit { get; set; }
+    
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(Model);
+    }
+}

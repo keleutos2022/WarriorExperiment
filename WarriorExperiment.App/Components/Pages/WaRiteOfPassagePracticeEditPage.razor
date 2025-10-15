@@ -1,0 +1,336 @@
+@page "/rite-of-passage/edit"
+@page "/rite-of-passage/edit/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@using WarriorExperiment.Persistence.Data
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Enums
+@using WarriorExperiment.Core.Services
+@inject WaDbContext Context
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+@inject WaRiteOfPassagePracticeEntryService PracticeService
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else if (CurrentUser == null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" Variant="Variant.Flat" Shade="Shade.Lighter">
+            Please select a user first
+        </RadzenAlert>
+    }
+    else
+    {
+        <RadzenCard Style="max-width: 800px;">
+            <RadzenTemplateForm TItem="WaRiteOfPassagePracticeEntry" Data="@model" Submit="@HandleSubmit">
+                <RadzenRow Gap="1rem">
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenStack Gap="1rem">
+                            <RadzenFormField Text="Date" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenDatePicker @bind-Value="@model.Date" Name="Date" 
+                                                    Style="width: 100%;" DateFormat="yyyy-MM-dd" />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="Date" Text="Date is required" />
+                                </Helper>
+                            </RadzenFormField>
+                            
+                            <RadzenFormField Text="Practice Intensity" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenDropDown @bind-Value="@model.PracticeIntensity" 
+                                                  Data="@practiceIntensities" 
+                                                  Name="Intensity" Style="width: 100%;" 
+                                                  Change="@OnIntensityChanged" />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="Intensity" Text="Intensity is required" />
+                                </Helper>
+                            </RadzenFormField>
+                            
+                            <RadzenFormField Text="Dice Roll (Time in minutes)" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenNumeric @bind-Value="@model.Dice" ShowUpDown="false" 
+                                                 Min="2" Max="12" Name="Dice" Style="width: 100%;" />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="Dice" Text="Dice roll is required" />
+                                    <RadzenRangeValidator Component="Dice" Min="2" Max="12" Text="Dice must be between 2 and 12" />
+                                </Helper>
+                            </RadzenFormField>
+                            
+                            <RadzenFormField Text="Total Pull Count" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenNumeric @bind-Value="@model.PullCount" ShowUpDown="false" 
+                                                 Min="0" Name="PullCount" Style="width: 100%;" />
+                                </ChildContent>
+                                <Helper>
+                                    <RadzenRequiredValidator Component="PullCount" Text="Pull count is required" />
+                                </Helper>
+                            </RadzenFormField>
+                            
+                            <RadzenFormField Text="Weight (kg)" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenNumeric @bind-Value="@model.Weight" ShowUpDown="false" 
+                                                 Format="0.0" Step="0.5" Style="width: 100%;" />
+                                </ChildContent>
+                            </RadzenFormField>
+                            
+                            <RadzenFormField Text="Success" Variant="Variant.Outlined">
+                                <ChildContent>
+                                    <RadzenCheckBox @bind-Value="@model.Success" Name="Success" />
+                                </ChildContent>
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenColumn>
+                    
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenFieldset Text="Ladder Sets">
+                            @if (!string.IsNullOrEmpty(progressionInfo))
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="false" Variant="Variant.Flat" 
+                                           Shade="Shade.Lighter" Style="margin-bottom: 1rem;">
+                                    <RadzenText TextStyle="TextStyle.Body2">@progressionInfo</RadzenText>
+                                </RadzenAlert>
+                            }
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenFormField Text="Ladder 1 Sets" Variant="Variant.Outlined">
+                                    <RadzenNumeric @bind-Value="@model.Ladder1Sets" ShowUpDown="false" 
+                                                 Min="0" Style="width: 100%;" />
+                                </RadzenFormField>
+                                
+                                <RadzenFormField Text="Ladder 2 Sets" Variant="Variant.Outlined">
+                                    <RadzenNumeric @bind-Value="@model.Ladder2Sets" ShowUpDown="false" 
+                                                 Min="0" Style="width: 100%;" />
+                                </RadzenFormField>
+                                
+                                <RadzenFormField Text="Ladder 3 Sets" Variant="Variant.Outlined">
+                                    <RadzenNumeric @bind-Value="@model.Ladder3Sets" ShowUpDown="false" 
+                                                 Min="0" Style="width: 100%;" />
+                                </RadzenFormField>
+                                
+                                <RadzenFormField Text="Ladder 4 Sets" Variant="Variant.Outlined">
+                                    <RadzenNumeric @bind-Value="@model.Ladder4Sets" ShowUpDown="false" 
+                                                 Min="0" Style="width: 100%;" />
+                                </RadzenFormField>
+                                
+                                <RadzenFormField Text="Ladder 5 Sets" Variant="Variant.Outlined">
+                                    <RadzenNumeric @bind-Value="@model.Ladder5Sets" ShowUpDown="false" 
+                                                 Min="0" Style="width: 100%;" />
+                                </RadzenFormField>
+                            </RadzenStack>
+                        </RadzenFieldset>
+                        
+                        @if (model.Dice > 0 && model.PullCount > 0)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" Variant="Variant.Flat" Shade="Shade.Lighter">
+                                <strong>Pulls per minute:</strong> @model.PullsPerMinute.ToString("F2")
+                            </RadzenAlert>
+                        }
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.End" 
+                           AlignItems="AlignItems.Center" Style="margin-top: 2rem;">
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" 
+                                Click="@(() => Navigation.NavigateTo("/rite-of-passage"))" />
+                    <RadzenButton Text="@submitButtonText" ButtonType="ButtonType.Submit" 
+                                ButtonStyle="ButtonStyle.Primary" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private WaRiteOfPassagePracticeEntry model = new();
+    private bool isLoading = true;
+    private string pageTitle = "New Rite of Passage Practice";
+    private string pageSubTitle = "Record your strength training session";
+    private string submitButtonText = "Save";
+    private string progressionInfo = "";
+    private WaRiteOfPassagePracticeEntry? lastSuccessfulHeavyDay;
+    private WaRiteOfPassagePracticeEntry? lastEntry;
+    
+    private readonly WaPracticeIntensity[] practiceIntensities = Enum.GetValues<WaPracticeIntensity>();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser == null)
+        {
+            isLoading = false;
+            return;
+        }
+        
+        if (Id.HasValue)
+        {
+            var entry = await Context.RiteOfPassagePracticeEntries
+                .FirstOrDefaultAsync(rpe => rpe.Id == Id.Value && rpe.UserId == CurrentUser.Id);
+                
+            if (entry != null)
+            {
+                model = entry;
+                pageTitle = "Edit Rite of Passage Practice";
+                pageSubTitle = $"Update practice from {entry.Date:yyyy-MM-dd}";
+                submitButtonText = "Update";
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Practice entry not found");
+                Navigation.NavigateTo("/rite-of-passage");
+                return;
+            }
+        }
+        else
+        {
+            model.Date = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+            model.UserId = CurrentUser.Id;
+            
+            // Load last entry for intensity cycling and weight carryover
+            lastEntry = await PracticeService.GetLastEntryAsync(CurrentUser.Id);
+            
+            // Set suggested intensity based on cycle
+            model.PracticeIntensity = PracticeService.GetSuggestedNextIntensity(lastEntry);
+            
+            // Auto-fill weight from last session
+            if (lastEntry?.Weight.HasValue == true)
+            {
+                model.Weight = lastEntry.Weight;
+            }
+            
+            // Load last successful heavy day and auto-fill ladder values
+            await LoadProgressionDataAndAutoFill();
+        }
+        
+        isLoading = false;
+    }
+    
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if (Id.HasValue)
+            {
+                model.UpdatedAt = DateTime.UtcNow;
+                Context.RiteOfPassagePracticeEntries.Update(model);
+            }
+            else
+            {
+                model.CreatedAt = DateTime.UtcNow;
+                model.UpdatedAt = DateTime.UtcNow;
+                model.EnteredAt = DateTime.UtcNow;
+                Context.RiteOfPassagePracticeEntries.Add(model);
+            }
+            
+            await Context.SaveChangesAsync();
+            
+            NotificationService.Notify(NotificationSeverity.Success, 
+                Id.HasValue ? "Practice entry updated successfully" : "Practice entry saved successfully");
+                
+            Navigation.NavigateTo("/rite-of-passage");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving practice entry: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadProgressionDataAndAutoFill()
+    {
+        if (CurrentUser == null) return;
+        
+        // Get last successful heavy day
+        lastSuccessfulHeavyDay = await PracticeService.GetLastSuccessfulHeavyDayAsync(CurrentUser.Id);
+        
+        // Calculate and auto-fill ladder values
+        var suggestedValues = PracticeService.CalculateSuggestedLadderValues(lastSuccessfulHeavyDay, model.PracticeIntensity);
+        model.Ladder1Sets = suggestedValues.ladder1;
+        model.Ladder2Sets = suggestedValues.ladder2;
+        model.Ladder3Sets = suggestedValues.ladder3;
+        model.Ladder4Sets = suggestedValues.ladder4;
+        model.Ladder5Sets = suggestedValues.ladder5;
+        
+        UpdateProgressionInfo();
+    }
+    
+    private void OnIntensityChanged(object value)
+    {
+        // Recalculate ladder values when intensity changes
+        if (Id.HasValue) return; // Only for new entries
+        
+        // For Heavy days, ensure we're progressing from last successful heavy day
+        // For Medium/Light days, reduce from last heavy day values
+        var suggestedValues = PracticeService.CalculateSuggestedLadderValues(lastSuccessfulHeavyDay, model.PracticeIntensity);
+        
+        model.Ladder1Sets = suggestedValues.ladder1;
+        model.Ladder2Sets = suggestedValues.ladder2;
+        model.Ladder3Sets = suggestedValues.ladder3;
+        model.Ladder4Sets = suggestedValues.ladder4;
+        model.Ladder5Sets = suggestedValues.ladder5;
+        
+        UpdateProgressionInfo();
+        StateHasChanged(); // Force UI update
+    }
+    
+    private void UpdateProgressionInfo()
+    {
+        var cycleInfo = lastEntry != null ? 
+            $"Cycle: {lastEntry.PracticeIntensity} → {model.PracticeIntensity}" : 
+            "Starting cycle";
+        
+        if (lastSuccessfulHeavyDay == null)
+        {
+            progressionInfo = $"{cycleInfo} | Starting progression: 1,2,3 × 3 sets";
+        }
+        else
+        {
+            var ladderPattern = GetLadderPatternDescription(lastSuccessfulHeavyDay);
+            var intensityAdjustment = model.PracticeIntensity switch
+            {
+                WaPracticeIntensity.Heavy => " (progressed)",
+                WaPracticeIntensity.Medium => " (reduced by 1 for medium)",
+                WaPracticeIntensity.Light => " (reduced by 2 for light)",
+                _ => ""
+            };
+            
+            progressionInfo = $"{cycleInfo} | Based on last heavy day: {ladderPattern}{intensityAdjustment}";
+        }
+    }
+    
+    private string GetLadderPatternDescription(WaRiteOfPassagePracticeEntry entry)
+    {
+        var patterns = new List<string>();
+        
+        if (entry.Ladder5Sets > 0)
+        {
+            patterns.Add($"1,2,3,4,5 × {entry.Ladder5Sets}");
+        }
+        else if (entry.Ladder4Sets > 0 && entry.Ladder3Sets > 0)
+        {
+            patterns.Add($"1,2,3,4 × {entry.Ladder4Sets}");
+            if (entry.Ladder3Sets > entry.Ladder4Sets)
+                patterns.Add($"1,2,3 × {entry.Ladder3Sets - entry.Ladder4Sets}");
+        }
+        else if (entry.Ladder3Sets > 0)
+        {
+            patterns.Add($"1,2,3 × {entry.Ladder3Sets}");
+        }
+        else if (entry.Ladder2Sets > 0)
+        {
+            patterns.Add($"1,2 × {entry.Ladder2Sets}");
+        }
+        else if (entry.Ladder1Sets > 0)
+        {
+            patterns.Add($"1 × {entry.Ladder1Sets}");
+        }
+        
+        return string.Join(" + ", patterns);
+    }
+}

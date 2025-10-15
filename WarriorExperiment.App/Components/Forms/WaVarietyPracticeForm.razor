@@ -1,0 +1,150 @@
+@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Validators
+@using Blazored.FluentValidation
+@inherits WaBaseComponent
+
+<EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
+    <FluentValidationValidator />
+    
+    <RadzenStack Gap="1rem">
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H5">Variety Practice Session</RadzenText>
+                
+                <!-- Date -->
+                <RadzenFormField Text="Date" AllowFloatingLabel="false">
+                    <RadzenDatePicker @bind-Value="@Model.Date" ShowTime="false" DateFormat="yyyy-MM-dd" />
+                </RadzenFormField>
+                
+                <!-- Exercises Section -->
+                <RadzenStack Gap="1rem">
+                    <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenColumn Size="8">
+                            <RadzenText TextStyle="TextStyle.H6">Exercises</RadzenText>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenButton Text="Add Exercise" Icon="add" ButtonStyle="ButtonStyle.Success" 
+                                        Click="@AddExercise" Size="ButtonSize.Small" />
+                        </RadzenColumn>
+                    </RadzenRow>
+                    
+                    @if (exercises.Any())
+                    {
+                        @for (int i = 0; i < exercises.Count; i++)
+                        {
+                            var index = i; // Capture for closure
+                            var exercise = exercises[index];
+                            
+                            <RadzenCard Style="background-color: var(--rz-base-200);">
+                                <RadzenStack Gap="0.5rem">
+                                    <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                        <RadzenColumn Size="10">
+                                            <RadzenText TextStyle="TextStyle.Subtitle2">Exercise @(index + 1)</RadzenText>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="2">
+                                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                                        Click="@(() => RemoveExercise(index))" />
+                                        </RadzenColumn>
+                                    </RadzenRow>
+                                    
+                                    <RadzenFormField Text="Exercise Name" AllowFloatingLabel="false">
+                                        <RadzenTextBox @bind-Value="@exercise.Name" Placeholder="Exercise name..." />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenRow>
+                                        <RadzenColumn Size="4">
+                                            <RadzenFormField Text="Sets" AllowFloatingLabel="false">
+                                                <RadzenNumeric @bind-Value="@exercise.Sets" Min="0" />
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="4">
+                                            <RadzenFormField Text="Reps" AllowFloatingLabel="false">
+                                                <RadzenNumeric @bind-Value="@exercise.Reps" Min="0" />
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="4">
+                                            <RadzenFormField Text="Weight (kg)" AllowFloatingLabel="false">
+                                                <RadzenNumeric @bind-Value="@exercise.Weight" Min="0" Step="0.5M" />
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                    </RadzenRow>
+                                </RadzenStack>
+                            </RadzenCard>
+                        }
+                    }
+                    else
+                    {
+                        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="false">
+                            <RadzenText TextStyle="TextStyle.Body1">
+                                No exercises added yet. Click "Add Exercise" to start.
+                            </RadzenText>
+                        </RadzenAlert>
+                    }
+                </RadzenStack>
+                
+                <!-- Notes -->
+                <RadzenFormField Text="Notes (Optional)" AllowFloatingLabel="false">
+                    <RadzenTextArea @bind-Value="@Model.Notes" Rows="3" Placeholder="Optional notes about the practice session..." />
+                </RadzenFormField>
+                
+                <!-- Validation Summary -->
+                <ValidationSummary />
+                
+                <!-- Submit Button -->
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save Practice Session" ButtonStyle="ButtonStyle.Primary" 
+                            Icon="save" Disabled="@(!exercises.Any())" />
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    [Parameter] public WaVarietyPracticeEntry Model { get; set; } = new();
+    [Parameter] public EventCallback<WaVarietyPracticeEntry> OnValidSubmit { get; set; }
+    
+    private List<WaExercise> exercises = new();
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        // Initialize with existing exercises or add one empty exercise
+        if (Model.Exercises?.Any() == true)
+        {
+            exercises = Model.Exercises.ToList();
+        }
+        else
+        {
+            AddExercise();
+        }
+    }
+    
+    private void AddExercise()
+    {
+        exercises.Add(new WaExercise
+        {
+            Name = string.Empty,
+            Sets = 0,
+            Reps = 0,
+            Weight = null
+        });
+        StateHasChanged();
+    }
+    
+    private void RemoveExercise(int index)
+    {
+        if (index >= 0 && index < exercises.Count)
+        {
+            exercises.RemoveAt(index);
+            StateHasChanged();
+        }
+    }
+    
+    private async Task HandleValidSubmit()
+    {
+        // Update the model with current exercises
+        Model.Exercises = exercises.Where(e => !string.IsNullOrWhiteSpace(e.Name)).ToList();
+        
+        await OnValidSubmit.InvokeAsync(Model);
+    }
+}
