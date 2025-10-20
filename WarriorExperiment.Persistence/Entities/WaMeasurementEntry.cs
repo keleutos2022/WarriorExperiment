@@ -1,9 +1,9 @@
-namespace WarriorExperiment.Persistence.Models;
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Represents a body measurement entry with photos and various metrics
 /// </summary>
-public class WaMeasurementEntry : WaBase
+public class WaMeasurementEntry : WaEntryEntity
 {
     /// <summary>
     /// Gets or sets the user ID (foreign key)
@@ -14,11 +14,6 @@ public class WaMeasurementEntry : WaBase
     /// Gets or sets the measurement method ID (foreign key)
     /// </summary>
     public int MeasurementMethodId { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the date of the measurement
-    /// </summary>
-    public DateTime Date { get; set; }
     
     // Photos (stored as Base64)
     /// <summary>
@@ -48,19 +43,14 @@ public class WaMeasurementEntry : WaBase
     public decimal? BodyFat { get; set; }
     
     /// <summary>
-    /// Gets or sets the muscle mass in kilograms
+    /// Gets or sets the muscle mass percentage from Omron scale
+    /// </summary>
+    public decimal? MuscleMassPercentage { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the calculated muscle mass in kilograms
     /// </summary>
     public decimal? MuscleMass { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the water percentage
-    /// </summary>
-    public decimal? WaterPercentage { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the bone mass in kilograms
-    /// </summary>
-    public decimal? BoneMass { get; set; }
     
     /// <summary>
     /// Gets or sets the BMI (Body Mass Index)
@@ -128,4 +118,51 @@ public class WaMeasurementEntry : WaBase
     /// Gets or sets the navigation property to the measurement method
     /// </summary>
     public WaMeasurementMethod MeasurementMethod { get; set; } = null!;
+    
+    /// <summary>
+    /// Calculates muscle mass in kg from percentage and weight
+    /// </summary>
+    /// <returns>Muscle mass in kg, or null if data is incomplete</returns>
+    public decimal? CalculateMuscleMassKg()
+    {
+        if (Weight.HasValue && MuscleMassPercentage.HasValue)
+        {
+            return Weight.Value * MuscleMassPercentage.Value / 100;
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Gets the visceral fat category based on the level
+    /// </summary>
+    /// <returns>Category description</returns>
+    public string GetVisceralFatCategory()
+    {
+        if (!VisceralFat.HasValue) return "Unknown";
+        
+        return VisceralFat.Value switch
+        {
+            >= 1 and <= 9 => "Normal",
+            >= 10 and <= 14 => "High", 
+            >= 15 and <= 30 => "Very High",
+            _ => "Out of Range"
+        };
+    }
+    
+    /// <summary>
+    /// Gets the color associated with the visceral fat category
+    /// </summary>
+    /// <returns>CSS color class or hex color</returns>
+    public string GetVisceralFatCategoryColor()
+    {
+        if (!VisceralFat.HasValue) return "#6c757d"; // gray
+        
+        return VisceralFat.Value switch
+        {
+            >= 1 and <= 9 => "#28a745", // green
+            >= 10 and <= 14 => "#ffc107", // orange
+            >= 15 and <= 30 => "#dc3545", // red
+            _ => "#6c757d" // gray
+        };
+    }
 }

@@ -176,9 +176,8 @@ public class WaMeasurementEntryExportData
     public string MeasurementMethodName { get; set; } = string.Empty;
     public decimal? Weight { get; set; }
     public decimal? BodyFat { get; set; }
+    public decimal? MuscleMassPercentage { get; set; }
     public decimal? MuscleMass { get; set; }
-    public decimal? WaterPercentage { get; set; }
-    public decimal? BoneMass { get; set; }
     public decimal? BMI { get; set; }
     public decimal? ChestCircumference { get; set; }
     public decimal? WaistCircumference { get; set; }

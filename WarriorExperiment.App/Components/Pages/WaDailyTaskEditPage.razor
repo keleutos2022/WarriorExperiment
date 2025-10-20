@@ -1,0 +1,106 @@
+@page "/daily-task/edit"
+@page "/daily-task/edit/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Core.Services
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
+@inject WaDailyTaskService DailyTaskService
+@inject NavigationManager Navigation
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenButton Text="← Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" 
+                        Click="@(() => Navigation.NavigateTo("/daily-tasks"))" />
+            
+            <WaDailyTaskForm Model="@currentTask" OnValidSubmit="@HandleFormSubmit" />
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Inject] NotificationService NotificationService { get; set; } = default!;
+    
+    private WaDailyTask currentTask = new();
+    private bool isLoading = true;
+    private string pageTitle => Id.HasValue ? "Edit Daily Task" : "New Daily Task";
+    private string pageSubTitle => Id.HasValue ? "Update task details" : "Create a new daily task";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            if (Id.HasValue)
+            {
+                // Load existing task for editing
+                var task = await DailyTaskService.GetByIdAsync(Id.Value);
+                if (task != null)
+                {
+                    currentTask = task;
+                }
+                else
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, "Task not found");
+                    Navigation.NavigateTo("/daily-tasks");
+                    return;
+                }
+            }
+            else
+            {
+                // New task
+                currentTask = new WaDailyTask
+                {
+                    IsActive = true,
+                    SortOrder = 0 // Will be set to max + 1 in service
+                };
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleFormSubmit(WaDailyTask task)
+    {
+        try
+        {
+            if (Id.HasValue)
+            {
+                await DailyTaskService.UpdateAsync(task);
+                NotificationService.Notify(NotificationSeverity.Success, "Daily task updated successfully");
+            }
+            else
+            {
+                await DailyTaskService.CreateAsync(task);
+                NotificationService.Notify(NotificationSeverity.Success, "Daily task created successfully");
+            }
+            
+            Navigation.NavigateTo("/daily-tasks");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error saving task: {ex.Message}");
+        }
+    }
+}

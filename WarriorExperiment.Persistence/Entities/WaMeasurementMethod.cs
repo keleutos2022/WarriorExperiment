@@ -1,9 +1,9 @@
-namespace WarriorExperiment.Persistence.Models;
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Represents a measurement method or scale type used for body measurements
 /// </summary>
-public class WaMeasurementMethod : WaBase
+public class WaMeasurementMethod : WaBaseEntity
 {
     /// <summary>
     /// Gets or sets the name of the measurement method

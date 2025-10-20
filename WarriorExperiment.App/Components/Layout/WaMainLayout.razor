@@ -1,7 +1,12 @@
+@using Microsoft.AspNetCore.Identity
 @using WarriorExperiment.Core.Services
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @inherits LayoutComponentBase
+@inject SignInManager<WaUser> SignInManager
+@inject UserManager<WaUser> UserManager
 @inject WaUserService UserService
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
 @implements IDisposable
 
 <RadzenDialog />
@@ -21,6 +26,7 @@
             <RadzenPanelMenuItem Text="Achievements" Icon="military_tech" Path="/" />
             <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="/dashboard" />
             <RadzenPanelMenuItem Text="Daily Survey" Icon="assignment" Path="/daily-survey" />
+            <RadzenPanelMenuItem Text="Daily Tasks" Icon="task_alt" Path="/daily-tasks" />
             <RadzenPanelMenuItem Text="Measurements" Icon="straighten">
                 <RadzenPanelMenuItem Text="Body Measurements" Icon="monitor_weight" Path="/measurements" />
                 <RadzenPanelMenuItem Text="Measurement Methods" Icon="settings" Path="/measurement-methods" />
@@ -46,26 +52,48 @@
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="6" SizeMD="8" class="wa-header-right">
-                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center">
-                    <WaUserSelector OnCurrentUserChanged="@HandleCurrentUserChanged" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="1rem">
+                    <AuthorizeView>
+                        <Authorized>
+                            <RadzenText Text="@($"Welcome, {context.User.Identity?.Name}")" TextStyle="TextStyle.Body2" />
+                            <RadzenButton Text="Logout" 
+                                          Icon="logout" 
+                                          Click="@HandleLogout"
+                                          Variant="Variant.Outlined"
+                                          Size="ButtonSize.Small" />
+                        </Authorized>
+                        <NotAuthorized>
+                            <RadzenButton Text="Login" 
+                                          Icon="login" 
+                                          Click="@NavigateToLogin"
+                                          Size="ButtonSize.Small" />
+                        </NotAuthorized>
+                    </AuthorizeView>
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
     </RadzenHeader>
     <RadzenBody class="wa-body">
-        @if (currentUser != null)
-        {
-            <CascadingValue Value="@currentUser">
+        <AuthorizeView>
+            <Authorized>
+                @if (currentUser != null)
+                {
+                    <CascadingValue Value="@currentUser">
+                        @Body
+                    </CascadingValue>
+                }
+                else
+                {
+                    <div class="wa-loading-container">
+                        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+                        <RadzenText Text="Loading user..." TextStyle="TextStyle.Body1" class="wa-loading-text" />
+                    </div>
+                }
+            </Authorized>
+            <NotAuthorized>
                 @Body
-            </CascadingValue>
-        }
-        else
-        {
-            <div class="wa-loading-container">
-                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
-                <RadzenText Text="Loading user..." TextStyle="TextStyle.Body1" class="wa-loading-text" />
-            </div>
-        }
+            </NotAuthorized>
+        </AuthorizeView>
     </RadzenBody>
 </RadzenLayout>
 
@@ -82,10 +110,14 @@
     
     protected override async Task OnInitializedAsync()
     {
-        currentUser = await UserService.GetCurrentUserAsync();
-        
-        // Subscribe to user service events to update cascaded value
-        UserService.CurrentUserChanged += HandleUserServiceChanged;
+        // Only load user data if authenticated
+        if (SignInManager.IsSignedIn(HttpContextAccessor.HttpContext?.User))
+        {
+            currentUser = await UserService.GetCurrentUserAsync();
+            
+            // Subscribe to user service events to update cascaded value
+            UserService.CurrentUserChanged += HandleUserServiceChanged;
+        }
         
         // Set initial sidebar state based on screen size
         sidebarExpanded = IsMobileDevice() == false;
@@ -134,6 +166,22 @@
     {
         sidebarExpanded = false;
         StateHasChanged();
+    }
+    
+    /// <summary>
+    /// Handles logout button click
+    /// </summary>
+    private void HandleLogout()
+    {
+        Navigation.NavigateTo("/Account/Logout");
+    }
+    
+    /// <summary>
+    /// Handles login button click
+    /// </summary>
+    private void NavigateToLogin()
+    {
+        Navigation.NavigateTo("/Account/Login");
     }
     
     public void Dispose()

@@ -1,19 +1,14 @@
-namespace WarriorExperiment.Persistence.Models;
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Represents a variety practice session with multiple exercises
 /// </summary>
-public class WaVarietyPracticeEntry : WaBase
+public class WaVarietyPracticeEntry : WaEntryEntity
 {
     /// <summary>
     /// Gets or sets the user ID (foreign key)
     /// </summary>
     public int UserId { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the date of the practice
-    /// </summary>
-    public DateTime Date { get; set; }
     
     /// <summary>
     /// Gets or sets optional notes about the practice session

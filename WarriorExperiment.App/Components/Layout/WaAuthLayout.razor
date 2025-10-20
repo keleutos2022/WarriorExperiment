@@ -1,0 +1,122 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<RadzenDialog />
+<RadzenNotification />
+<RadzenContextMenu />
+<RadzenTooltip />
+
+<RadzenLayout class="wa-auth-layout">
+    <RadzenHeader class="wa-auth-header">
+        <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-p-4">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenIcon Icon="fitness_center" Style="font-size: 2rem; color: var(--rz-primary);" />
+                    <RadzenText TextStyle="TextStyle.H4" class="wa-brand-title">
+                        Warrior Experiment
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenButton Text="About" 
+                                  Icon="info" 
+                                  Click="@NavigateToAbout"
+                                  Variant="Variant.Text"
+                                  Size="ButtonSize.Small" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenHeader>
+    
+    <RadzenBody class="wa-auth-body">
+        <div class="wa-auth-container">
+            @Body
+        </div>
+    </RadzenBody>
+    
+    <RadzenFooter class="wa-auth-footer">
+        <RadzenRow JustifyContent="JustifyContent.Center" class="rz-p-3">
+            <RadzenColumn Size="12">
+                <RadzenText TextStyle="TextStyle.Caption" TextAlign="TextAlign.Center" class="wa-footer-text">
+                    © @DateTime.Now.Year Warrior Experiment. Transform your body, mind, and spirit.
+                </RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenFooter>
+</RadzenLayout>
+
+@code {
+    private void NavigateToAbout()
+    {
+        Navigation.NavigateTo("/about");
+    }
+}
+
+<style>
+    .wa-auth-layout {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wa-auth-header {
+        background: var(--rz-surface-900);
+        color: var(--rz-text-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border-bottom: 1px solid var(--rz-border-color);
+    }
+
+    .wa-brand-title {
+        color: var(--rz-text-color) !important;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .wa-auth-body {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--rz-surface-800) 0%, var(--rz-surface-700) 100%);
+        padding: 2rem;
+    }
+
+    .wa-auth-container {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .wa-auth-footer {
+        background: var(--rz-surface-900);
+        border-top: 1px solid var(--rz-border-color);
+    }
+
+    .wa-footer-text {
+        color: var(--rz-text-secondary-color);
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .wa-auth-body {
+            padding: 1rem;
+        }
+        
+        .wa-auth-container {
+            max-width: 100%;
+        }
+        
+        .wa-brand-title {
+            font-size: 1.25rem;
+        }
+    }
+
+    /* Card styling for auth forms */
+    .wa-auth-container .rz-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--rz-border-color);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+</style>

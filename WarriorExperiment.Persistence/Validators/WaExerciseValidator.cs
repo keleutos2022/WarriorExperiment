@@ -1,5 +1,5 @@
 using FluentValidation;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
 
 namespace WarriorExperiment.Persistence.Validators;
 

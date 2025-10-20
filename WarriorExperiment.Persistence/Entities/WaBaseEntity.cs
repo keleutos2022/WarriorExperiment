@@ -1,9 +1,9 @@
-namespace WarriorExperiment.Persistence.Models;
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Base entity for all domain models
 /// </summary>
-public abstract class WaBase
+public abstract class WaBaseEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier

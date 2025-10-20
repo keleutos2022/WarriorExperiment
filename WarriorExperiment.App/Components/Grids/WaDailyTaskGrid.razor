@@ -1,0 +1,161 @@
+@using WarriorExperiment.Persistence.Entities
+@using WarriorExperiment.Persistence.Enums
+
+<RadzenDataGrid @ref="grid" 
+                Data="@Tasks" 
+                TItem="WaDailyTask" 
+                AllowPaging="true" 
+                PageSize="20"
+                AllowSorting="true" 
+                AllowFiltering="true"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                class="rz-shadow-3">
+    <Columns>
+        <RadzenDataGridColumn TItem="WaDailyTask" Property="SortOrder" Title="Order" Width="80px" Sortable="true">
+            <Template Context="task">
+                <RadzenNumeric @bind-Value="@task.SortOrder" 
+                             TValue="int" 
+                             Min="0" 
+                             Change="@((args) => OnSortOrderChanged(task, args))"
+                             Style="width: 60px;" />
+            </Template>
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaDailyTask" Property="Name" Title="Task Name" Sortable="true" Filterable="true">
+            <Template Context="task">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Subtitle2" Text="@task.Name" />
+                    @if (!string.IsNullOrEmpty(task.Description))
+                    {
+                        <RadzenText TextStyle="TextStyle.Caption" 
+                                  Text="@task.Description" 
+                                  class="rz-color-secondary" 
+                                  Style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" />
+                    }
+                </RadzenStack>
+            </Template>
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaDailyTask" Property="PreferredTime" Title="Preferred Time" Width="130px" Sortable="true" Filterable="true">
+            <FilterTemplate>
+                <RadzenDropDown @bind-Value="@context.FilterValue" 
+                              Data="@preferredTimeFilterOptions" 
+                              TextProperty="Text" 
+                              ValueProperty="Value"
+                              AllowClear="true"
+                              Placeholder="All" />
+            </FilterTemplate>
+            <Template Context="task">
+                <RadzenText Text="@GetPreferredTimeDisplayName(task.PreferredTime)" />
+            </Template>
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaDailyTask" Property="IsActive" Title="Status" Width="120px" Sortable="true" Filterable="true">
+            <FilterTemplate>
+                <RadzenDropDown @bind-Value="@context.FilterValue" 
+                              Data="@(new List<object> { true, false })" 
+                              TextProperty="Text" 
+                              ValueProperty="Value"
+                              AllowClear="true"
+                              Placeholder="All">
+                    <Template Context="item">
+                        @((bool)item ? "Active" : "Inactive")
+                    </Template>
+                </RadzenDropDown>
+            </FilterTemplate>
+            <Template Context="task">
+                <RadzenSwitch @bind-Value="@task.IsActive" 
+                            Change="@((args) => OnToggleActive.InvokeAsync(task))" />
+                <RadzenText TextStyle="TextStyle.Caption" 
+                          Text="@(task.IsActive ? "Active" : "Inactive")" 
+                          class="rz-ml-2" />
+            </Template>
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaDailyTask" Property="CreatedAt" Title="Created" Width="150px" Sortable="true" FormatString="{0:MM/dd/yyyy}">
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaDailyTask" Title="Actions" Width="150px" Sortable="false" Filterable="false">
+            <Template Context="task">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <RadzenButton Icon="edit" 
+                                Size="ButtonSize.Small" 
+                                ButtonStyle="ButtonStyle.Light" 
+                                Variant="Variant.Flat"
+                                Click="@(() => OnEdit.InvokeAsync(task))" 
+                                Text="Edit" />
+                    <RadzenButton Icon="delete" 
+                                Size="ButtonSize.Small" 
+                                ButtonStyle="ButtonStyle.Danger" 
+                                Variant="Variant.Flat"
+                                Click="@(() => OnDelete.InvokeAsync(task))" 
+                                Text="Delete" />
+                </RadzenStack>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@if (!Tasks.Any())
+{
+    <RadzenCard class="rz-shadow-1 rz-text-align-center rz-p-8">
+        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenIcon Icon="task_alt" Style="font-size: 4rem;" class="rz-color-secondary" />
+            <RadzenText TextStyle="TextStyle.H6" Text="No Daily Tasks" class="rz-color-secondary" />
+            <RadzenText TextStyle="TextStyle.Body1" Text="Create your first daily task to get started" class="rz-color-secondary" />
+        </RadzenStack>
+    </RadzenCard>
+}
+
+@code {
+    [Parameter] public List<WaDailyTask> Tasks { get; set; } = new();
+    [Parameter] public EventCallback<WaDailyTask> OnEdit { get; set; }
+    [Parameter] public EventCallback<WaDailyTask> OnDelete { get; set; }
+    [Parameter] public EventCallback<WaDailyTask> OnToggleActive { get; set; }
+    [Parameter] public EventCallback<List<int>> OnReorder { get; set; }
+    
+    private RadzenDataGrid<WaDailyTask> grid = default!;
+    private Dictionary<int, int> originalSortOrders = new();
+    
+    private readonly List<object> preferredTimeFilterOptions = new()
+    {
+        new { Text = "Morning", Value = WaDaySection.Morning },
+        new { Text = "Midday", Value = WaDaySection.Midday },
+        new { Text = "Evening", Value = WaDaySection.Evening },
+        new { Text = "Other", Value = WaDaySection.Other }
+    };
+    
+    protected override void OnParametersSet()
+    {
+        // Store original sort orders to detect changes
+        originalSortOrders = Tasks.ToDictionary(t => t.Id, t => t.SortOrder);
+    }
+    
+    private async Task OnSortOrderChanged(WaDailyTask task, int newSortOrder)
+    {
+        // Update the local model
+        task.SortOrder = newSortOrder;
+        
+        // Check if we need to reorder
+        if (originalSortOrders.ContainsKey(task.Id) && originalSortOrders[task.Id] != newSortOrder)
+        {
+            // Create a reordered list based on current sort orders
+            var orderedTasks = Tasks.OrderBy(t => t.SortOrder).ToList();
+            var taskIds = orderedTasks.Select(t => t.Id).ToList();
+            
+            await OnReorder.InvokeAsync(taskIds);
+        }
+    }
+    
+    private string GetPreferredTimeDisplayName(WaDaySection preferredTime)
+    {
+        return preferredTime switch
+        {
+            WaDaySection.Morning => "Morning",
+            WaDaySection.Midday => "Midday",
+            WaDaySection.Evening => "Evening",
+            WaDaySection.Other => "Other",
+            _ => "Unknown"
+        };
+    }
+}

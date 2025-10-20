@@ -1,4 +1,4 @@
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @using WarriorExperiment.Persistence.Validators
 @using Blazored.FluentValidation
 @inherits WaBaseComponent
@@ -42,51 +42,66 @@
                 <RadzenRow>
                     <RadzenColumn Size="6">
                         <RadzenFormField Text="Weight (kg)" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.Weight" Min="20M" Max="500M" Step="0.1M" />
+                            <RadzenNumeric @bind-Value="@Model.Weight" Min="20M" Max="500M" Step="0.1M" 
+                                         Change="@((decimal? value) => OnWeightChanged(value))" />
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="6">
                         <RadzenFormField Text="Body Fat (%)" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.BodyFat" Min="1M" Max="80M" Step="0.1M" />
+                            <RadzenNumeric @bind-Value="@Model.BodyFat" Min="5M" Max="50M" Step="0.1M" />
                         </RadzenFormField>
                     </RadzenColumn>
                 </RadzenRow>
                 
                 <RadzenRow>
                     <RadzenColumn Size="6">
-                        <RadzenFormField Text="Muscle Mass (kg)" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.MuscleMass" Min="10M" Max="150M" Step="0.1M" />
+                        <RadzenFormField Text="Muscle Mass (%)" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.MuscleMassPercentage" Min="20M" Max="60M" Step="0.1M" 
+                                         Change="@((decimal? value) => OnMuscleMassPercentageChanged(value))" />
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="6">
-                        <RadzenFormField Text="Water Percentage (%)" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.WaterPercentage" Min="20M" Max="80M" Step="0.1M" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                </RadzenRow>
-                
-                <RadzenRow>
-                    <RadzenColumn Size="6">
-                        <RadzenFormField Text="Bone Mass (kg)" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.BoneMass" Min="0.5M" Max="10M" Step="0.1M" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="6">
-                        <RadzenFormField Text="BMI" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.BMI" Min="10M" Max="60M" Step="0.1M" />
+                        <RadzenFormField Text="Muscle Mass (kg) - Calculated" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.MuscleMass" Min="10M" Max="150M" Step="0.1M" 
+                                         Disabled="true" Style="background-color: #f8f9fa;" />
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                                Auto-calculated from weight and percentage
+                            </RadzenText>
                         </RadzenFormField>
                     </RadzenColumn>
                 </RadzenRow>
                 
                 <RadzenRow>
                     <RadzenColumn Size="6">
-                        <RadzenFormField Text="Visceral Fat Level" AllowFloatingLabel="false">
-                            <RadzenNumeric @bind-Value="@Model.VisceralFat" Min="1" Max="60" />
+                        <RadzenFormField Text="BMI - Calculated" AllowFloatingLabel="false">
+                            <RadzenNumeric @bind-Value="@Model.BMI" Min="10M" Max="60M" Step="0.1M" 
+                                         Disabled="true" Style="background-color: #f8f9fa;" />
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                                Auto-calculated from weight and height
+                            </RadzenText>
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="6">
                         <RadzenFormField Text="Metabolic Age (years)" AllowFloatingLabel="false">
                             <RadzenNumeric @bind-Value="@Model.MetabolicAge" Min="10" Max="100" />
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="12">
+                        <RadzenFormField Text="Visceral Fat Level (1-30)" AllowFloatingLabel="false">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenNumeric @bind-Value="@Model.VisceralFat" Min="1" Max="30" Style="flex: 1;" />
+                                @if (Model.VisceralFat.HasValue)
+                                {
+                                    <RadzenBadge Text="@GetVisceralFatCategory()" 
+                                               Style="@($"background-color: {GetVisceralFatCategoryColor()}; color: white;")" />
+                                }
+                            </RadzenStack>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                                1-9: Normal, 10-14: High, 15-30: Very High
+                            </RadzenText>
                         </RadzenFormField>
                     </RadzenColumn>
                 </RadzenRow>
@@ -155,10 +170,57 @@
 @code {
     [Parameter] public WaMeasurementEntry Model { get; set; } = new();
     [Parameter] public EventCallback<WaMeasurementEntry> OnValidSubmit { get; set; }
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
     
     private IReadOnlyList<IBrowserFile>? frontPhotoFiles;
     private IReadOnlyList<IBrowserFile>? backPhotoFiles;
     private IReadOnlyList<IBrowserFile>? sidePhotoFiles;
+    
+    private void OnWeightChanged(decimal? value)
+    {
+        CalculateBMI();
+        CalculateMuscleMassKg();
+    }
+    
+    private void OnMuscleMassPercentageChanged(decimal? value)
+    {
+        CalculateMuscleMassKg();
+    }
+    
+    private void CalculateBMI()
+    {
+        if (Model.Weight.HasValue && CurrentUser?.Height.HasValue == true)
+        {
+            var heightInMeters = CurrentUser.Height.Value / 100m; // Convert cm to meters
+            Model.BMI = Math.Round(Model.Weight.Value / (heightInMeters * heightInMeters), 2);
+        }
+        else
+        {
+            Model.BMI = null;
+        }
+    }
+    
+    private void CalculateMuscleMassKg()
+    {
+        if (Model.Weight.HasValue && Model.MuscleMassPercentage.HasValue)
+        {
+            Model.MuscleMass = Math.Round(Model.Weight.Value * Model.MuscleMassPercentage.Value / 100, 2);
+        }
+        else
+        {
+            Model.MuscleMass = null;
+        }
+    }
+    
+    private string GetVisceralFatCategory()
+    {
+        return Model.GetVisceralFatCategory();
+    }
+    
+    private string GetVisceralFatCategoryColor()
+    {
+        return Model.GetVisceralFatCategoryColor();
+    }
     
     private void OnFrontPhotoChange(IReadOnlyList<IBrowserFile> files)
     {

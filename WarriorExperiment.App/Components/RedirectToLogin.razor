@@ -1,0 +1,16 @@
+@layout Layout.WaAuthLayout
+@inject NavigationManager Navigation
+
+<div class="wa-redirecting">
+    <RadzenProgressBar ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    <RadzenText TextStyle="TextStyle.Body1">Redirecting to login...</RadzenText>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Redirect to login page with return URL
+        var returnUrl = Uri.EscapeDataString(Navigation.Uri);
+        Navigation.NavigateTo($"/Account/Login?returnUrl={returnUrl}", forceLoad: true);
+    }
+}

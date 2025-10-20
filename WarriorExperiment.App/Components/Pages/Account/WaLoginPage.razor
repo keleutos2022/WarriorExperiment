@@ -1,0 +1,272 @@
+@page "/Account/Login"
+@layout Layout.WaAuthLayout
+@using Microsoft.AspNetCore.Identity
+@using WarriorExperiment.Persistence.Entities
+@using Microsoft.AspNetCore.Mvc
+@using System.ComponentModel.DataAnnotations
+@inject SignInManager<WaUser> SignInManager
+@inject UserManager<WaUser> UserManager
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Login - Warrior Experiment</PageTitle>
+
+<div class="wa-login-container">
+    <div class="wa-login-card">
+        <h3 class="wa-login-title">Login to Warrior Experiment</h3>
+        
+        <form method="post" action="/Account/ProcessLogin" class="wa-login-form">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="wa-error-message">@errorMessage</div>
+            }
+            
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="wa-success-message">@successMessage</div>
+            }
+            
+            <div class="wa-form-field">
+                <label for="username">Username</label>
+                <input type="text" 
+                       id="username" 
+                       name="Username"
+                       placeholder="Enter your username"
+                       class="wa-input" 
+                       required />
+            </div>
+            
+            <div class="wa-form-field">
+                <label for="password">Password</label>
+                <input type="password" 
+                       id="password" 
+                       name="Password"
+                       placeholder="Enter your password"
+                       class="wa-input" 
+                       required />
+            </div>
+            
+            <div class="wa-form-field wa-checkbox-field">
+                <input type="checkbox" id="rememberMe" name="RememberMe" value="true" />
+                <label for="rememberMe">Remember me</label>
+                <input type="hidden" name="RememberMe" value="false" />
+            </div>
+            
+            <div class="wa-login-buttons">
+                <button type="submit" class="wa-login-button">
+                    <span class="button-icon">🔑</span>
+                    Login
+                </button>
+                
+                <a href="/Account/Register" class="wa-register-button">
+                    <span class="button-icon">👤</span>
+                    Register
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery] 
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Details { get; set; }
+
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // If user is already authenticated, redirect to return URL or home
+        if (SignInManager.IsSignedIn(HttpContextAccessor.HttpContext?.User))
+        {
+            var redirectUrl = !string.IsNullOrEmpty(ReturnUrl) ? Uri.UnescapeDataString(ReturnUrl) : "/";
+            Navigation.NavigateTo(redirectUrl, forceLoad: true);
+        }
+
+        // Handle error messages from controller redirects
+        if (!string.IsNullOrEmpty(Error))
+        {
+            errorMessage = Error switch
+            {
+                "invalid" => "Invalid username or password.",
+                "locked" => "Your account has been locked due to multiple failed login attempts.",
+                "not-allowed" => "Your account is not allowed to sign in.",
+                "two-factor" => "Two-factor authentication is required.",
+                "validation" => "Please check your input and try again.",
+                "exception" => "An error occurred during login. Please try again.",
+                _ => "Login failed. Please try again."
+            };
+        }
+    }
+}
+
+<style>
+    .wa-login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        padding: 2rem;
+    }
+    
+    .wa-login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        background: var(--rz-surface-100);
+        border: 1px solid var(--rz-border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .wa-login-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--rz-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .wa-login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .wa-form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .wa-form-field label {
+        font-weight: 500;
+        color: var(--rz-text-color);
+        font-size: 0.9rem;
+    }
+    
+    .wa-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--rz-border-color);
+        border-radius: 4px;
+        background: var(--rz-surface-0);
+        color: var(--rz-text-color);
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .wa-input:focus {
+        outline: none;
+        border-color: var(--rz-primary);
+        box-shadow: 0 0 0 2px rgba(var(--rz-primary-rgb), 0.2);
+    }
+    
+    .wa-checkbox-field {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .wa-checkbox-field input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+    }
+    
+    .wa-login-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .wa-login-button {
+        width: 100%;
+        min-height: 48px;
+        background: var(--rz-primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .wa-login-button:hover {
+        background: var(--rz-primary-dark, var(--rz-primary));
+        opacity: 0.9;
+    }
+    
+    .wa-register-button {
+        width: 100%;
+        min-height: 48px;
+        background: transparent;
+        color: var(--rz-primary);
+        border: 1px solid var(--rz-primary);
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .wa-register-button:hover {
+        background: var(--rz-primary);
+        color: white;
+    }
+    
+    .button-icon {
+        font-size: 1.1rem;
+    }
+    
+    .wa-error-message {
+        padding: 1rem;
+        background: #fee;
+        border: 1px solid #fcc;
+        border-radius: 4px;
+        color: #c33;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .wa-success-message {
+        padding: 1rem;
+        background: #efe;
+        border: 1px solid #cfc;
+        border-radius: 4px;
+        color: #3c3;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .wa-validation-message {
+        color: #c33;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    
+    .wa-login-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>

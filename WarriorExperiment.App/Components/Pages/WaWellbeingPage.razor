@@ -1,5 +1,7 @@
 @page "/wellbeing"
-@using WarriorExperiment.Persistence.Models
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Persistence.Entities
+@attribute [Authorize]
 @using WarriorExperiment.App.Components.Stats
 @inherits WaBasePage
 

@@ -1,0 +1,142 @@
+@page "/daily-tasks"
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Core.Services
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
+@inject WaDailyTaskService DailyTaskService
+@inject WaDefaultDataService DefaultDataService
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+
+<WaBasePage Title="Daily Tasks" SubTitle="Manage your daily task checklist">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenColumn Size="8">
+                    <RadzenText TextStyle="TextStyle.Body1" class="rz-color-secondary">
+                        Create and manage tasks that appear in your daily surveys
+                    </RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="4" class="rz-text-align-end">
+                    <RadzenButton Text="New Task" 
+                                Icon="add" 
+                                ButtonStyle="ButtonStyle.Primary" 
+                                Click="@(() => Navigation.NavigateTo("/daily-task/edit"))" />
+                </RadzenColumn>
+            </RadzenRow>
+            
+            <WaDailyTaskGrid Tasks="@tasks" 
+                           OnEdit="@HandleEdit"
+                           OnDelete="@HandleDelete"
+                           OnToggleActive="@HandleToggleActive"
+                           OnReorder="@HandleReorder" />
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    [Inject] NotificationService NotificationService { get; set; } = default!;
+    
+    private List<WaDailyTask> tasks = new();
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            // Check if default tasks exist, if not, seed them
+            var hasDefaultTasks = await DefaultDataService.HasDefaultDailyTasksAsync();
+            if (!hasDefaultTasks)
+            {
+                await DefaultDataService.SeedDefaultDailyTasksAsync();
+            }
+            
+            tasks = await DailyTaskService.GetAllAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private void HandleEdit(WaDailyTask task)
+    {
+        Navigation.NavigateTo($"/daily-task/edit/{task.Id}");
+    }
+    
+    private async Task HandleDelete(WaDailyTask task)
+    {
+        var result = await DialogService.Confirm(
+            $"Are you sure you want to delete the task '{task.Name}'?", 
+            "Delete Task", 
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+            
+        if (result == true)
+        {
+            try
+            {
+                var deleted = await DailyTaskService.DeleteAsync(task.Id);
+                if (deleted)
+                {
+                    NotificationService.Notify(NotificationSeverity.Success, "Task deleted successfully");
+                    await LoadData();
+                }
+                else
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, "Task not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error deleting task: {ex.Message}");
+            }
+        }
+    }
+    
+    private async Task HandleToggleActive(WaDailyTask task)
+    {
+        try
+        {
+            task.IsActive = !task.IsActive;
+            await DailyTaskService.UpdateAsync(task);
+            
+            var status = task.IsActive ? "activated" : "deactivated";
+            NotificationService.Notify(NotificationSeverity.Success, $"Task {status} successfully");
+        }
+        catch (Exception ex)
+        {
+            // Revert the change on error
+            task.IsActive = !task.IsActive;
+            NotificationService.Notify(NotificationSeverity.Error, $"Error updating task: {ex.Message}");
+            StateHasChanged();
+        }
+    }
+    
+    private async Task HandleReorder(List<int> taskIds)
+    {
+        try
+        {
+            await DailyTaskService.ReorderTasksAsync(taskIds);
+            NotificationService.Notify(NotificationSeverity.Success, "Tasks reordered successfully");
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, $"Error reordering tasks: {ex.Message}");
+        }
+    }
+}

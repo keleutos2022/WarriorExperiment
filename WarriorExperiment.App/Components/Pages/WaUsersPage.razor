@@ -1,6 +1,8 @@
 @page "/users"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.Core.Services
-@using WarriorExperiment.Persistence.Models
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
 @inject WaUserService UserService
 @inject DialogService DialogService
 @inject NotificationService NotificationService

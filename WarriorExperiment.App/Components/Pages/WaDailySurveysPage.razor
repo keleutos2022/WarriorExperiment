@@ -1,5 +1,7 @@
 @page "/daily-survey"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.App.Components.Grids
+@attribute [Authorize]
 
 <WaBasePage Title="Daily Surveys" SubTitle="Track your daily wellness metrics">
     <WaDailySurveyGrid />

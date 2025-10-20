@@ -1,6 +1,8 @@
 @page "/admin"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.Core.Services
-@using WarriorExperiment.Persistence.Models
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
 @using Microsoft.EntityFrameworkCore
 @inject WaDemoDataService DemoDataService
 @inject WaUserService UserService

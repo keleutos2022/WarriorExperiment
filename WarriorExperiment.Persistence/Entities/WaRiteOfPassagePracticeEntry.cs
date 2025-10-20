@@ -1,11 +1,11 @@
 using WarriorExperiment.Persistence.Enums;
 
-namespace WarriorExperiment.Persistence.Models;
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Represents a Rite of Passage practice session entry
 /// </summary>
-public class WaRiteOfPassagePracticeEntry : WaBase
+public class WaRiteOfPassagePracticeEntry : WaEntryEntity
 {
     /// <summary>
     /// Gets or sets the user ID (foreign key)
@@ -63,9 +63,9 @@ public class WaRiteOfPassagePracticeEntry : WaBase
     public bool Success { get; set; }
     
     /// <summary>
-    /// Gets or sets the date of the practice
+    /// Gets or sets optional notes about the practice session
     /// </summary>
-    public DateTime Date { get; set; }
+    public string? Notes { get; set; }
     
     /// <summary>
     /// Gets the calculated pulls per minute

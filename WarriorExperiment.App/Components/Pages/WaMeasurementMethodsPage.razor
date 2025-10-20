@@ -1,5 +1,7 @@
 @page "/measurement-methods"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.App.Components.Grids
+@attribute [Authorize]
 
 <WaBasePage Title="Measurement Methods" SubTitle="Manage different measurement methods">
     <WaMeasurementMethodGrid />

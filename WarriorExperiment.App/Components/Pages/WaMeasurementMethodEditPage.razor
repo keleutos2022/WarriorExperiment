@@ -1,8 +1,10 @@
 @page "/measurement-method/edit"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @page "/measurement-method/edit/{id:int}"
 @using Microsoft.EntityFrameworkCore
 @using WarriorExperiment.Persistence.Data
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @inject WaDbContext Context
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService

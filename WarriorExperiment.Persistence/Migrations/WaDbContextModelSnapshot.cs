@@ -22,7 +22,139 @@ namespace WarriorExperiment.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaDailySurveyEntry", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailySurveyEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -54,10 +186,22 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Property<DateTime>("EnteredAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FunActivity")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("GratefulFor")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<int>("HungerFeelingDuringUndereatingPhase")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(5);
+
+                    b.Property<string>("LookingForwardTo")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<int>("Mood")
                         .ValueGeneratedOnAdd()
@@ -95,7 +239,106 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.ToTable("daily_surveys", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaExercise", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailyTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("EnteredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PreferredTime")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(3);
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("daily_tasks", (string)null);
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailyTaskEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("DailySurveyEntryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DailyTaskId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Done")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("EnteredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DailySurveyEntryId");
+
+                    b.HasIndex("DailyTaskId", "DailySurveyEntryId")
+                        .IsUnique();
+
+                    b.ToTable("daily_task_entries", (string)null);
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaExercise", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -143,7 +386,7 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.ToTable("exercises", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaMeasurementEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaMeasurementEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -166,10 +409,6 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("numeric(5,2)");
 
                     b.Property<decimal?>("BodyFat")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<decimal?>("BoneMass")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
@@ -209,6 +448,10 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasPrecision(6, 2)
                         .HasColumnType("numeric(6,2)");
 
+                    b.Property<decimal?>("MuscleMassPercentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
@@ -235,10 +478,6 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasPrecision(6, 2)
                         .HasColumnType("numeric(6,2)");
 
-                    b.Property<decimal?>("WaterPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
                     b.Property<decimal?>("Weight")
                         .HasPrecision(6, 2)
                         .HasColumnType("numeric(6,2)");
@@ -252,7 +491,7 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.ToTable("measurement_entries", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaMeasurementMethod", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaMeasurementMethod", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -290,7 +529,7 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.ToTable("measurement_methods", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaRiteOfPassagePracticeEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaRiteOfPassagePracticeEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -327,6 +566,9 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Property<int>("Ladder5Sets")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
                     b.Property<string>("PracticeIntensity")
                         .IsRequired()
                         .HasColumnType("text");
@@ -357,7 +599,7 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.ToTable("rite_of_passage_practice_entries", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaUser", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -365,8 +607,15 @@ namespace WarriorExperiment.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -376,8 +625,22 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Property<DateTime?>("DateOfStart")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("EnteredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<decimal?>("Height")
                         .HasPrecision(5, 2)
@@ -388,22 +651,57 @@ namespace WarriorExperiment.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaVarietyPracticeEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaVarietyPracticeEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -442,9 +740,60 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.ToTable("variety_practices", (string)null);
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaDailySurveyEntry", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("WarriorExperiment.Persistence.Models.WaUser", "User")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+                {
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+                {
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailySurveyEntry", b =>
+                {
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", "User")
                         .WithMany("DailySurveys")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -453,9 +802,28 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaExercise", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailyTaskEntry", b =>
                 {
-                    b.HasOne("WarriorExperiment.Persistence.Models.WaVarietyPracticeEntry", "VarietyPractice")
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaDailySurveyEntry", "DailySurveyEntry")
+                        .WithMany("TaskEntries")
+                        .HasForeignKey("DailySurveyEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaDailyTask", "DailyTask")
+                        .WithMany("TaskEntries")
+                        .HasForeignKey("DailyTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DailySurveyEntry");
+
+                    b.Navigation("DailyTask");
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaExercise", b =>
+                {
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaVarietyPracticeEntry", "VarietyPractice")
                         .WithMany("Exercises")
                         .HasForeignKey("VarietyPracticeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -464,15 +832,15 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Navigation("VarietyPractice");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaMeasurementEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaMeasurementEntry", b =>
                 {
-                    b.HasOne("WarriorExperiment.Persistence.Models.WaMeasurementMethod", "MeasurementMethod")
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaMeasurementMethod", "MeasurementMethod")
                         .WithMany("MeasurementEntries")
                         .HasForeignKey("MeasurementMethodId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("WarriorExperiment.Persistence.Models.WaUser", "User")
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", "User")
                         .WithMany("MeasurementEntries")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -483,9 +851,9 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaRiteOfPassagePracticeEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaRiteOfPassagePracticeEntry", b =>
                 {
-                    b.HasOne("WarriorExperiment.Persistence.Models.WaUser", "User")
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", "User")
                         .WithMany("RiteOfPassagePracticeEntries")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -494,9 +862,9 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaVarietyPracticeEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaVarietyPracticeEntry", b =>
                 {
-                    b.HasOne("WarriorExperiment.Persistence.Models.WaUser", "User")
+                    b.HasOne("WarriorExperiment.Persistence.Entities.WaUser", "User")
                         .WithMany("VarietyPractices")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -505,12 +873,22 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaMeasurementMethod", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailySurveyEntry", b =>
+                {
+                    b.Navigation("TaskEntries");
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaDailyTask", b =>
+                {
+                    b.Navigation("TaskEntries");
+                });
+
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaMeasurementMethod", b =>
                 {
                     b.Navigation("MeasurementEntries");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaUser", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaUser", b =>
                 {
                     b.Navigation("DailySurveys");
 
@@ -521,7 +899,7 @@ namespace WarriorExperiment.Persistence.Migrations
                     b.Navigation("VarietyPractices");
                 });
 
-            modelBuilder.Entity("WarriorExperiment.Persistence.Models.WaVarietyPracticeEntry", b =>
+            modelBuilder.Entity("WarriorExperiment.Persistence.Entities.WaVarietyPracticeEntry", b =>
                 {
                     b.Navigation("Exercises");
                 });

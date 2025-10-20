@@ -1,9 +1,11 @@
 @page "/dashboard"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.Core.Services
+@attribute [Authorize]
 @using WarriorExperiment.Core.Enums
 @using WarriorExperiment.Core.Interfaces
 @using WarriorExperiment.Core.Dtos
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @inject WaEntryService EntryService
 
 <PageTitle>Dashboard - Warrior Experiment</PageTitle>

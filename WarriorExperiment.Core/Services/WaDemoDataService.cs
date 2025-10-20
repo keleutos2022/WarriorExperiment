@@ -1,6 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WarriorExperiment.Persistence.Data;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
 using WarriorExperiment.Persistence.Enums;
 
 namespace WarriorExperiment.Core.Services;
@@ -12,6 +13,7 @@ public class WaDemoDataService
 {
     private readonly WaDbContext _context;
     private readonly WaUserService _userService;
+    private readonly UserManager<WaUser> _userManager;
     private readonly WaMeasurementEntryService _measurementService;
     private readonly WaDailySurveyEntryService _surveyService;
     private readonly WaRiteOfPassagePracticeEntryService _practiceService;
@@ -23,12 +25,14 @@ public class WaDemoDataService
     public WaDemoDataService(
         WaDbContext context,
         WaUserService userService,
+        UserManager<WaUser> userManager,
         WaMeasurementEntryService measurementService,
         WaDailySurveyEntryService surveyService,
         WaRiteOfPassagePracticeEntryService practiceService)
     {
         _context = context;
         _userService = userService;
+        _userManager = userManager;
         _measurementService = measurementService;
         _surveyService = surveyService;
         _practiceService = practiceService;
@@ -67,9 +71,19 @@ public class WaDemoDataService
     /// </summary>
     private async Task<WaUser> CreateDemoUserAsync()
     {
+        // Check if demo user already exists
+        var existingDemoUser = await _userManager.FindByEmailAsync("demo@warriorexperiment.local");
+        if (existingDemoUser != null)
+        {
+            return existingDemoUser;
+        }
+
         var demoUser = new WaUser
         {
-            UserName = "DemoWarrior",
+            UserName = "demo@warriorexperiment.local",
+            Email = "demo@warriorexperiment.local",
+            EmailConfirmed = true,
+            DisplayName = "Demo Warrior",
             Height = 175.0m, // 175 cm
             BirthDate = new DateTime(1990, 5, 15),
             DateOfStart = DateTime.Now.AddDays(-56), // Started 8 weeks ago
@@ -78,8 +92,11 @@ public class WaDemoDataService
             EnteredAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(demoUser);
-        await _context.SaveChangesAsync();
+        var result = await _userManager.CreateAsync(demoUser, "DemoWarrior123!");
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException($"Failed to create demo user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
         
         return demoUser;
     }
@@ -152,9 +169,8 @@ public class WaDemoDataService
                 SidePhoto = sidePhoto,
                 Weight = startWeight + weightChange + (decimal)(_random.NextDouble() * 0.4 - 0.2),
                 BodyFat = startBodyFat + bodyFatChange + (decimal)(_random.NextDouble() * 0.4 - 0.2),
+                MuscleMassPercentage = 35.0m + 0.1m * week + (decimal)(_random.NextDouble() * 2 - 1),
                 MuscleMass = startMuscleMass + muscleMassChange + (decimal)(_random.NextDouble() * 0.2 - 0.1),
-                WaterPercentage = 60.0m + (decimal)(_random.NextDouble() * 4 - 2),
-                BoneMass = 3.2m + (decimal)(_random.NextDouble() * 0.2 - 0.1),
                 BMI = 26.0m - 0.1m * week + (decimal)(_random.NextDouble() * 0.2 - 0.1),
                 VisceralFat = 8 - week / 2 + _random.Next(-1, 2),
                 MetabolicAge = 35 - week + _random.Next(-2, 3),

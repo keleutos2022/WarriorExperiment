@@ -1,9 +1,9 @@
-namespace WarriorExperiment.Persistence.Models;
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Represents an individual exercise within a variety practice session
 /// </summary>
-public class WaExercise : WaBase
+public class WaExercise : WaBaseEntity
 {
     /// <summary>
     /// Gets or sets the variety practice ID (foreign key)

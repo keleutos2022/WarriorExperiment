@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using WarriorExperiment.Core.Interfaces;
 using WarriorExperiment.Core.Models;
 using WarriorExperiment.Persistence.Data;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
 
 namespace WarriorExperiment.Core.Services;
 
@@ -382,9 +382,8 @@ public class WaUserDataService : IWaUserDataService
             MeasurementMethodName = entry.MeasurementMethod?.Name ?? string.Empty,
             Weight = entry.Weight,
             BodyFat = entry.BodyFat,
+            MuscleMassPercentage = entry.MuscleMassPercentage,
             MuscleMass = entry.MuscleMass,
-            WaterPercentage = entry.WaterPercentage,
-            BoneMass = entry.BoneMass,
             BMI = entry.BMI,
             ChestCircumference = entry.ChestCircumference,
             WaistCircumference = entry.WaistCircumference,
@@ -572,9 +571,8 @@ public class WaUserDataService : IWaUserDataService
                 Date = entryData.Date,
                 Weight = entryData.Weight,
                 BodyFat = entryData.BodyFat,
+                MuscleMassPercentage = entryData.MuscleMassPercentage,
                 MuscleMass = entryData.MuscleMass,
-                WaterPercentage = entryData.WaterPercentage,
-                BoneMass = entryData.BoneMass,
                 BMI = entryData.BMI,
                 ChestCircumference = entryData.ChestCircumference,
                 WaistCircumference = entryData.WaistCircumference,

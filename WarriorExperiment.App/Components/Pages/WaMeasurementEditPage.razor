@@ -1,8 +1,10 @@
 @page "/measurement/edit"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @page "/measurement/edit/{id:int}"
 @using Microsoft.EntityFrameworkCore
 @using WarriorExperiment.Persistence.Data
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @inject WaDbContext Context
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
@@ -55,7 +57,8 @@
                                 <RadzenStack Gap="0.5rem">
                                     <RadzenFormField Text="Weight (kg)" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.Weight" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" 
+                                                     Change="@((decimal? value) => OnWeightChanged(value))" />
                                     </RadzenFormField>
                                     
                                     <RadzenFormField Text="Body Fat %" Variant="Variant.Outlined">
@@ -63,24 +66,43 @@
                                                      Format="0.0" Step="0.1" Min="0" Max="100" Style="width: 100%;" />
                                     </RadzenFormField>
                                     
-                                    <RadzenFormField Text="Muscle Mass (kg)" Variant="Variant.Outlined">
+                                    <RadzenFormField Text="Muscle Mass %" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.MuscleMassPercentage" ShowUpDown="false" 
+                                                     Format="0.0" Step="0.1" Min="20" Max="60" Style="width: 100%;" 
+                                                     Change="@((decimal? value) => OnMuscleMassPercentageChanged(value))" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Muscle Mass (kg) - Calculated" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.MuscleMass" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="999" Style="width: 100%; background-color: #f8f9fa;" 
+                                                     Disabled="true" />
                                     </RadzenFormField>
                                     
-                                    <RadzenFormField Text="Water %" Variant="Variant.Outlined">
-                                        <RadzenNumeric @bind-Value="@model.WaterPercentage" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Min="0" Max="100" Style="width: 100%;" />
-                                    </RadzenFormField>
-                                    
-                                    <RadzenFormField Text="Bone Mass (kg)" Variant="Variant.Outlined">
-                                        <RadzenNumeric @bind-Value="@model.BoneMass" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%;" />
-                                    </RadzenFormField>
-                                    
-                                    <RadzenFormField Text="BMI" Variant="Variant.Outlined">
+                                    <RadzenFormField Text="BMI - Calculated" Variant="Variant.Outlined">
                                         <RadzenNumeric @bind-Value="@model.BMI" ShowUpDown="false" 
-                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%;" />
+                                                     Format="0.0" Step="0.1" Min="0" Max="99" Style="width: 100%; background-color: #f8f9fa;" 
+                                                     Disabled="true" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Visceral Fat Level (1-30)" Variant="Variant.Outlined">
+                                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                            <RadzenNumeric @bind-Value="@model.VisceralFat" Min="1" Max="30" Style="flex: 1;" />
+                                            @if (model.VisceralFat.HasValue)
+                                            {
+                                                <RadzenBadge Text="@GetVisceralFatCategory()" 
+                                                           Style="@($"background-color: {GetVisceralFatCategoryColor()}; color: white;")" />
+                                            }
+                                        </RadzenStack>
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Metabolic Age (years)" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.MetabolicAge" ShowUpDown="false" 
+                                                     Min="10" Max="100" Style="width: 100%;" />
+                                    </RadzenFormField>
+                                    
+                                    <RadzenFormField Text="Basal Metabolic Rate (calories)" Variant="Variant.Outlined">
+                                        <RadzenNumeric @bind-Value="@model.BasalMetabolicRate" ShowUpDown="false" 
+                                                     Min="500" Max="5000" Style="width: 100%;" />
                                     </RadzenFormField>
                                 </RadzenStack>
                             </RadzenFieldset>
@@ -296,6 +318,52 @@
         isLoading = false;
     }
     
+    private void OnWeightChanged(decimal? value)
+    {
+        CalculateBMI();
+        CalculateMuscleMassKg();
+    }
+    
+    private void OnMuscleMassPercentageChanged(decimal? value)
+    {
+        CalculateMuscleMassKg();
+    }
+    
+    private void CalculateBMI()
+    {
+        if (model.Weight.HasValue && CurrentUser?.Height.HasValue == true)
+        {
+            var heightInMeters = CurrentUser.Height.Value / 100m;
+            model.BMI = Math.Round(model.Weight.Value / (heightInMeters * heightInMeters), 2);
+        }
+        else
+        {
+            model.BMI = null;
+        }
+    }
+    
+    private void CalculateMuscleMassKg()
+    {
+        if (model.Weight.HasValue && model.MuscleMassPercentage.HasValue)
+        {
+            model.MuscleMass = Math.Round(model.Weight.Value * model.MuscleMassPercentage.Value / 100, 2);
+        }
+        else
+        {
+            model.MuscleMass = null;
+        }
+    }
+    
+    private string GetVisceralFatCategory()
+    {
+        return model.GetVisceralFatCategory();
+    }
+    
+    private string GetVisceralFatCategoryColor()
+    {
+        return model.GetVisceralFatCategoryColor();
+    }
+
     private async Task HandleSubmit()
     {
         try

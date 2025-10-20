@@ -8,9 +8,9 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.AssemblyInfoInputs.cache
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.AssemblyInfo.cs
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.csproj.CoreCompileInputs.cache
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.sourcelink.json
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorE.95F5871C.Up2Date
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/refint/WarriorExperiment.Core.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.pdb
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/ref/WarriorExperiment.Core.dll
-/home/moritz/projects/WarriorExperiment/WarriorExperiment.Core/obj/Debug/net9.0/WarriorExperiment.Core.sourcelink.json

@@ -1,8 +1,10 @@
 @page "/rite-of-passage/edit"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @page "/rite-of-passage/edit/{id:int}"
 @using Microsoft.EntityFrameworkCore
 @using WarriorExperiment.Persistence.Data
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @using WarriorExperiment.Persistence.Enums
 @using WarriorExperiment.Core.Services
 @inject WaDbContext Context

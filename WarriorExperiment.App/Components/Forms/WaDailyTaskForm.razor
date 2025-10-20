@@ -1,0 +1,126 @@
+@using WarriorExperiment.Persistence.Entities
+@using WarriorExperiment.Persistence.Enums
+@using WarriorExperiment.Core.Services
+@inject WaDailyTaskService DailyTaskService
+
+<RadzenCard class="rz-shadow-3">
+    <RadzenTemplateForm TItem="WaDailyTask" Data="@Model" Submit="@OnSubmit">
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12">
+                <RadzenFieldset Text="Task Information">
+                    <RadzenStack Gap="1rem">
+                        <RadzenRow>
+                            <RadzenColumn Size="12" SizeMD="8">
+                                <RadzenFormField Text="Task Name" Variant="@Variant.Outlined">
+                                    <RadzenTextBox @bind-Value="@Model.Name" 
+                                                 Placeholder="Enter task name..."
+                                                 MaxLength="200"
+                                                 class="w-100" />
+                                    <RadzenRequiredValidator Component="Name" Text="Task name is required" />
+                                    <RadzenCustomValidator Component="Name" Validator="@(() => ValidateUniqueName(Model.Name))" Text="Task name already exists" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="4">
+                                <RadzenFormField Text="Sort Order" Variant="@Variant.Outlined">
+                                    <RadzenNumeric @bind-Value="@Model.SortOrder" 
+                                                 TValue="int"
+                                                 Min="0"
+                                                 class="w-100" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        
+                        <RadzenRow>
+                            <RadzenColumn Size="12" SizeMD="6">
+                                <RadzenFormField Text="Preferred Time" Variant="@Variant.Outlined">
+                                    <RadzenDropDown @bind-Value="@Model.PreferredTime" 
+                                                  Data="@preferredTimeOptions" 
+                                                  TextProperty="Text" 
+                                                  ValueProperty="Value"
+                                                  Placeholder="Select preferred time..."
+                                                  class="w-100" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6">
+                                <RadzenFormField Text="Active" Variant="@Variant.Outlined">
+                                    <RadzenCheckBox @bind-Value="@Model.IsActive" Name="IsActive" />
+                                    <RadzenLabel Text="Will appear in daily surveys" Component="IsActive" class="rz-ml-2" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        
+                        <RadzenRow>
+                            <RadzenColumn Size="12">
+                                <RadzenFormField Text="Description (Optional)" Variant="@Variant.Outlined">
+                                    <RadzenTextArea @bind-Value="@Model.Description" 
+                                                  Placeholder="Enter task description..."
+                                                  MaxLength="1000"
+                                                  Rows="3"
+                                                  class="w-100" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-4">
+            <RadzenButton ButtonType="ButtonType.Submit" 
+                        Icon="save" 
+                        Text="Save Task" 
+                        ButtonStyle="ButtonStyle.Primary" 
+                        Disabled="@isSubmitting" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+</RadzenCard>
+
+@code {
+    [Parameter] public WaDailyTask Model { get; set; } = new();
+    [Parameter] public EventCallback<WaDailyTask> OnValidSubmit { get; set; }
+    
+    private bool isSubmitting = false;
+    
+    private readonly List<object> preferredTimeOptions = new()
+    {
+        new { Text = "Morning", Value = WaDaySection.Morning },
+        new { Text = "Midday", Value = WaDaySection.Midday },
+        new { Text = "Evening", Value = WaDaySection.Evening },
+        new { Text = "Other", Value = WaDaySection.Other }
+    };
+    
+    private async Task OnSubmit()
+    {
+        if (isSubmitting)
+            return;
+            
+        isSubmitting = true;
+        
+        try
+        {
+            await OnValidSubmit.InvokeAsync(Model);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+    
+    private bool ValidateUniqueName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return true; // Let required validator handle empty values
+            
+        try
+        {
+            // For now, return true - async validation is complex in Radzen
+            // We'll handle uniqueness validation in the service layer
+            return true;
+        }
+        catch
+        {
+            return true; // Allow submission if validation fails
+        }
+    }
+}

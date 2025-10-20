@@ -1,5 +1,7 @@
 @page "/measurements"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.App.Components.Grids
+@attribute [Authorize]
 
 <WaBasePage Title="Measurements" SubTitle="Track your body measurements">
     <WaMeasurementEntryGrid />

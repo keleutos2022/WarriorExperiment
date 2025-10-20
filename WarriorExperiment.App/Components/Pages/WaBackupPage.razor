@@ -1,8 +1,10 @@
 @page "/backup"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.Core.Interfaces
+@attribute [Authorize]
 @using WarriorExperiment.Core.Models
 @using WarriorExperiment.Core.Services
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @using System.IO
 @inject IWaBackupService BackupService
 @inject IWaUserDataService UserDataService

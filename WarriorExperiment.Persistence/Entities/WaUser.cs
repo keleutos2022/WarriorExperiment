@@ -1,14 +1,16 @@
-namespace WarriorExperiment.Persistence.Models;
+using Microsoft.AspNetCore.Identity;
+
+namespace WarriorExperiment.Persistence.Entities;
 
 /// <summary>
 /// Represents a user in the system
 /// </summary>
-public class WaUser : WaBase
+public class WaUser : IdentityUser<int>
 {
     /// <summary>
-    /// Gets or sets the username
+    /// Gets or sets the display name for the user
     /// </summary>
-    public string UserName { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the user's height in centimeters
@@ -29,6 +31,21 @@ public class WaUser : WaBase
     /// Gets or sets whether this user is the default user
     /// </summary>
     public bool IsDefault { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the creation timestamp
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the last update timestamp
+    /// </summary>
+    public DateTime UpdatedAt { get; set; }
+    
+    /// <summary>
+    /// Gets or sets when this entry was actually entered into the system
+    /// </summary>
+    public DateTime EnteredAt { get; set; }
     
     /// <summary>
     /// Gets or sets the collection of daily surveys for this user

@@ -1,5 +1,7 @@
 @page "/rite-of-passage"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.App.Components.Grids
+@attribute [Authorize]
 
 <WaBasePage Title="Rite of Passage Practices" SubTitle="Track your strength training sessions">
     <WaRiteOfPassagePracticeGrid />

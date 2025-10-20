@@ -1,13 +1,16 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
+using WarriorExperiment.Persistence.Enums;
 
 namespace WarriorExperiment.Persistence.Data;
 
 /// <summary>
 /// Database context for the WarriorExperiment application
 /// </summary>
-public class WaDbContext : DbContext
+public class WaDbContext : IdentityDbContext<WaUser, IdentityRole<int>, int>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="WaDbContext"/> class
@@ -53,6 +56,16 @@ public class WaDbContext : DbContext
     public DbSet<WaExercise> Exercises { get; set; }
     
     /// <summary>
+    /// Gets or sets the DailyTasks DbSet
+    /// </summary>
+    public DbSet<WaDailyTask> DailyTasks { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the DailyTaskEntries DbSet
+    /// </summary>
+    public DbSet<WaDailyTaskEntry> DailyTaskEntries { get; set; }
+    
+    /// <summary>
     /// Configures the model creating conventions
     /// </summary>
     /// <param name="modelBuilder">The model builder instance</param>
@@ -64,9 +77,8 @@ public class WaDbContext : DbContext
         modelBuilder.Entity<WaUser>(entity =>
         {
             entity.ToTable("users");
-            entity.HasKey(u => u.Id);
             
-            entity.Property(u => u.UserName)
+            entity.Property(u => u.DisplayName)
                 .IsRequired()
                 .HasMaxLength(100);
                 
@@ -82,6 +94,10 @@ public class WaDbContext : DbContext
                 .HasDefaultValueSql("NOW()");
                 
             entity.Property(u => u.UpdatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(u => u.EnteredAt)
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
                 
@@ -150,6 +166,15 @@ public class WaDbContext : DbContext
             entity.Property(ds => ds.Comment)
                 .HasMaxLength(1000);
                 
+            entity.Property(ds => ds.GratefulFor)
+                .HasMaxLength(2000);
+                
+            entity.Property(ds => ds.FunActivity)
+                .HasMaxLength(1000);
+                
+            entity.Property(ds => ds.LookingForwardTo)
+                .HasMaxLength(1000);
+                
             entity.Property(ds => ds.CreatedAt)
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
@@ -207,9 +232,8 @@ public class WaDbContext : DbContext
             // Configure decimal precision for measurements (increased limits)
             entity.Property(me => me.Weight).HasPrecision(6, 2); // max 9999.99 kg
             entity.Property(me => me.BodyFat).HasPrecision(5, 2); // max 999.99%
+            entity.Property(me => me.MuscleMassPercentage).HasPrecision(5, 2); // max 999.99%
             entity.Property(me => me.MuscleMass).HasPrecision(6, 2); // max 9999.99 kg
-            entity.Property(me => me.WaterPercentage).HasPrecision(5, 2); // max 999.99%
-            entity.Property(me => me.BoneMass).HasPrecision(5, 2); // max 999.99 kg
             entity.Property(me => me.BMI).HasPrecision(5, 2); // max 999.99
             
             // Configure circumference measurements (increased limits)
@@ -316,6 +340,87 @@ public class WaDbContext : DbContext
             entity.Property(e => e.EnteredAt)
                 .IsRequired()
                 .HasDefaultValueSql("NOW()");
+        });
+        
+        // Configure the WaDailyTask entity
+        modelBuilder.Entity<WaDailyTask>(entity =>
+        {
+            entity.ToTable("daily_tasks");
+            entity.HasKey(dt => dt.Id);
+            
+            entity.Property(dt => dt.Name)
+                .IsRequired()
+                .HasMaxLength(200);
+                
+            entity.Property(dt => dt.Description)
+                .HasMaxLength(1000);
+                
+            entity.Property(dt => dt.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true);
+                
+            entity.Property(dt => dt.SortOrder)
+                .IsRequired()
+                .HasDefaultValue(0);
+                
+            entity.Property(dt => dt.PreferredTime)
+                .IsRequired()
+                .HasDefaultValue(WaDaySection.Other);
+                
+            entity.Property(dt => dt.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(dt => dt.UpdatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(dt => dt.EnteredAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            // Create unique index on Name
+            entity.HasIndex(dt => dt.Name)
+                .IsUnique();
+                
+            // Configure one-to-many relationship with DailyTaskEntries
+            entity.HasMany(dt => dt.TaskEntries)
+                .WithOne(dte => dte.DailyTask)
+                .HasForeignKey(dte => dte.DailyTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure the WaDailyTaskEntry entity
+        modelBuilder.Entity<WaDailyTaskEntry>(entity =>
+        {
+            entity.ToTable("daily_task_entries");
+            entity.HasKey(dte => dte.Id);
+            
+            entity.Property(dte => dte.Done)
+                .IsRequired()
+                .HasDefaultValue(false);
+                
+            entity.Property(dte => dte.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(dte => dte.UpdatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(dte => dte.EnteredAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            // Create unique index on DailyTaskId + DailySurveyEntryId to prevent duplicates
+            entity.HasIndex(dte => new { dte.DailyTaskId, dte.DailySurveyEntryId })
+                .IsUnique();
+                
+            // Configure many-to-one relationship with DailySurveyEntry
+            entity.HasOne(dte => dte.DailySurveyEntry)
+                .WithMany(dse => dse.TaskEntries)
+                .HasForeignKey(dte => dte.DailySurveyEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

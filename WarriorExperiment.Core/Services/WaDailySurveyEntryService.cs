@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WarriorExperiment.Persistence.Data;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
 
 namespace WarriorExperiment.Core.Services;
 

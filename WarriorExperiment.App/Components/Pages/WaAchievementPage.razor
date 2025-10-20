@@ -1,5 +1,7 @@
 @page "/"
-@using WarriorExperiment.Persistence.Models
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Persistence.Entities
+@attribute [Authorize]
 
 <PageTitle>Achievements - Warrior Experiment</PageTitle>
 

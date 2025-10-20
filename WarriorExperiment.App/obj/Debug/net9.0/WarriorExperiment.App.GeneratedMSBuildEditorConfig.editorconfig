@@ -48,6 +48,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Gb3Jtcy9XYURhaWx5U3VydmV5Rm9ybS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Forms/WaDailyTaskForm.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Gb3Jtcy9XYURhaWx5VGFza0Zvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Forms/WaMeasurementEntryForm.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Gb3Jtcy9XYU1lYXN1cmVtZW50RW50cnlGb3JtLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -66,6 +70,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Grids/WaDailySurveyGrid.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Hcmlkcy9XYURhaWx5U3VydmV5R3JpZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Grids/WaDailyTaskGrid.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Hcmlkcy9XYURhaWx5VGFza0dyaWQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Grids/WaExerciseGrid.razor]
@@ -88,8 +96,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Hcmlkcy9XYVZhcmlldHlQcmFjdGljZUdyaWQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Layout/WaAuthLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvV2FBdXRoTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Layout/WaMainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvV2FNYWluTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/Account/WaLoginPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L1dhTG9naW5QYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/Account/WaLogoutPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L1dhTG9nb3V0UGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/Account/WaRegisterPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BY2NvdW50L1dhUmVnaXN0ZXJQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/Error.razor]
@@ -118,6 +142,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaDailySurveysPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYURhaWx5U3VydmV5c1BhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaDailyTaskEditPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYURhaWx5VGFza0VkaXRQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaDailyTasksPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYURhaWx5VGFza3NQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaDashboardPage.razor]
@@ -178,6 +210,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Photos/WaMeasurementPhotoProgress.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QaG90b3MvV2FNZWFzdXJlbWVudFBob3RvUHJvZ3Jlc3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9SZWRpcmVjdFRvTG9naW4ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Routes.razor]

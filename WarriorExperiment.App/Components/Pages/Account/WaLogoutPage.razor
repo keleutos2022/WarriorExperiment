@@ -1,0 +1,64 @@
+@page "/Account/Logout"
+@layout Layout.WaAuthLayout
+@inject NavigationManager Navigation
+
+<PageTitle>Logging out - Warrior Experiment</PageTitle>
+
+<div class="wa-logout-container">
+    <div class="wa-logout-card">
+        <h3 class="wa-logout-title">Logging out...</h3>
+        
+        <form method="post" action="/Account/ProcessLogout" id="logoutForm">
+            <AntiforgeryToken />
+        </form>
+        
+        <p class="wa-logout-message">You are being logged out. Please wait...</p>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Automatically submit the logout form via JavaScript
+    }
+}
+
+<script>
+    // Auto-submit the logout form when page loads
+    window.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('logoutForm').submit();
+    });
+</script>
+
+<style>
+    .wa-logout-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        padding: 2rem;
+    }
+    
+    .wa-logout-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        background: var(--rz-surface-100);
+        border: 1px solid var(--rz-border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .wa-logout-title {
+        margin-bottom: 1rem;
+        color: var(--rz-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .wa-logout-message {
+        color: var(--rz-text-color);
+        font-size: 1rem;
+    }
+</style>

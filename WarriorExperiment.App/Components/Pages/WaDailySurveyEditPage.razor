@@ -1,8 +1,13 @@
 @page "/daily-survey/edit"
 @page "/daily-survey/edit/{id:int}"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.Core.Services
-@using WarriorExperiment.Persistence.Models
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
+@using WarriorExperiment.Persistence.Enums
 @inject WaDailySurveyEntryService DailySurveyService
+@inject WaDailyTaskEntryService TaskEntryService
+@inject WaDailyTaskService DailyTaskService
 @inject NavigationManager Navigation
 
 <WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
@@ -25,6 +30,94 @@
                         Click="@(() => Navigation.NavigateTo("/daily-survey"))" />
             
             <WaDailySurveyForm Model="@currentEntry" OnValidSubmit="@HandleFormSubmit" />
+            
+            @if (taskEntries.Any())
+            {
+                <RadzenCard class="rz-shadow-3">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">Daily Tasks</RadzenText>
+                    
+                    <RadzenRow Gap="1rem">
+                        @foreach (var timeSection in Enum.GetValues<WaDaySection>())
+                        {
+                            var sectionTasks = GetTasksForTimeSection(timeSection);
+                            if (sectionTasks.Any())
+                            {
+                                <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                    <RadzenCard class="rz-shadow-1" Style="@($"background: {GetTimeSectionColor(timeSection)}; border-left: 4px solid var(--rz-primary); border: 1px solid var(--rz-border-color); height: 100%;")">
+                                        <RadzenStack Gap="0.75rem">
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                <RadzenText TextStyle="TextStyle.Body1" Style="font-size: 1.2em;">
+                                                    @GetTimeSectionIcon(timeSection)
+                                                </RadzenText>
+                                                <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-font-weight-bold">
+                                                    @GetTimeSectionTitle(timeSection)
+                                                </RadzenText>
+                                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"{sectionTasks.Count(t => t.Done)}/{sectionTasks.Count}")" />
+                                            </RadzenStack>
+                                            
+                                            <RadzenStack Gap="0.5rem">
+                                                @foreach (var taskEntry in sectionTasks)
+                                                {
+                                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Gap="0.5rem" class="rz-p-2" 
+                                                               Style="background: rgba(255,255,255,0.05); border: 1px solid var(--rz-border-color); border-radius: 4px;">
+                                                        <RadzenCheckBox @bind-Value="@taskEntry.Done" 
+                                                                      Name="@($"task_{taskEntry.Id}")" 
+                                                                      Change="@((bool args) => OnTaskCompletionChanged(taskEntry, args))" 
+                                                                      Style="margin-top: 2px;" />
+                                                        <RadzenStack Gap="0.25rem" class="flex-grow-1">
+                                                            <RadzenLabel Text="@taskEntry.DailyTask.Name" 
+                                                                       Component="@($"task_{taskEntry.Id}")" 
+                                                                       class="@(taskEntry.Done ? "rz-text-decoration-line-through rz-color-secondary" : "")" 
+                                                                       Style="margin: 0; font-weight: 500;" />
+                                                            @if (!string.IsNullOrEmpty(taskEntry.DailyTask.Description))
+                                                            {
+                                                                <RadzenText TextStyle="TextStyle.Caption" 
+                                                                          class="@(taskEntry.Done ? "rz-color-secondary" : "rz-color-secondary")" 
+                                                                          Style="line-height: 1.2; margin: 0;">
+                                                                    @taskEntry.DailyTask.Description
+                                                                </RadzenText>
+                                                            }
+                                                        </RadzenStack>
+                                                    </RadzenStack>
+                                                }
+                                            </RadzenStack>
+                                        </RadzenStack>
+                                    </RadzenCard>
+                                </RadzenColumn>
+                            }
+                        }
+                    </RadzenRow>
+                </RadzenCard>
+            }
+            
+            <RadzenCard class="rz-shadow-3">
+                <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">Daily Reflection</RadzenText>
+                <RadzenStack Gap="1rem">
+                    <RadzenFormField Text="What are 3 things you are grateful for?" Variant="@Variant.Outlined">
+                        <RadzenTextArea @bind-Value="@currentEntry.GratefulFor" 
+                                      Placeholder="List three things you're grateful for today..."
+                                      MaxLength="2000"
+                                      Rows="3"
+                                      class="w-100" />
+                    </RadzenFormField>
+                    
+                    <RadzenFormField Text="What did you do today that was fun?" Variant="@Variant.Outlined">
+                        <RadzenTextArea @bind-Value="@currentEntry.FunActivity" 
+                                      Placeholder="Describe something fun or enjoyable you did today..."
+                                      MaxLength="1000"
+                                      Rows="2"
+                                      class="w-100" />
+                    </RadzenFormField>
+                    
+                    <RadzenFormField Text="What are you looking forward to tomorrow?" Variant="@Variant.Outlined">
+                        <RadzenTextArea @bind-Value="@currentEntry.LookingForwardTo" 
+                                      Placeholder="Share what you're excited about for tomorrow..."
+                                      MaxLength="1000"
+                                      Rows="2"
+                                      class="w-100" />
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenCard>
         </RadzenStack>
     }
 </WaBasePage>
@@ -35,6 +128,7 @@
     [Inject] NotificationService NotificationService { get; set; } = default!;
     
     private WaDailySurveyEntry currentEntry = new();
+    private List<WaDailyTaskEntry> taskEntries = new();
     private bool isLoading = true;
     private string pageTitle => Id.HasValue ? "Edit Daily Survey" : "New Daily Survey";
     private string pageSubTitle => Id.HasValue ? "Update your wellness entry" : "Record your daily wellness metrics";
@@ -91,6 +185,25 @@
                     HungerFeelingDuringUndereatingPhase = 5
                 };
             }
+            
+            // Load or create task entries
+            if (currentEntry.Id > 0)
+            {
+                // For existing entries, load actual task entries
+                taskEntries = await TaskEntryService.EnsureTaskEntriesAsync(currentEntry.Id);
+            }
+            else
+            {
+                // For new entries, create temporary task entries from active tasks
+                var activeTasks = await DailyTaskService.GetActiveAsync();
+                taskEntries = activeTasks.Select(task => new WaDailyTaskEntry
+                {
+                    DailyTaskId = task.Id,
+                    DailyTask = task,
+                    Done = false,
+                    DailySurveyEntryId = 0 // Will be set when survey is saved
+                }).ToList();
+            }
         }
         finally
         {
@@ -105,11 +218,44 @@
             if (Id.HasValue)
             {
                 await DailySurveyService.UpdateAsync(entry);
+                
+                // Save task completion updates
+                if (taskEntries.Any())
+                {
+                    var updates = taskEntries.ToDictionary(te => te.Id, te => te.Done);
+                    await TaskEntryService.BulkUpdateCompletionAsync(updates);
+                }
+                
                 NotificationService.Notify(NotificationSeverity.Success, "Daily survey updated successfully");
             }
             else
             {
-                await DailySurveyService.CreateAsync(entry);
+                var createdEntry = await DailySurveyService.CreateAsync(entry);
+                
+                // Create task entries for new daily survey with completion states
+                await TaskEntryService.EnsureTaskEntriesAsync(createdEntry.Id);
+                
+                // Update task completion states if any were changed before saving
+                if (taskEntries.Any(te => te.Done))
+                {
+                    var updatedTaskEntries = await TaskEntryService.GetByDailySurveyIdAsync(createdEntry.Id);
+                    var updates = new Dictionary<int, bool>();
+                    
+                    foreach (var tempEntry in taskEntries.Where(te => te.Done))
+                    {
+                        var actualEntry = updatedTaskEntries.FirstOrDefault(ute => ute.DailyTaskId == tempEntry.DailyTaskId);
+                        if (actualEntry != null)
+                        {
+                            updates[actualEntry.Id] = true;
+                        }
+                    }
+                    
+                    if (updates.Any())
+                    {
+                        await TaskEntryService.BulkUpdateCompletionAsync(updates);
+                    }
+                }
+                
                 NotificationService.Notify(NotificationSeverity.Success, "Daily survey created successfully");
             }
             
@@ -119,6 +265,80 @@
         {
             NotificationService.Notify(NotificationSeverity.Error, $"Error saving survey: {ex.Message}");
         }
+    }
+    
+    private async Task OnTaskCompletionChanged(WaDailyTaskEntry taskEntry, bool value)
+    {
+        // Update the local state immediately for responsiveness
+        taskEntry.Done = value;
+        
+        // If this is an existing entry (has ID), save immediately
+        if (taskEntry.Id > 0)
+        {
+            try
+            {
+                await TaskEntryService.UpdateCompletionAsync(taskEntry.Id, value);
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, $"Error updating task: {ex.Message}");
+                // Revert the change on error
+                taskEntry.Done = !value;
+                StateHasChanged();
+            }
+        }
+    }
+    
+    private IEnumerable<IGrouping<WaDaySection, WaDailyTaskEntry>> GetTasksByTimeSection()
+    {
+        return taskEntries
+            .GroupBy(te => te.DailyTask.PreferredTime)
+            .OrderBy(g => (int)g.Key); // Morning=0, Midday=1, Evening=2, Other=3
+    }
+    
+    private List<WaDailyTaskEntry> GetTasksForTimeSection(WaDaySection timeSection)
+    {
+        return taskEntries
+            .Where(te => te.DailyTask.PreferredTime == timeSection)
+            .OrderBy(te => te.DailyTask.SortOrder)
+            .ThenBy(te => te.DailyTask.Name)
+            .ToList();
+    }
+    
+    private string GetTimeSectionIcon(WaDaySection timeSection)
+    {
+        return timeSection switch
+        {
+            WaDaySection.Morning => "🌅",
+            WaDaySection.Midday => "☀️", 
+            WaDaySection.Evening => "🌙",
+            WaDaySection.Other => "⏰",
+            _ => "⏰"
+        };
+    }
+    
+    private string GetTimeSectionTitle(WaDaySection timeSection)
+    {
+        return timeSection switch
+        {
+            WaDaySection.Morning => "Morning",
+            WaDaySection.Midday => "Midday",
+            WaDaySection.Evening => "Evening", 
+            WaDaySection.Other => "Anytime",
+            _ => "Other"
+        };
+    }
+    
+    private string GetTimeSectionColor(WaDaySection timeSection)
+    {
+        return timeSection switch
+        {
+            WaDaySection.Morning => "var(--rz-warning-lighter)",
+            WaDaySection.Midday => "var(--rz-info-lighter)",
+            WaDaySection.Evening => "var(--rz-success-lighter)",
+            WaDaySection.Other => "var(--rz-base-300)",
+            _ => "var(--rz-base-300)"
+        };
     }
     
 }

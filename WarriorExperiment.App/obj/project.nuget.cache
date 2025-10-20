@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "O/2BRu1GIzw=",
+  "dgSpecHash": "9bWB42UNBTs=",
   "success": true,
   "projectFilePath": "/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/WarriorExperiment.App.csproj",
   "expectedPackageFiles": [
@@ -14,6 +14,11 @@
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.components.analyzers/9.0.9/microsoft.aspnetcore.components.analyzers.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.components.forms/9.0.9/microsoft.aspnetcore.components.forms.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.components.web/9.0.9/microsoft.aspnetcore.components.web.9.0.9.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.aspnetcore.cryptography.internal/9.0.9/microsoft.aspnetcore.cryptography.internal.9.0.9.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.aspnetcore.cryptography.keyderivation/9.0.9/microsoft.aspnetcore.cryptography.keyderivation.9.0.9.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.aspnetcore.http.abstractions/2.2.0/microsoft.aspnetcore.http.abstractions.2.2.0.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.aspnetcore.http.features/2.2.0/microsoft.aspnetcore.http.features.2.2.0.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.aspnetcore.identity.entityframeworkcore/9.0.9/microsoft.aspnetcore.identity.entityframeworkcore.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.metadata/9.0.9/microsoft.aspnetcore.metadata.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.bcl.asyncinterfaces/7.0.0/microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.build.framework/17.8.3/microsoft.build.framework.17.8.3.nupkg.sha512",
@@ -39,6 +44,8 @@
     "/home/moritz/.nuget/packages/microsoft.extensions.diagnostics.abstractions/8.0.0/microsoft.extensions.diagnostics.abstractions.8.0.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.extensions.fileproviders.abstractions/8.0.0/microsoft.extensions.fileproviders.abstractions.8.0.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.extensions.hosting.abstractions/8.0.0/microsoft.extensions.hosting.abstractions.8.0.0.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.extensions.identity.core/9.0.9/microsoft.extensions.identity.core.9.0.9.nupkg.sha512",
+    "/home/moritz/.nuget/packages/microsoft.extensions.identity.stores/9.0.9/microsoft.extensions.identity.stores.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.extensions.logging/9.0.9/microsoft.extensions.logging.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.extensions.logging.abstractions/9.0.9/microsoft.extensions.logging.abstractions.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.extensions.options/9.0.9/microsoft.extensions.options.9.0.9.nupkg.sha512",
@@ -70,6 +77,7 @@
     "/home/moritz/.nuget/packages/system.io.pipelines/7.0.0/system.io.pipelines.7.0.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/system.reflection.metadata/7.0.0/system.reflection.metadata.7.0.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/system.runtime.compilerservices.unsafe/6.0.0/system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "/home/moritz/.nuget/packages/system.text.encodings.web/4.5.0/system.text.encodings.web.4.5.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/system.text.json/9.0.9/system.text.json.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/system.threading.channels/7.0.0/system.threading.channels.7.0.0.nupkg.sha512"
   ],

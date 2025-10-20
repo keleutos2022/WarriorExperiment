@@ -16,19 +16,27 @@ public static class WaServiceCollectionExtensions
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddWaCoreServices(this IServiceCollection services)
     {
+        
         // Register services
         services.AddTransient<WaEntryService>();
         services.AddTransient<WaImageService>();
         
         // Register CRUD services
         services.AddTransient<WaDailySurveyEntryService>();
+        services.AddTransient<WaDailyTaskService>();
+        services.AddTransient<WaDailyTaskEntryService>();
         services.AddTransient<WaMeasurementEntryService>();
         services.AddTransient<WaRiteOfPassagePracticeEntryService>();
         services.AddTransient<WaVarietyPracticeEntryService>();
         services.AddTransient<WaUserService>();
+        services.AddTransient<WaUserMigrationService>();
+        services.AddTransient<WaPasswordResetService>();
         
         // Register demo data service
         services.AddTransient<WaDemoDataService>();
+        
+        // Register default data service
+        services.AddTransient<WaDefaultDataService>();
         
         // Register backup and restore services
         services.AddTransient<IWaBackupService, WaBackupService>();

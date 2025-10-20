@@ -1,5 +1,7 @@
 @page "/exercises"
+@using Microsoft.AspNetCore.Authorization
 @using WarriorExperiment.App.Components.Grids
+@attribute [Authorize]
 
 <WaBasePage Title="Exercises" SubTitle="View all exercise entries">
     <WaExerciseGrid />

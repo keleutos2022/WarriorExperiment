@@ -1,5 +1,5 @@
 using FluentValidation;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
 
 namespace WarriorExperiment.Persistence.Validators;
 
@@ -46,28 +46,24 @@ public class WaMeasurementEntryValidator : AbstractValidator<WaMeasurementEntry>
             .WithMessage("Weight must be between 20 and 500 kg");
         
         RuleFor(x => x.BodyFat)
-            .InclusiveBetween(1m, 80m).When(x => x.BodyFat.HasValue)
-            .WithMessage("Body fat percentage must be between 1 and 80%");
+            .InclusiveBetween(5m, 50m).When(x => x.BodyFat.HasValue)
+            .WithMessage("Body fat percentage must be between 5 and 50%");
+        
+        RuleFor(x => x.MuscleMassPercentage)
+            .InclusiveBetween(20m, 60m).When(x => x.MuscleMassPercentage.HasValue)
+            .WithMessage("Muscle mass percentage must be between 20 and 60%");
         
         RuleFor(x => x.MuscleMass)
             .InclusiveBetween(10m, 150m).When(x => x.MuscleMass.HasValue)
             .WithMessage("Muscle mass must be between 10 and 150 kg");
-        
-        RuleFor(x => x.WaterPercentage)
-            .InclusiveBetween(20m, 80m).When(x => x.WaterPercentage.HasValue)
-            .WithMessage("Water percentage must be between 20 and 80%");
-        
-        RuleFor(x => x.BoneMass)
-            .InclusiveBetween(0.5m, 10m).When(x => x.BoneMass.HasValue)
-            .WithMessage("Bone mass must be between 0.5 and 10 kg");
         
         RuleFor(x => x.BMI)
             .InclusiveBetween(10m, 60m).When(x => x.BMI.HasValue)
             .WithMessage("BMI must be between 10 and 60");
         
         RuleFor(x => x.VisceralFat)
-            .InclusiveBetween(1, 60).When(x => x.VisceralFat.HasValue)
-            .WithMessage("Visceral fat level must be between 1 and 60");
+            .InclusiveBetween(1, 30).When(x => x.VisceralFat.HasValue)
+            .WithMessage("Visceral fat level must be between 1 and 30");
         
         RuleFor(x => x.MetabolicAge)
             .InclusiveBetween(10, 100).When(x => x.MetabolicAge.HasValue)

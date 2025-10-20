@@ -1,5 +1,5 @@
 @using WarriorExperiment.Core.Services
-@using WarriorExperiment.Persistence.Models
+@using WarriorExperiment.Persistence.Entities
 @using WarriorExperiment.App.Components.Charts
 @using WarriorExperiment.App.Components.Photos
 @inject WaMeasurementEntryService MeasurementService
@@ -77,10 +77,10 @@
                             </RadzenRow>
                             
                             <RadzenRow Gap="1rem">
-                                <!-- Muscle Mass -->
+                                <!-- Muscle Mass Percentage -->
                                 <RadzenColumn SizeLG="6" SizeMD="12">
-                                    <WaMeasurementChart Title="Muscle Mass" Data="@GetChartData(nameof(WaMeasurementEntry.MuscleMass))" 
-                                                      Unit="kg" IsBetterHigher="true" />
+                                    <WaMeasurementChart Title="Muscle Mass %" Data="@GetChartData(nameof(WaMeasurementEntry.MuscleMassPercentage))" 
+                                                      Unit="%" IsBetterHigher="true" />
                                 </RadzenColumn>
                                 
                                 <!-- BMI -->
@@ -95,7 +95,7 @@
                             <RadzenRow Gap="1rem" Style="margin-top: 1rem;">
                                 <!-- Visceral Fat -->
                                 <RadzenColumn SizeLG="6" SizeMD="12">
-                                    <WaMeasurementChart Title="Visceral Fat Level" Data="@GetIntChartData(nameof(WaMeasurementEntry.VisceralFat))" 
+                                    <WaMeasurementChart Title="Visceral Fat Level (1-30)" Data="@GetIntChartData(nameof(WaMeasurementEntry.VisceralFat))" 
                                                       Unit="" IsBetterHigher="false" />
                                 </RadzenColumn>
                                 
@@ -107,16 +107,10 @@
                             </RadzenRow>
                             
                             <RadzenRow Gap="1rem">
-                                <!-- Water Percentage -->
-                                <RadzenColumn SizeLG="6" SizeMD="12">
-                                    <WaMeasurementChart Title="Water %" Data="@GetChartData(nameof(WaMeasurementEntry.WaterPercentage))" 
-                                                      Unit="%" IsBetterHigher="true" />
-                                </RadzenColumn>
-                                
                                 <!-- BMR -->
                                 <RadzenColumn SizeLG="6" SizeMD="12">
                                     <WaMeasurementChart Title="Basal Metabolic Rate" Data="@GetIntChartData(nameof(WaMeasurementEntry.BasalMetabolicRate))" 
-                                                      Unit="cal" IsBetterHigher="true" />
+                                                      Unit="kcal" IsBetterHigher="true" />
                                 </RadzenColumn>
                             </RadzenRow>
                         </RadzenTabsItem>
@@ -354,9 +348,8 @@
         {
             nameof(WaMeasurementEntry.Weight) => entry.Weight,
             nameof(WaMeasurementEntry.BodyFat) => entry.BodyFat,
+            nameof(WaMeasurementEntry.MuscleMassPercentage) => entry.MuscleMassPercentage,
             nameof(WaMeasurementEntry.MuscleMass) => entry.MuscleMass,
-            nameof(WaMeasurementEntry.WaterPercentage) => entry.WaterPercentage,
-            nameof(WaMeasurementEntry.BoneMass) => entry.BoneMass,
             nameof(WaMeasurementEntry.BMI) => entry.BMI,
             nameof(WaMeasurementEntry.ChestCircumference) => entry.ChestCircumference,
             nameof(WaMeasurementEntry.WaistCircumference) => entry.WaistCircumference,

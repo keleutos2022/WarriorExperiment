@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WarriorExperiment.Persistence.Data;
-using WarriorExperiment.Persistence.Models;
+using WarriorExperiment.Persistence.Entities;
 
 namespace WarriorExperiment.Core.Services;
 
@@ -10,6 +12,8 @@ namespace WarriorExperiment.Core.Services;
 public class WaUserService
 {
     private readonly WaDbContext _context;
+    private readonly UserManager<WaUser> _userManager;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private int? _selectedUserId;
     
     /// <summary>
@@ -21,9 +25,13 @@ public class WaUserService
     /// Initializes a new instance of the <see cref="WaUserService"/> class
     /// </summary>
     /// <param name="context">The database context</param>
-    public WaUserService(WaDbContext context)
+    /// <param name="userManager">The Identity user manager</param>
+    /// <param name="httpContextAccessor">The HTTP context accessor</param>
+    public WaUserService(WaDbContext context, UserManager<WaUser> userManager, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
+        _userManager = userManager;
+        _httpContextAccessor = httpContextAccessor;
     }
     
     /// <summary>
@@ -133,28 +141,19 @@ public class WaUserService
     }
     
     /// <summary>
-    /// Gets the current user based on selection, default user, or first user
+    /// Gets the current authenticated user
     /// </summary>
-    /// <returns>The current user</returns>
+    /// <returns>The current authenticated user</returns>
     public async Task<WaUser?> GetCurrentUserAsync()
     {
-        if (_selectedUserId.HasValue)
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
         {
-            var selectedUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == _selectedUserId.Value);
-            if (selectedUser != null)
-            {
-                return selectedUser;
-            }
+            var user = await _userManager.GetUserAsync(httpContext.User);
+            return user;
         }
         
-        // If no selection or selected user not found, get default user
-        var defaultUser = await GetDefaultUserAsync();
-        if (defaultUser != null && !_selectedUserId.HasValue)
-        {
-            _selectedUserId = defaultUser.Id;
-        }
-        
-        return defaultUser;
+        return null;
     }
     
     
