@@ -193,3 +193,5 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/WarriorExperiment.App.pdb
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/WarriorExperiment.App.genruntimeconfig.cache
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/ref/WarriorExperiment.App.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Data/default-motivation-quotes.json
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Markdig.dll

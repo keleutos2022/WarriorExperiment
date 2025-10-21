@@ -2,6 +2,7 @@
 @using WarriorExperiment.Persistence.Entities
 @inject WaMeasurementEntryService MeasurementService
 @inject WaRiteOfPassagePracticeEntryService RopService
+@inject WaDailySurveyEntryService DailySurveyService
 @inject NotificationService NotificationService
 @inherits WaBaseComponent
 
@@ -114,6 +115,62 @@
                     </RadzenColumn>
                 }
             </RadzenRow>
+            
+            <RadzenRow Gap="1rem" class="wa-achievement-row">
+                @if (dailySurveyStreak > 0 || longestDailySurveyStreak > 0)
+                {
+                    <RadzenColumn SizeLG="6" SizeMD="12" Size="12" class="wa-achievement-column">
+                        <RadzenCard class="wa-achievement-card wa-daily-survey-streak-card">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                                <RadzenIcon Icon="@(dailySurveyStreak > 0 ? "whatshot" : "calendar_today")" class="wa-achievement-icon" />
+                                <RadzenText TextStyle="TextStyle.H5" class="wa-achievement-title">
+                                    Daily Survey Streak
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H3" class="wa-achievement-value">
+                                    @dailySurveyStreak days
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" class="wa-achievement-description">
+                                    @if (longestDailySurveyStreak > dailySurveyStreak)
+                                    {
+                                        @:Longest: @longestDailySurveyStreak days
+                                    }
+                                    else if (dailySurveyStreak > 0)
+                                    {
+                                        @:Keep it going! 🔥
+                                    }
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+                
+                @if (ropWeeklyStreak > 0 || longestRopWeeklyStreak > 0)
+                {
+                    <RadzenColumn SizeLG="6" SizeMD="12" Size="12" class="wa-achievement-column">
+                        <RadzenCard class="wa-achievement-card wa-rop-streak-card">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem">
+                                <RadzenIcon Icon="@(ropWeeklyStreak > 0 ? "whatshot" : "fitness_center")" class="wa-achievement-icon" />
+                                <RadzenText TextStyle="TextStyle.H5" class="wa-achievement-title">
+                                    Rite of Passage Streak
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.H3" class="wa-achievement-value">
+                                    @ropWeeklyStreak weeks
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" class="wa-achievement-description">
+                                    @if (longestRopWeeklyStreak > ropWeeklyStreak)
+                                    {
+                                        @:Longest: @longestRopWeeklyStreak weeks
+                                    }
+                                    else if (ropWeeklyStreak > 0)
+                                    {
+                                        @:3+ practices per week 💪
+                                    }
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
         }
         else
         {
@@ -143,8 +200,12 @@
     private decimal? muscleMassChange = null;
     private int totalPulls = 0;
     private int totalPushes = 0;
+    private int dailySurveyStreak = 0;
+    private int longestDailySurveyStreak = 0;
+    private int ropWeeklyStreak = 0;
+    private int longestRopWeeklyStreak = 0;
     
-    private bool HasAnyMetrics => bodyFatChange.HasValue || muscleMassChange.HasValue || totalPulls > 0 || totalPushes > 0;
+    private bool HasAnyMetrics => bodyFatChange.HasValue || muscleMassChange.HasValue || totalPulls > 0 || totalPushes > 0 || dailySurveyStreak > 0 || ropWeeklyStreak > 0;
     
     protected override async Task OnInitializedAsync()
     {
@@ -176,6 +237,12 @@
             // Load ROP statistics
             totalPulls = await RopService.GetTotalSuccessfulPullsAsync(UserId);
             totalPushes = await RopService.GetTotalLadderPushesAsync(UserId);
+            
+            // Load streak data
+            dailySurveyStreak = await DailySurveyService.GetCurrentStreakAsync(UserId);
+            longestDailySurveyStreak = await DailySurveyService.GetLongestStreakAsync(UserId);
+            ropWeeklyStreak = await RopService.GetCurrentWeeklyStreakAsync(UserId);
+            longestRopWeeklyStreak = await RopService.GetLongestWeeklyStreakAsync(UserId);
         }
         catch (Exception ex)
         {
@@ -186,6 +253,10 @@
             muscleMassChange = null;
             totalPulls = 0;
             totalPushes = 0;
+            dailySurveyStreak = 0;
+            longestDailySurveyStreak = 0;
+            ropWeeklyStreak = 0;
+            longestRopWeeklyStreak = 0;
         }
         finally
         {
@@ -255,6 +326,14 @@
 
     .wa-pushes-card {
         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .wa-daily-survey-streak-card {
+        background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+    }
+    
+    .wa-rop-streak-card {
+        background: linear-gradient(135deg, #9c88ff 0%, #8c7ae6 100%);
     }
 
     .wa-achievement-icon {

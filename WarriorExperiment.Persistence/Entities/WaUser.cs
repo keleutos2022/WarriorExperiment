@@ -28,6 +28,16 @@ public class WaUser : IdentityUser<int>
     public DateTime? DateOfStart { get; set; }
     
     /// <summary>
+    /// Gets or sets the date when the user accepted the rules of engagement
+    /// </summary>
+    public DateTime? RulesAcceptedAt { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the name the user typed to confirm acceptance of the rules
+    /// </summary>
+    public string? RulesAcceptedName { get; set; }
+    
+    /// <summary>
     /// Gets or sets whether this user is the default user
     /// </summary>
     public bool IsDefault { get; set; }

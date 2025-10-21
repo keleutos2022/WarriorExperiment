@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using WarriorExperiment.Persistence.Data;
 using WarriorExperiment.Persistence.Entities;
@@ -82,14 +84,103 @@ public class WaDefaultDataService
     }
     
     /// <summary>
+    /// Seeds default motivation quotes from embedded JSON file
+    /// </summary>
+    /// <returns>Number of quotes created</returns>
+    public async Task<int> SeedDefaultMotivationQuotesAsync()
+    {
+        var createdCount = 0;
+        
+        // Load quotes from embedded resource
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = "WarriorExperiment.Core.Data.default-motivation-quotes.json";
+        
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream == null)
+        {
+            // If embedded resource not found, try loading from file system
+            var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "default-motivation-quotes.json");
+            if (File.Exists(filePath))
+            {
+                var jsonContent = await File.ReadAllTextAsync(filePath);
+                var quotes = JsonSerializer.Deserialize<List<MotivationQuoteData>>(jsonContent);
+                
+                if (quotes != null)
+                {
+                    foreach (var quoteData in quotes)
+                    {
+                        // Check if quote already exists
+                        var existingQuote = await _context.MotivationQuotes
+                            .FirstOrDefaultAsync(mq => mq.Quote == quoteData.Quote && mq.Author == quoteData.Author);
+                            
+                        if (existingQuote == null)
+                        {
+                            var quote = new WaMotivationQuote
+                            {
+                                Author = quoteData.Author,
+                                Quote = quoteData.Quote,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow,
+                                EnteredAt = DateTime.UtcNow
+                            };
+                            
+                            _context.MotivationQuotes.Add(quote);
+                            createdCount++;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            using var reader = new StreamReader(stream);
+            var jsonContent = await reader.ReadToEndAsync();
+            var quotes = JsonSerializer.Deserialize<List<MotivationQuoteData>>(jsonContent);
+            
+            if (quotes != null)
+            {
+                foreach (var quoteData in quotes)
+                {
+                    // Check if quote already exists
+                    var existingQuote = await _context.MotivationQuotes
+                        .FirstOrDefaultAsync(mq => mq.Quote == quoteData.Quote && mq.Author == quoteData.Author);
+                        
+                    if (existingQuote == null)
+                    {
+                        var quote = new WaMotivationQuote
+                        {
+                            Author = quoteData.Author,
+                            Quote = quoteData.Quote,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                            EnteredAt = DateTime.UtcNow
+                        };
+                        
+                        _context.MotivationQuotes.Add(quote);
+                        createdCount++;
+                    }
+                }
+            }
+        }
+        
+        if (createdCount > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+        
+        return createdCount;
+    }
+    
+    /// <summary>
     /// Seeds all default data
     /// </summary>
     /// <returns>Summary of created items</returns>
     public async Task<string> SeedAllDefaultDataAsync()
     {
         var tasksCreated = await SeedDefaultDailyTasksAsync();
+        var quotesCreated = await SeedDefaultMotivationQuotesAsync();
         
-        return $"Default data seeding completed: {tasksCreated} daily tasks created.";
+        return $"Default data seeding completed: {tasksCreated} daily tasks created, {quotesCreated} motivation quotes created.";
     }
     
     /// <summary>
@@ -100,5 +191,14 @@ public class WaDefaultDataService
     {
         var taskCount = await _context.DailyTasks.CountAsync();
         return taskCount >= 10; // We have 10 default tasks
+    }
+    
+    /// <summary>
+    /// Internal class for deserializing motivation quote data from JSON
+    /// </summary>
+    private class MotivationQuoteData
+    {
+        public string Author { get; set; } = string.Empty;
+        public string Quote { get; set; } = string.Empty;
     }
 }

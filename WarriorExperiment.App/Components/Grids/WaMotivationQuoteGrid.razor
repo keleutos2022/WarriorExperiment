@@ -1,0 +1,71 @@
+@using WarriorExperiment.Persistence.Entities
+
+<RadzenDataGrid @ref="grid" 
+                Data="@Quotes" 
+                TItem="WaMotivationQuote" 
+                AllowPaging="true" 
+                PageSize="20"
+                AllowSorting="true" 
+                AllowFiltering="true"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                class="rz-shadow-3">
+    <Columns>
+        <RadzenDataGridColumn TItem="WaMotivationQuote" Property="Author" Title="Author" Width="200px" Sortable="true" Filterable="true">
+            <Template Context="quote">
+                <RadzenText TextStyle="TextStyle.Subtitle2" Text="@quote.Author" />
+            </Template>
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaMotivationQuote" Property="Quote" Title="Quote" Sortable="true" Filterable="true">
+            <Template Context="quote">
+                <RadzenStack Gap="0">
+                    <RadzenText TextStyle="TextStyle.Body1" 
+                              Text="@quote.Quote" 
+                              class="rz-font-italic"
+                              Style="max-width: 600px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;" />
+                </RadzenStack>
+            </Template>
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaMotivationQuote" Property="CreatedAt" Title="Added" Width="130px" Sortable="true" FormatString="{0:MM/dd/yyyy}">
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn TItem="WaMotivationQuote" Title="Actions" Width="150px" Sortable="false" Filterable="false">
+            <Template Context="quote">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <RadzenButton Icon="edit" 
+                                Size="ButtonSize.Small" 
+                                ButtonStyle="ButtonStyle.Light" 
+                                Variant="Variant.Flat"
+                                Click="@(() => OnEdit.InvokeAsync(quote))" 
+                                Text="Edit" />
+                    <RadzenButton Icon="delete" 
+                                Size="ButtonSize.Small" 
+                                ButtonStyle="ButtonStyle.Danger" 
+                                Variant="Variant.Flat"
+                                Click="@(() => OnDelete.InvokeAsync(quote))" 
+                                Text="Delete" />
+                </RadzenStack>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@if (!Quotes.Any())
+{
+    <RadzenCard class="rz-shadow-1 rz-text-align-center rz-p-8">
+        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenIcon Icon="format_quote" Style="font-size: 4rem;" class="rz-color-secondary" />
+            <RadzenText TextStyle="TextStyle.H6" Text="No Motivation Quotes" class="rz-color-secondary" />
+            <RadzenText TextStyle="TextStyle.Body1" Text="Add your first motivational quote to inspire your journey" class="rz-color-secondary" />
+        </RadzenStack>
+    </RadzenCard>
+}
+
+@code {
+    [Parameter] public List<WaMotivationQuote> Quotes { get; set; } = new();
+    [Parameter] public EventCallback<WaMotivationQuote> OnEdit { get; set; }
+    [Parameter] public EventCallback<WaMotivationQuote> OnDelete { get; set; }
+    
+    private RadzenDataGrid<WaMotivationQuote> grid = default!;
+}

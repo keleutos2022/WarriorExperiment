@@ -1,0 +1,152 @@
+@page "/motivation-quote/edit"
+@page "/motivation-quote/edit/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Core.Services
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
+@inject WaMotivationQuoteService MotivationQuoteService
+@inject NavigationManager Navigation
+
+<WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenButton Text="← Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" 
+                        Click="@(() => Navigation.NavigateTo("/motivation-quotes"))" />
+            
+            <WaMotivationQuoteForm Model="@currentQuote" OnValidSubmit="@HandleFormSubmit" />
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Inject] NotificationService NotificationService { get; set; } = default!;
+    
+    private WaMotivationQuote currentQuote = new();
+    private bool isLoading = true;
+    private string pageTitle => Id.HasValue ? "Edit Motivation Quote" : "New Motivation Quote";
+    private string pageSubTitle => Id.HasValue ? "Update quote details" : "Add an inspirational quote";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            if (Id.HasValue)
+            {
+                var quote = await MotivationQuoteService.GetByIdAsync(Id.Value);
+                if (quote != null)
+                {
+                    currentQuote = quote;
+                }
+                else
+                {
+                    NotificationService.Notify(new NotificationMessage 
+                    { 
+                        Severity = NotificationSeverity.Error, 
+                        Summary = "Quote Not Found", 
+                        Detail = "The requested quote could not be found.",
+                        Duration = 4000
+                    });
+                    Navigation.NavigateTo("/motivation-quotes");
+                    return;
+                }
+            }
+            else
+            {
+                currentQuote = new WaMotivationQuote();
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage 
+            { 
+                Severity = NotificationSeverity.Error, 
+                Summary = "Error Loading Quote", 
+                Detail = ex.Message,
+                Duration = 4000
+            });
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleFormSubmit(WaMotivationQuote quote)
+    {
+        try
+        {
+            // Check for duplicates
+            var isDuplicate = await MotivationQuoteService.IsDuplicateAsync(
+                quote.Author, 
+                quote.Quote, 
+                Id);
+                
+            if (isDuplicate)
+            {
+                NotificationService.Notify(new NotificationMessage 
+                { 
+                    Severity = NotificationSeverity.Warning, 
+                    Summary = "Duplicate Quote", 
+                    Detail = "This quote already exists for this author.",
+                    Duration = 4000
+                });
+                return;
+            }
+            
+            if (Id.HasValue)
+            {
+                await MotivationQuoteService.UpdateAsync(quote);
+                NotificationService.Notify(new NotificationMessage 
+                { 
+                    Severity = NotificationSeverity.Success, 
+                    Summary = "Quote Updated", 
+                    Detail = "The quote has been updated successfully.",
+                    Duration = 3000
+                });
+            }
+            else
+            {
+                await MotivationQuoteService.CreateAsync(quote);
+                NotificationService.Notify(new NotificationMessage 
+                { 
+                    Severity = NotificationSeverity.Success, 
+                    Summary = "Quote Created", 
+                    Detail = "The new quote has been added successfully.",
+                    Duration = 3000
+                });
+            }
+            
+            Navigation.NavigateTo("/motivation-quotes");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage 
+            { 
+                Severity = NotificationSeverity.Error, 
+                Summary = "Save Failed", 
+                Detail = ex.Message,
+                Duration = 4000
+            });
+        }
+    }
+}

@@ -1,0 +1,108 @@
+@using WarriorExperiment.Persistence.Entities
+@using WarriorExperiment.Core.Services
+@inject WaMotivationQuoteService MotivationQuoteService
+
+<RadzenCard class="rz-shadow-3">
+    <RadzenTemplateForm TItem="WaMotivationQuote" Data="@Model" Submit="@OnSubmit">
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12">
+                <RadzenFieldset Text="Quote Information">
+                    <RadzenStack Gap="1rem">
+                        <RadzenRow>
+                            <RadzenColumn Size="12">
+                                <RadzenFormField Text="Author" Variant="@Variant.Outlined">
+                                    <RadzenTextBox @bind-Value="@Model.Author" 
+                                                 Placeholder="Enter author name..."
+                                                 MaxLength="200"
+                                                 class="w-100" />
+                                    <RadzenRequiredValidator Component="Author" Text="Author is required" />
+                                    <RadzenLengthValidator Component="Author" Min="2" Text="Author must be at least 2 characters" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        
+                        <RadzenRow>
+                            <RadzenColumn Size="12">
+                                <RadzenFormField Text="Quote" Variant="@Variant.Outlined">
+                                    <RadzenTextArea @bind-Value="@Model.Quote" 
+                                                  Placeholder="Enter the motivational quote..."
+                                                  MaxLength="2000"
+                                                  Rows="5"
+                                                  class="w-100" />
+                                    <RadzenRequiredValidator Component="Quote" Text="Quote is required" />
+                                    <RadzenLengthValidator Component="Quote" Min="10" Text="Quote must be at least 10 characters" />
+                                    <RadzenCustomValidator Component="Quote" 
+                                                         Validator="@(() => ValidateDuplicateQuote())" 
+                                                         Text="This quote already exists for this author" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Quote))
+                        {
+                            <RadzenRow>
+                                <RadzenColumn Size="12">
+                                    <RadzenCard class="rz-background-color-info-lighter rz-shadow-0">
+                                        <RadzenStack Gap="0.5rem">
+                                            <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-color-info">Preview:</RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Body1" class="rz-font-italic">
+                                                "@Model.Quote"
+                                            </RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-align-right">
+                                                — @(string.IsNullOrEmpty(Model.Author) ? "Unknown Author" : Model.Author)
+                                            </RadzenText>
+                                        </RadzenStack>
+                                    </RadzenCard>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        }
+                        
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+        
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-mt-4">
+            <RadzenButton ButtonType="ButtonType.Submit" 
+                        Icon="save" 
+                        Text="Save Quote" 
+                        ButtonStyle="ButtonStyle.Primary" 
+                        Disabled="@isSubmitting" />
+        </RadzenStack>
+    </RadzenTemplateForm>
+</RadzenCard>
+
+@code {
+    [Parameter] public WaMotivationQuote Model { get; set; } = new();
+    [Parameter] public EventCallback<WaMotivationQuote> OnValidSubmit { get; set; }
+    
+    private bool isSubmitting = false;
+    private bool isDuplicateCheckPending = false;
+    
+    private async Task OnSubmit()
+    {
+        if (isSubmitting)
+            return;
+            
+        isSubmitting = true;
+        
+        try
+        {
+            await OnValidSubmit.InvokeAsync(Model);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+    
+    private bool ValidateDuplicateQuote()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Author) || string.IsNullOrWhiteSpace(Model.Quote))
+            return true; // Let required validators handle empty values
+            
+        // For synchronous validation in Radzen, we'll handle the actual duplicate check
+        // in the service layer during save. This is just a placeholder that always returns true.
+        return true;
+    }
+}

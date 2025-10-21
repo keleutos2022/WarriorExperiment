@@ -26,6 +26,7 @@ public static class WaServiceCollectionExtensions
         services.AddTransient<WaDailyTaskService>();
         services.AddTransient<WaDailyTaskEntryService>();
         services.AddTransient<WaMeasurementEntryService>();
+        services.AddTransient<WaMotivationQuoteService>();
         services.AddTransient<WaRiteOfPassagePracticeEntryService>();
         services.AddTransient<WaVarietyPracticeEntryService>();
         services.AddTransient<WaUserService>();

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "9bWB42UNBTs=",
+  "dgSpecHash": "xWKWjt1cJhI=",
   "success": true,
   "projectFilePath": "/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/WarriorExperiment.App.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "/home/moritz/.nuget/packages/fluentvalidation.aspnetcore/11.3.0/fluentvalidation.aspnetcore.11.3.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/fluentvalidation.dependencyinjectionextensions/11.5.1/fluentvalidation.dependencyinjectionextensions.11.5.1.nupkg.sha512",
     "/home/moritz/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
+    "/home/moritz/.nuget/packages/markdig/0.37.0/markdig.0.37.0.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.authorization/9.0.9/microsoft.aspnetcore.authorization.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.components/9.0.9/microsoft.aspnetcore.components.9.0.9.nupkg.sha512",
     "/home/moritz/.nuget/packages/microsoft.aspnetcore.components.analyzers/9.0.9/microsoft.aspnetcore.components.analyzers.9.0.9.nupkg.sha512",

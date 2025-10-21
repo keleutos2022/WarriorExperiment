@@ -56,6 +56,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Gb3Jtcy9XYU1lYXN1cmVtZW50RW50cnlGb3JtLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Forms/WaMotivationQuoteForm.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Gb3Jtcy9XYU1vdGl2YXRpb25RdW90ZUZvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Forms/WaRiteOfPassagePracticeForm.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Gb3Jtcy9XYVJpdGVPZlBhc3NhZ2VQcmFjdGljZUZvcm0ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -86,6 +90,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Grids/WaMeasurementMethodGrid.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Hcmlkcy9XYU1lYXN1cmVtZW50TWV0aG9kR3JpZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Grids/WaMotivationQuoteGrid.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Hcmlkcy9XYU1vdGl2YXRpb25RdW90ZUdyaWQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Grids/WaRiteOfPassagePracticeGrid.razor]
@@ -184,12 +192,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYU1lYXN1cmVtZW50c1BhZ2UucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaMotivationQuoteEditPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYU1vdGl2YXRpb25RdW90ZUVkaXRQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaMotivationQuotesPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYU1vdGl2YXRpb25RdW90ZXNQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaRiteOfPassagePracticeEditPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYVJpdGVPZlBhc3NhZ2VQcmFjdGljZUVkaXRQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaRiteOfPassagePracticesPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYVJpdGVPZlBhc3NhZ2VQcmFjdGljZXNQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaRulesOfEngagementPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYVJ1bGVzT2ZFbmdhZ2VtZW50UGFnZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaUsersPage.razor]
@@ -234,6 +254,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/WaMotivationalCard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9XYU1vdGl2YXRpb25hbENhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/WaRandomQuote.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9XYVJhbmRvbVF1b3RlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/WaUserSelector.razor]

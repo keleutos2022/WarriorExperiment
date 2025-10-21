@@ -249,4 +249,38 @@ public class WaUserService
         
         return await query.AnyAsync();
     }
+    
+    /// <summary>
+    /// Accepts the rules of engagement for a user
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="acceptanceName">The name typed by the user to confirm acceptance</param>
+    /// <returns>The updated user</returns>
+    public async Task<WaUser> AcceptRulesAsync(int userId, string acceptanceName)
+    {
+        var user = await GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException($"User with ID {userId} not found");
+        }
+        
+        user.RulesAcceptedAt = DateTime.UtcNow;
+        user.RulesAcceptedName = acceptanceName;
+        
+        // Set the experiment start date if not already set
+        if (!user.DateOfStart.HasValue)
+        {
+            user.DateOfStart = DateTime.UtcNow;
+        }
+        
+        user.UpdatedAt = DateTime.UtcNow;
+        
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+        
+        // Notify listeners of the change
+        CurrentUserChanged?.Invoke(user);
+        
+        return user;
+    }
 }

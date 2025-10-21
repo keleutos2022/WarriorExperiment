@@ -66,6 +66,11 @@ public class WaDbContext : IdentityDbContext<WaUser, IdentityRole<int>, int>
     public DbSet<WaDailyTaskEntry> DailyTaskEntries { get; set; }
     
     /// <summary>
+    /// Gets or sets the MotivationQuotes DbSet
+    /// </summary>
+    public DbSet<WaMotivationQuote> MotivationQuotes { get; set; }
+    
+    /// <summary>
     /// Configures the model creating conventions
     /// </summary>
     /// <param name="modelBuilder">The model builder instance</param>
@@ -421,6 +426,36 @@ public class WaDbContext : IdentityDbContext<WaUser, IdentityRole<int>, int>
                 .WithMany(dse => dse.TaskEntries)
                 .HasForeignKey(dte => dte.DailySurveyEntryId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Configure the WaMotivationQuote entity
+        modelBuilder.Entity<WaMotivationQuote>(entity =>
+        {
+            entity.ToTable("motivation_quotes");
+            entity.HasKey(mq => mq.Id);
+            
+            entity.Property(mq => mq.Author)
+                .IsRequired()
+                .HasMaxLength(200);
+                
+            entity.Property(mq => mq.Quote)
+                .IsRequired()
+                .HasMaxLength(2000);
+                
+            entity.Property(mq => mq.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(mq => mq.UpdatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            entity.Property(mq => mq.EnteredAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+                
+            // Create index on Author for better search performance
+            entity.HasIndex(mq => mq.Author);
         });
     }
 

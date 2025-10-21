@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WarriorExperiment.Persistence.Data;
@@ -11,9 +12,11 @@ using WarriorExperiment.Persistence.Data;
 namespace WarriorExperiment.Persistence.Migrations
 {
     [DbContext(typeof(WaDbContext))]
-    partial class WaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251021121138_AddMotivationQuotes")]
+    partial class AddMotivationQuotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -713,12 +716,6 @@ namespace WarriorExperiment.Persistence.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("RulesAcceptedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("RulesAcceptedName")
-                        .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");

@@ -1,0 +1,137 @@
+@page "/motivation-quotes"
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Core.Services
+@attribute [Authorize]
+@using WarriorExperiment.Persistence.Entities
+@inject WaMotivationQuoteService MotivationQuoteService
+@inject WaDefaultDataService DefaultDataService
+@inject NavigationManager Navigation
+@inject DialogService DialogService
+
+<WaBasePage Title="Motivation Quotes" SubTitle="Inspirational quotes for your warrior journey">
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack Gap="1rem">
+            <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                <RadzenColumn Size="8">
+                    <RadzenText TextStyle="TextStyle.Body1" class="rz-color-secondary">
+                        Manage your collection of motivational quotes
+                    </RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="4" class="rz-text-align-end">
+                    <RadzenButton Text="New Quote" 
+                                Icon="add" 
+                                ButtonStyle="ButtonStyle.Primary" 
+                                Click="@(() => Navigation.NavigateTo("/motivation-quote/edit"))" />
+                </RadzenColumn>
+            </RadzenRow>
+            
+            <WaMotivationQuoteGrid Quotes="@quotes" 
+                                 OnEdit="@HandleEdit"
+                                 OnDelete="@HandleDelete" />
+        </RadzenStack>
+    }
+</WaBasePage>
+
+@code {
+    [Inject] NotificationService NotificationService { get; set; } = default!;
+    
+    private List<WaMotivationQuote> quotes = new();
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuotes();
+    }
+    
+    private async Task LoadQuotes()
+    {
+        isLoading = true;
+        try
+        {
+            quotes = await MotivationQuoteService.GetAllAsync();
+            
+            // Seed default quotes if none exist
+            if (!quotes.Any())
+            {
+                var result = await DefaultDataService.SeedDefaultMotivationQuotesAsync();
+                if (result > 0)
+                {
+                    NotificationService.Notify(new NotificationMessage 
+                    { 
+                        Severity = NotificationSeverity.Info, 
+                        Summary = "Default Quotes Loaded", 
+                        Detail = $"{result} default quotes have been added.",
+                        Duration = 4000
+                    });
+                    
+                    // Reload quotes after seeding
+                    quotes = await MotivationQuoteService.GetAllAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage 
+            { 
+                Severity = NotificationSeverity.Error, 
+                Summary = "Error Loading Quotes", 
+                Detail = ex.Message,
+                Duration = 4000
+            });
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private void HandleEdit(WaMotivationQuote quote)
+    {
+        Navigation.NavigateTo($"/motivation-quote/edit/{quote.Id}");
+    }
+    
+    private async Task HandleDelete(WaMotivationQuote quote)
+    {
+        var confirmed = await DialogService.Confirm(
+            $"Are you sure you want to delete this quote by {quote.Author}?", 
+            "Delete Quote",
+            new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+            
+        if (confirmed == true)
+        {
+            try
+            {
+                var deleted = await MotivationQuoteService.DeleteAsync(quote.Id);
+                if (deleted)
+                {
+                    NotificationService.Notify(new NotificationMessage 
+                    { 
+                        Severity = NotificationSeverity.Success, 
+                        Summary = "Quote Deleted", 
+                        Detail = "The quote has been removed successfully.",
+                        Duration = 3000
+                    });
+                    
+                    await LoadQuotes();
+                }
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(new NotificationMessage 
+                { 
+                    Severity = NotificationSeverity.Error, 
+                    Summary = "Delete Failed", 
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+            }
+        }
+    }
+}

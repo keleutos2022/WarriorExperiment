@@ -323,4 +323,113 @@ public class WaRiteOfPassagePracticeEntryService
     {
         return ladderSets * (ladderSets + 1) / 2;
     }
+    
+    /// <summary>
+    /// Gets the current weekly streak for rite of passage practices
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Number of consecutive weeks with 3+ practices (including current week if applicable)</returns>
+    public async Task<int> GetCurrentWeeklyStreakAsync(int userId)
+    {
+        var entries = await _context.RiteOfPassagePracticeEntries
+            .Where(rpe => rpe.UserId == userId)
+            .OrderByDescending(rpe => rpe.Date)
+            .Select(rpe => rpe.Date.Date)
+            .ToListAsync();
+        
+        if (!entries.Any())
+            return 0;
+        
+        var today = DateTime.UtcNow.Date;
+        var currentWeekStart = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+        if (currentWeekStart > today)
+            currentWeekStart = currentWeekStart.AddDays(-7); // Handle Sunday edge case
+        
+        // Group entries by week
+        var weekGroups = entries
+            .GroupBy(date => 
+            {
+                var weekStart = date.AddDays(-(int)date.DayOfWeek + (int)DayOfWeek.Monday);
+                if (weekStart > date)
+                    weekStart = weekStart.AddDays(-7); // Handle Sunday edge case
+                return weekStart;
+            })
+            .Select(g => new { WeekStart = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.WeekStart)
+            .ToList();
+        
+        if (!weekGroups.Any())
+            return 0;
+        
+        var streak = 0;
+        var expectedWeekStart = currentWeekStart;
+        
+        foreach (var week in weekGroups)
+        {
+            if (week.WeekStart == expectedWeekStart && week.Count >= 3)
+            {
+                streak++;
+                expectedWeekStart = expectedWeekStart.AddDays(-7);
+            }
+            else if (week.WeekStart < expectedWeekStart)
+            {
+                // We've gone past the expected week, check if we need to break
+                break;
+            }
+        }
+        
+        return streak;
+    }
+    
+    /// <summary>
+    /// Gets the longest weekly streak ever achieved for rite of passage practices
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Longest streak of consecutive weeks with 3+ practices</returns>
+    public async Task<int> GetLongestWeeklyStreakAsync(int userId)
+    {
+        var entries = await _context.RiteOfPassagePracticeEntries
+            .Where(rpe => rpe.UserId == userId)
+            .OrderBy(rpe => rpe.Date)
+            .Select(rpe => rpe.Date.Date)
+            .ToListAsync();
+        
+        if (!entries.Any())
+            return 0;
+        
+        // Group entries by week
+        var weekGroups = entries
+            .GroupBy(date => 
+            {
+                var weekStart = date.AddDays(-(int)date.DayOfWeek + (int)DayOfWeek.Monday);
+                if (weekStart > date)
+                    weekStart = weekStart.AddDays(-7); // Handle Sunday edge case
+                return weekStart;
+            })
+            .Where(g => g.Count() >= 3) // Only consider weeks with 3+ practices
+            .Select(g => g.Key)
+            .OrderBy(weekStart => weekStart)
+            .ToList();
+        
+        if (!weekGroups.Any())
+            return 0;
+        
+        var longestStreak = 1;
+        var currentStreak = 1;
+        
+        for (int i = 1; i < weekGroups.Count; i++)
+        {
+            if (weekGroups[i] == weekGroups[i - 1].AddDays(7))
+            {
+                currentStreak++;
+                longestStreak = Math.Max(longestStreak, currentStreak);
+            }
+            else
+            {
+                currentStreak = 1;
+            }
+        }
+        
+        return longestStreak;
+    }
 }

@@ -1,0 +1,233 @@
+@page "/rules-of-engagement"
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Entities
+@using System.Reflection
+@using Markdig
+@inject WaUserService UserService
+@inject ILogger<WaRulesOfEngagementPage> Logger
+@inject NotificationService NotificationService
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<PageTitle>Rules of Engagement - Warrior Experiment</PageTitle>
+
+<RadzenCard>
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 400px;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        </RadzenStack>
+    }
+    else if (CurrentUser?.RulesAcceptedAt.HasValue == true)
+    {
+        <!-- User has already accepted the rules -->
+        <RadzenStack Gap="1rem">
+            <RadzenAlert AlertStyle="AlertStyle.Success" ShowIcon="true" Variant="Variant.Flat">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <RadzenText TextStyle="TextStyle.Body1">
+                        You accepted the Rules of Engagement on @CurrentUser.RulesAcceptedAt.Value.ToString("MMMM dd, yyyy") as 
+                        <strong>@CurrentUser.RulesAcceptedName</strong>
+                    </RadzenText>
+                    @if (CurrentUser.DateOfStart.HasValue)
+                    {
+                        var daysOnDuty = (DateTime.UtcNow - CurrentUser.DateOfStart.Value).Days;
+                        <RadzenBadge Text="@($"Day {daysOnDuty}")" BadgeStyle="BadgeStyle.Success" />
+                    }
+                </RadzenStack>
+            </RadzenAlert>
+            
+            <div class="wa-rules-content">
+                @((MarkupString)markdownHtml)
+            </div>
+        </RadzenStack>
+    }
+    else
+    {
+        <!-- User hasn't accepted the rules yet -->
+        <RadzenStack Gap="2rem">
+            <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" Variant="Variant.Flat">
+                <RadzenText TextStyle="TextStyle.Subtitle1">
+                    Please read the Rules of Engagement carefully before beginning your Warrior Experiment journey.
+                </RadzenText>
+            </RadzenAlert>
+            
+            <div class="wa-rules-content">
+                @((MarkupString)markdownHtml)
+            </div>
+            
+            <RadzenCard class="wa-acceptance-card">
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H5">Accept the Rules</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body1">
+                        By typing your name below and clicking "Accept", you commit to following the Rules of Engagement 
+                        and beginning your 90-day Warrior Experiment.
+                    </RadzenText>
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                        <RadzenStack Style="flex: 1; min-width: 200px;">
+                            <RadzenLabel Text="Type your full name to confirm:" Component="nameInput" />
+                            <RadzenTextBox @bind-Value="nameConfirmation" Name="nameInput" Placeholder="Enter your full name" 
+                                         Style="width: 100%;" />
+                        </RadzenStack>
+                        
+                        <RadzenButton Text="Accept Rules of Engagement" Icon="check_circle" 
+                                    ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Large"
+                                    Disabled="@(string.IsNullOrWhiteSpace(nameConfirmation) || isProcessing)"
+                                    IsBusy="@isProcessing"
+                                    Click="@AcceptRules" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenStack>
+    }
+</RadzenCard>
+
+@code {
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    
+    private string markdownHtml = string.Empty;
+    private string nameConfirmation = string.Empty;
+    private bool isLoading = true;
+    private bool isProcessing = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load the markdown content from embedded resource
+            var assembly = Assembly.GetAssembly(typeof(WaUserService));
+            var resourceName = "WarriorExperiment.Core.Data.RulesOfEngagement.md";
+            
+            using (var stream = assembly?.GetManifestResourceStream(resourceName))
+            {
+                if (stream != null)
+                {
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var markdownContent = await reader.ReadToEndAsync();
+                        
+                        // Convert markdown to HTML using Markdig
+                        var pipeline = new MarkdownPipelineBuilder()
+                            .UseAdvancedExtensions()
+                            .Build();
+                        
+                        markdownHtml = Markdown.ToHtml(markdownContent, pipeline);
+                    }
+                }
+                else
+                {
+                    Logger.LogError("Could not find RulesOfEngagement.md embedded resource");
+                    markdownHtml = "<p>Error: Could not load the Rules of Engagement content.</p>";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading Rules of Engagement content");
+            markdownHtml = "<p>Error: Could not load the Rules of Engagement content.</p>";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task AcceptRules()
+    {
+        if (CurrentUser == null || string.IsNullOrWhiteSpace(nameConfirmation))
+            return;
+            
+        isProcessing = true;
+        
+        try
+        {
+            await UserService.AcceptRulesAsync(CurrentUser.Id, nameConfirmation);
+            
+            NotificationService.Notify(NotificationSeverity.Success, "Success", 
+                                     "Rules of Engagement accepted! Your Warrior Experiment begins now!", 
+                                     5000);
+            
+            // Refresh the page to show the accepted state
+            Navigation.NavigateTo("/rules-of-engagement", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error accepting rules");
+            NotificationService.Notify(NotificationSeverity.Error, "Error", "Failed to accept rules. Please try again.");
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+}
+
+<style>
+    .wa-rules-content {
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+    
+    .wa-rules-content h1 {
+        font-size: 2rem;
+        margin: 1.5rem 0;
+        color: var(--rz-primary);
+    }
+    
+    .wa-rules-content h2 {
+        font-size: 1.5rem;
+        margin: 1.25rem 0;
+        color: var(--rz-secondary);
+    }
+    
+    .wa-rules-content h3 {
+        font-size: 1.25rem;
+        margin: 1rem 0;
+    }
+    
+    .wa-rules-content ul {
+        margin: 0.5rem 0;
+        padding-left: 2rem;
+    }
+    
+    .wa-rules-content li {
+        margin: 0.25rem 0;
+    }
+    
+    .wa-rules-content hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 1px solid var(--rz-base-400);
+    }
+    
+    .wa-rules-content strong {
+        font-weight: 600;
+        color: var(--rz-text-title-color);
+    }
+    
+    .wa-acceptance-card {
+        background: var(--rz-base-100);
+        border: 2px solid var(--rz-primary);
+        margin-top: 2rem;
+    }
+    
+    @@media (max-width: 768px) {
+        .wa-rules-content {
+            padding: 0 0.5rem;
+        }
+        
+        .wa-rules-content h1 {
+            font-size: 1.5rem;
+        }
+        
+        .wa-rules-content h2 {
+            font-size: 1.25rem;
+        }
+        
+        .wa-rules-content h3 {
+            font-size: 1.1rem;
+        }
+    }
+</style>

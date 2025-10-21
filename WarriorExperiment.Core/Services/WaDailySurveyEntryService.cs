@@ -153,4 +153,83 @@ public class WaDailySurveyEntryService
             .OrderBy(ds => ds.Date)
             .ToListAsync();
     }
+    
+    /// <summary>
+    /// Gets the current daily survey streak for a user
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Number of consecutive days with survey entries</returns>
+    public async Task<int> GetCurrentStreakAsync(int userId)
+    {
+        var entries = await _context.DailySurveys
+            .Where(ds => ds.UserId == userId)
+            .OrderByDescending(ds => ds.Date)
+            .Select(ds => ds.Date.Date)
+            .ToListAsync();
+        
+        if (!entries.Any())
+            return 0;
+        
+        var today = DateTime.UtcNow.Date;
+        var currentStreak = 0;
+        var expectedDate = today;
+        
+        // Check if user has entry for today or yesterday
+        if (entries[0] != today && entries[0] != today.AddDays(-1))
+            return 0;
+        
+        // If the most recent entry is yesterday, start from yesterday
+        if (entries[0] == today.AddDays(-1))
+            expectedDate = today.AddDays(-1);
+        
+        foreach (var entryDate in entries)
+        {
+            if (entryDate == expectedDate)
+            {
+                currentStreak++;
+                expectedDate = expectedDate.AddDays(-1);
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        return currentStreak;
+    }
+    
+    /// <summary>
+    /// Gets the longest daily survey streak ever achieved by a user
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <returns>Longest streak count</returns>
+    public async Task<int> GetLongestStreakAsync(int userId)
+    {
+        var entries = await _context.DailySurveys
+            .Where(ds => ds.UserId == userId)
+            .OrderBy(ds => ds.Date)
+            .Select(ds => ds.Date.Date)
+            .ToListAsync();
+        
+        if (!entries.Any())
+            return 0;
+        
+        var longestStreak = 1;
+        var currentStreak = 1;
+        
+        for (int i = 1; i < entries.Count; i++)
+        {
+            if (entries[i] == entries[i - 1].AddDays(1))
+            {
+                currentStreak++;
+                longestStreak = Math.Max(longestStreak, currentStreak);
+            }
+            else
+            {
+                currentStreak = 1;
+            }
+        }
+        
+        return longestStreak;
+    }
 }
