@@ -119,6 +119,21 @@
                     <RadzenTextArea @bind-Value="@Model.Comment" Rows="3" Placeholder="Optional comment..." />
                 </RadzenFormField>
                 
+                <!-- What Went Well -->
+                <RadzenFormField Text="What went well today? (Where did I act virtuously?)" AllowFloatingLabel="false">
+                    <RadzenTextArea @bind-Value="@Model.WhatWentWell" Rows="3" Placeholder="Describe what went well today..." />
+                </RadzenFormField>
+                
+                <!-- What Didn't Go Well -->
+                <RadzenFormField Text="What didn't go so well? (Where did I deviate from my principles?)" AllowFloatingLabel="false">
+                    <RadzenTextArea @bind-Value="@Model.WhatDidNotGoWell" Rows="3" Placeholder="Describe what could have been better..." />
+                </RadzenFormField>
+                
+                <!-- What To Change Tomorrow -->
+                <RadzenFormField Text="What will I do differently tomorrow? (How can I improve?)" AllowFloatingLabel="false">
+                    <RadzenTextArea @bind-Value="@Model.WhatToChangeTomorrow" Rows="3" Placeholder="Describe what you'll improve tomorrow..." />
+                </RadzenFormField>
+                
                 <!-- Validation Summary -->
                 <ValidationSummary />
                 

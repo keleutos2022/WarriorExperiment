@@ -366,14 +366,21 @@ public class WaRiteOfPassagePracticeEntryService
         
         foreach (var week in weekGroups)
         {
-            if (week.WeekStart == expectedWeekStart && week.Count >= 3)
+            // For the current week, count it if it has any practices
+            if (week.WeekStart == currentWeekStart && week.Count > 0)
+            {
+                streak++;
+                expectedWeekStart = expectedWeekStart.AddDays(-7);
+            }
+            // For past weeks, require 3+ practices
+            else if (week.WeekStart == expectedWeekStart && week.Count >= 3)
             {
                 streak++;
                 expectedWeekStart = expectedWeekStart.AddDays(-7);
             }
             else if (week.WeekStart < expectedWeekStart)
             {
-                // We've gone past the expected week, check if we need to break
+                // We've gone past the expected week without finding it, break the streak
                 break;
             }
         }

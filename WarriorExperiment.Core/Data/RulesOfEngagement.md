@@ -21,6 +21,7 @@ This is a 90-day experiment combining the Warrior Diet with Pavel Tsatsouline's 
 - Fresh juices
 - Clear broths
 - Small amounts of nuts
+- Simple proteins (small portions of eggs, yogurt, or cheese)
 - Water, herbal tea, black coffee
 
 **Overeating Phase (4 hours - evening)**
@@ -57,7 +58,6 @@ This is a 90-day experiment combining the Warrior Diet with Pavel Tsatsouline's 
 
 **Program Structure:**
 - Variety Days: Different exercises and movements
-- Volume Days: Higher sets and repetitions
 - Heavy Days: Maximum effort and intensity
 
 **Core Focus:** Military press progression toward 32kg

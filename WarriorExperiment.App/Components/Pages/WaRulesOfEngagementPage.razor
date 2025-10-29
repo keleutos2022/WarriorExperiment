@@ -208,9 +208,57 @@
     }
     
     .wa-acceptance-card {
-        background: var(--rz-base-100);
+        background-color: var(--rz-card-background-color, var(--rz-base-100));
         border: 2px solid var(--rz-primary);
         margin-top: 2rem;
+    }
+    
+    /* Force dark background based on CSS variables */
+    .wa-acceptance-card.rz-card[style*="--rz-card-background-color"] {
+        background-color: var(--rz-card-background-color) !important;
+    }
+    
+    /* Dark theme support for acceptance card */
+    body[class*="dark"] .wa-acceptance-card,
+    .rz-dark .wa-acceptance-card,
+    [data-theme="dark"] .wa-acceptance-card,
+    .wa-acceptance-card.rz-card {
+        background-color: var(--rz-base-800) !important;
+        border-color: var(--rz-primary-light) !important;
+    }
+    
+    /* Target Radzen card specifically in dark mode */
+    body[class*="dark"] .rz-card.wa-acceptance-card,
+    .rz-dark .rz-card.wa-acceptance-card,
+    [data-theme="dark"] .rz-card.wa-acceptance-card {
+        background-color: var(--rz-base-800) !important;
+        background: var(--rz-base-800) !important;
+    }
+    
+    body[class*="dark"] .wa-acceptance-card .rz-textbox,
+    .rz-dark .wa-acceptance-card .rz-textbox,
+    [data-theme="dark"] .wa-acceptance-card .rz-textbox {
+        background: var(--rz-base-700) !important;
+        border-color: var(--rz-base-600) !important;
+        color: var(--rz-text-color) !important;
+    }
+    
+    body[class*="dark"] .wa-acceptance-card .rz-textbox:focus,
+    .rz-dark .wa-acceptance-card .rz-textbox:focus,
+    [data-theme="dark"] .wa-acceptance-card .rz-textbox:focus {
+        border-color: var(--rz-primary-light) !important;
+    }
+    
+    body[class*="dark"] .wa-acceptance-card .rz-button,
+    .rz-dark .wa-acceptance-card .rz-button,
+    [data-theme="dark"] .wa-acceptance-card .rz-button {
+        background-color: var(--rz-success-dark) !important;
+    }
+    
+    body[class*="dark"] .wa-acceptance-card label,
+    .rz-dark .wa-acceptance-card label,
+    [data-theme="dark"] .wa-acceptance-card label {
+        color: var(--rz-text-color) !important;
     }
     
     @@media (max-width: 768px) {

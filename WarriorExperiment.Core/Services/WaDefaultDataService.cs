@@ -103,7 +103,11 @@ public class WaDefaultDataService
             if (File.Exists(filePath))
             {
                 var jsonContent = await File.ReadAllTextAsync(filePath);
-                var quotes = JsonSerializer.Deserialize<List<MotivationQuoteData>>(jsonContent);
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var quotes = JsonSerializer.Deserialize<List<MotivationQuoteData>>(jsonContent, jsonOptions);
                 
                 if (quotes != null)
                 {
@@ -135,7 +139,11 @@ public class WaDefaultDataService
         {
             using var reader = new StreamReader(stream);
             var jsonContent = await reader.ReadToEndAsync();
-            var quotes = JsonSerializer.Deserialize<List<MotivationQuoteData>>(jsonContent);
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var quotes = JsonSerializer.Deserialize<List<MotivationQuoteData>>(jsonContent, jsonOptions);
             
             if (quotes != null)
             {

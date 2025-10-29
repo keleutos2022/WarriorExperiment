@@ -63,6 +63,21 @@ public class WaDailySurveyEntry : WaEntryEntity
     public string? LookingForwardTo { get; set; }
     
     /// <summary>
+    /// Gets or sets what went well today (Where did I act virtuously?)
+    /// </summary>
+    public string? WhatWentWell { get; set; }
+    
+    /// <summary>
+    /// Gets or sets what didn't go so well (Where did I deviate from my principles?)
+    /// </summary>
+    public string? WhatDidNotGoWell { get; set; }
+    
+    /// <summary>
+    /// Gets or sets what will be done differently tomorrow (How can I improve?)
+    /// </summary>
+    public string? WhatToChangeTomorrow { get; set; }
+    
+    /// <summary>
     /// Gets or sets the user ID (foreign key)
     /// </summary>
     public int UserId { get; set; }
