@@ -39,13 +39,13 @@
                                 ButtonStyle="ButtonStyle.Light" 
                                 Variant="Variant.Flat"
                                 Click="@(() => OnEdit.InvokeAsync(quote))" 
-                                Text="Edit" />
+                                title="Edit quote" />
                     <RadzenButton Icon="delete" 
                                 Size="ButtonSize.Small" 
                                 ButtonStyle="ButtonStyle.Danger" 
                                 Variant="Variant.Flat"
                                 Click="@(() => OnDelete.InvokeAsync(quote))" 
-                                Text="Delete" />
+                                title="Delete quote" />
                 </RadzenStack>
             </Template>
         </RadzenDataGridColumn>

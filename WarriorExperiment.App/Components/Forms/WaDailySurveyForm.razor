@@ -14,7 +14,8 @@
                 
                 <!-- Date -->
                 <RadzenFormField Text="Date" AllowFloatingLabel="false">
-                    <RadzenDatePicker @bind-Value="@Model.Date" ShowTime="false" DateFormat="yyyy-MM-dd" />
+                    <RadzenDatePicker @bind-Value="@Model.Date" ShowTime="false" DateFormat="yyyy-MM-dd" 
+                                    Change="@((DateTime? value) => HandleDateChange(value))" />
                 </RadzenFormField>
                 
                 <!-- Sleep Quality -->
@@ -130,27 +131,36 @@
                 </RadzenFormField>
                 
                 <!-- What To Change Tomorrow -->
-                <RadzenFormField Text="What will I do differently tomorrow? (How can I improve?)" AllowFloatingLabel="false">
+                <RadzenFormField Text="What will I do differently tomorrow? (How can I come closer to my true self?)" AllowFloatingLabel="false">
                     <RadzenTextArea @bind-Value="@Model.WhatToChangeTomorrow" Rows="3" Placeholder="Describe what you'll improve tomorrow..." />
                 </RadzenFormField>
                 
                 <!-- Validation Summary -->
                 <ValidationSummary />
-                
-                <!-- Submit Button -->
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Save Survey" ButtonStyle="ButtonStyle.Primary" Icon="save" />
             </RadzenStack>
         </RadzenCard>
+        
+        <!-- Submit Button at the bottom -->
+        <RadzenButton ButtonType="ButtonType.Submit" Text="Save Survey" ButtonStyle="ButtonStyle.Primary" Icon="save" Style="width: 100%;" />
     </RadzenStack>
 </EditForm>
 
 @code {
     [Parameter] public WaDailySurveyEntry Model { get; set; } = new();
     [Parameter] public EventCallback<WaDailySurveyEntry> OnValidSubmit { get; set; }
+    [Parameter] public EventCallback<DateTime?> OnDateChanged { get; set; }
     
     private async Task HandleValidSubmit()
     {
         await OnValidSubmit.InvokeAsync(Model);
+    }
+    
+    private async Task HandleDateChange(DateTime? value)
+    {
+        if (value.HasValue && OnDateChanged.HasDelegate)
+        {
+            await OnDateChanged.InvokeAsync(value);
+        }
     }
 }
 

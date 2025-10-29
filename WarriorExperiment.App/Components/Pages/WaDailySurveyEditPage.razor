@@ -9,6 +9,7 @@
 @inject WaDailyTaskEntryService TaskEntryService
 @inject WaDailyTaskService DailyTaskService
 @inject NavigationManager Navigation
+@inject DialogService DialogService
 
 <WaBasePage Title="@pageTitle" SubTitle="@pageSubTitle">
     @if (isLoading)
@@ -26,10 +27,21 @@
     else
     {
         <RadzenStack Gap="1rem">
-            <RadzenButton Text="← Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" 
-                        Click="@(() => Navigation.NavigateTo("/daily-survey"))" />
+            <RadzenRow JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenColumn Size="6">
+                    <RadzenButton Text="← Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" 
+                                Click="@(() => Navigation.NavigateTo("/daily-survey"))" />
+                </RadzenColumn>
+                <RadzenColumn Size="6" Style="text-align: right;">
+                    @if (Id > 0 && currentEntry != null)
+                    {
+                        <RadzenButton Text="View in Book" Icon="menu_book" ButtonStyle="ButtonStyle.Info" 
+                                    Click="@(() => Navigation.NavigateTo($"/reflections/{currentEntry.Id}"))" />
+                    }
+                </RadzenColumn>
+            </RadzenRow>
             
-            <WaDailySurveyForm Model="@currentEntry" OnValidSubmit="@HandleFormSubmit" />
+            <WaDailySurveyForm Model="@currentEntry" OnValidSubmit="@HandleFormSubmit" OnDateChanged="@HandleDateChanged" />
             
             @if (taskEntries.Any())
             {
@@ -172,18 +184,30 @@
             }
             else
             {
-                // New entry
-                currentEntry = new WaDailySurveyEntry
+                // Check if entry exists for today
+                var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+                var existingEntry = await DailySurveyService.GetByUserAndDateAsync(CurrentUser.Id, today);
+                
+                if (existingEntry != null)
                 {
-                    UserId = CurrentUser.Id,
-                    Date = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc),
-                    SleepQuality = 5,
-                    Energy = 5,
-                    Mood = 5,
-                    MuscleSoreness = 5,
-                    StressLevel = 5,
-                    HungerFeelingDuringUndereatingPhase = 5
-                };
+                    // Load existing entry for today
+                    currentEntry = existingEntry;
+                }
+                else
+                {
+                    // Create new entry
+                    currentEntry = new WaDailySurveyEntry
+                    {
+                        UserId = CurrentUser.Id,
+                        Date = today,
+                        SleepQuality = 5,
+                        Energy = 5,
+                        Mood = 5,
+                        MuscleSoreness = 5,
+                        StressLevel = 5,
+                        HungerFeelingDuringUndereatingPhase = 5
+                    };
+                }
             }
             
             // Load or create task entries
@@ -230,6 +254,15 @@
             }
             else
             {
+                // Check if an entry already exists for this date
+                var existingEntry = await DailySurveyService.GetByUserAndDateAsync(entry.UserId, entry.Date);
+                if (existingEntry != null)
+                {
+                    NotificationService.Notify(NotificationSeverity.Warning, 
+                        $"A daily survey already exists for {entry.Date:yyyy-MM-dd}. Please use the edit function instead.");
+                    return;
+                }
+                
                 var createdEntry = await DailySurveyService.CreateAsync(entry);
                 
                 // Create task entries for new daily survey with completion states
@@ -339,6 +372,41 @@
             WaDaySection.Other => "var(--rz-base-300)",
             _ => "var(--rz-base-300)"
         };
+    }
+    
+    private async Task HandleDateChanged(DateTime? newDate)
+    {
+        if (!newDate.HasValue || CurrentUser == null)
+            return;
+        
+        var newDateUtc = DateTime.SpecifyKind(newDate.Value.Date, DateTimeKind.Utc);
+        
+        // Only check if we're in create mode (no ID) or if the date is different from the current entry
+        if (!Id.HasValue || (currentEntry.Date.Date != newDateUtc))
+        {
+            var existingEntry = await DailySurveyService.GetByUserAndDateAsync(CurrentUser.Id, newDateUtc);
+            
+            if (existingEntry != null && existingEntry.Id != currentEntry.Id)
+            {
+                // Entry already exists for this date
+                var result = await DialogService.Confirm(
+                    $"A daily survey already exists for {newDateUtc:yyyy-MM-dd}. Do you want to edit that entry instead?", 
+                    "Entry Already Exists",
+                    new ConfirmOptions { OkButtonText = "Yes, Edit Existing", CancelButtonText = "No, Keep Current Date" });
+                
+                if (result == true)
+                {
+                    // Navigate to edit the existing entry
+                    Navigation.NavigateTo($"/daily-survey/edit/{existingEntry.Id}");
+                }
+                else
+                {
+                    // Revert the date change
+                    currentEntry.Date = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+                    StateHasChanged();
+                }
+            }
+        }
     }
     
 }

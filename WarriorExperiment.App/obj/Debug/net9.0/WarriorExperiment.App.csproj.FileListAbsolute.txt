@@ -182,7 +182,6 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/compressed/6xb9o06z95-lyjmhwhy9l.gz
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/compressed/t2tvocn0z4-76hsiee7y5.gz
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/compressed/r3vy2a4omt-4kywy7iv6g.gz
-/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/compressed/c1b4zenv1g-apzv0inqky.gz
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/staticwebassets.build.json
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/staticwebassets.build.json.cache
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/staticwebassets.development.json
@@ -195,3 +194,4 @@
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/ref/WarriorExperiment.App.dll
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Data/default-motivation-quotes.json
 /home/moritz/projects/WarriorExperiment/WarriorExperiment.App/bin/Debug/net9.0/Markdig.dll
+/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/obj/Debug/net9.0/compressed/c1b4zenv1g-laovocty6n.gz

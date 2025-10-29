@@ -73,7 +73,7 @@ public class WaDailySurveyEntry : WaEntryEntity
     public string? WhatDidNotGoWell { get; set; }
     
     /// <summary>
-    /// Gets or sets what will be done differently tomorrow (How can I improve?)
+    /// Gets or sets what will be done differently tomorrow (How can I come closer to my true self?)
     /// </summary>
     public string? WhatToChangeTomorrow { get; set; }
     

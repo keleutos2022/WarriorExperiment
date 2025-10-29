@@ -1,0 +1,644 @@
+@page "/reflections"
+@page "/reflections/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using WarriorExperiment.Core.Services
+@using WarriorExperiment.Persistence.Entities
+@attribute [Authorize]
+@inject WaDailySurveyEntryService DailySurveyService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="wa-reflection-book">
+    <!-- Header -->
+    <div class="wa-book-header">
+        <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenColumn Size="8" SizeMD="9">
+                <RadzenText TextStyle="TextStyle.H4" class="wa-book-title">Daily Reflections</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="4" SizeMD="3" Style="text-align: right;">
+                <RadzenButton Icon="menu" Click="@ToggleSidebar" Variant="Variant.Text" 
+                            class="wa-sidebar-toggle-btn" title="Toggle navigation" />
+            </RadzenColumn>
+        </RadzenRow>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="wa-book-container">
+        <!-- Sidebar -->
+        <div class="@GetSidebarClass()">
+            <div class="wa-sidebar-header">
+                <RadzenText TextStyle="TextStyle.H6">All Reflections</RadzenText>
+                <RadzenButton Icon="close" Size="ButtonSize.Small" Variant="Variant.Text" 
+                            Click="@ToggleSidebar" class="wa-sidebar-close" />
+            </div>
+            <div class="wa-sidebar-content">
+                @if (allEntries.Any())
+                {
+                    var groupedEntries = allEntries.GroupBy(e => new { e.Date.Year, e.Date.Month })
+                                                  .OrderByDescending(g => g.Key.Year)
+                                                  .ThenByDescending(g => g.Key.Month);
+                    
+                    @foreach (var group in groupedEntries)
+                    {
+                        <div class="wa-month-group">
+                            <RadzenText class="wa-month-header">
+                                @($"{new DateTime(group.Key.Year, group.Key.Month, 1):MMMM yyyy}")
+                            </RadzenText>
+                            @foreach (var entry in group.OrderByDescending(e => e.Date))
+                            {
+                                <div class="@GetEntryClass(entry)" @onclick="@(() => NavigateToEntry(entry))">
+                                    <RadzenText class="wa-entry-date">@entry.Date.ToString("dd MMM")</RadzenText>
+                                    <RadzenText class="wa-entry-preview">
+                                        @GetPreviewText(entry)
+                                    </RadzenText>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" Style="padding: 1rem; color: var(--rz-text-secondary-color);">
+                        No reflections yet
+                    </RadzenText>
+                }
+            </div>
+        </div>
+
+        <!-- Book Content -->
+        <div class="wa-book-content">
+            @if (isLoading)
+            {
+                <div class="wa-loading">
+                    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" 
+                                             Size="ProgressBarCircularSize.Large" />
+                </div>
+            }
+            else if (currentEntry != null)
+            {
+                <div class="wa-page-content">
+                    <!-- Date Header with Edit Button -->
+                    <div class="wa-page-header">
+                        <RadzenText class="wa-page-date">@currentEntry.Date.ToString("dddd, MMMM d, yyyy")</RadzenText>
+                        <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/daily-survey/edit/{currentEntry.Id}"))"
+                                    title="Edit this entry" class="wa-edit-button" />
+                    </div>
+
+                    <!-- Reflection Content -->
+                    <div class="wa-reflection-content">
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.WhatWentWell))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">What went well today?</h3>
+                                <p class="wa-question-subtitle">(Where did I act virtuously?)</p>
+                                <p class="wa-answer">@currentEntry.WhatWentWell</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.WhatDidNotGoWell))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">What didn't go so well?</h3>
+                                <p class="wa-question-subtitle">(Where did I deviate from my principles?)</p>
+                                <p class="wa-answer">@currentEntry.WhatDidNotGoWell</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.WhatToChangeTomorrow))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">What will I do differently tomorrow?</h3>
+                                <p class="wa-question-subtitle">(How can I come closer to my true self?)</p>
+                                <p class="wa-answer">@currentEntry.WhatToChangeTomorrow</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.GratefulFor))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">Three things I'm grateful for</h3>
+                                <p class="wa-answer">@currentEntry.GratefulFor</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.FunActivity))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">What did I do today that was fun?</h3>
+                                <p class="wa-answer">@currentEntry.FunActivity</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.LookingForwardTo))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">What am I looking forward to tomorrow?</h3>
+                                <p class="wa-answer">@currentEntry.LookingForwardTo</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(currentEntry.Comment))
+                        {
+                            <div class="wa-reflection-section">
+                                <h3 class="wa-question">Notes</h3>
+                                <p class="wa-answer">@currentEntry.Comment</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="wa-page-navigation">
+                        <RadzenButton Icon="arrow_back" Text="Previous" Variant="Variant.Outlined" 
+                                    Click="@NavigatePrevious" Disabled="@(currentIndex <= 0)"
+                                    class="wa-nav-button" />
+                        <RadzenText class="wa-page-info">
+                            Page @(currentIndex + 1) of @allEntries.Count
+                        </RadzenText>
+                        <RadzenButton Icon="arrow_forward" Text="Next" Variant="Variant.Outlined" 
+                                    Click="@NavigateNext" Disabled="@(currentIndex >= allEntries.Count - 1)"
+                                    class="wa-nav-button" />
+                    </div>
+                </div>
+            }
+            else if (!isLoading)
+            {
+                <div class="wa-empty-state">
+                    <RadzenIcon Icon="menu_book" Style="font-size: 4rem; color: var(--rz-text-disabled-color);" />
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin-top: 1rem;">No reflections found</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                        Start adding daily reflections to see them here.
+                    </RadzenText>
+                    <RadzenButton Text="Go to Daily Survey" Icon="add" Click="@(() => Navigation.NavigateTo("/daily-survey"))"
+                                Style="margin-top: 1rem;" />
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] public WaUser? CurrentUser { get; set; }
+    [Parameter] public int? Id { get; set; }
+
+    private List<WaDailySurveyEntry> allEntries = new();
+    private WaDailySurveyEntry? currentEntry;
+    private int currentIndex = 0;
+    private bool isLoading = true;
+    private bool sidebarExpanded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEntries();
+
+        // Handle keyboard navigation
+        Navigation.LocationChanged += HandleLocationChanged;
+    }
+
+    private async Task LoadEntries()
+    {
+        if (CurrentUser == null) return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Get all entries with reflection content
+            var entries = await DailySurveyService.GetAllAsync(CurrentUser.Id);
+            allEntries = entries.Where(e => e.UserId == CurrentUser.Id &&
+                                           (!string.IsNullOrWhiteSpace(e.WhatWentWell) ||
+                                            !string.IsNullOrWhiteSpace(e.WhatDidNotGoWell) ||
+                                            !string.IsNullOrWhiteSpace(e.WhatToChangeTomorrow) ||
+                                            !string.IsNullOrWhiteSpace(e.GratefulFor) ||
+                                            !string.IsNullOrWhiteSpace(e.FunActivity) ||
+                                            !string.IsNullOrWhiteSpace(e.LookingForwardTo) ||
+                                            !string.IsNullOrWhiteSpace(e.Comment)))
+                               .OrderByDescending(e => e.Date)
+                               .ToList();
+
+            // Check if we have an ID parameter first
+            if (Id.HasValue && Id.Value > 0)
+            {
+                var targetEntry = allEntries.FirstOrDefault(e => e.Id == Id.Value);
+                if (targetEntry != null)
+                {
+                    currentIndex = allEntries.IndexOf(targetEntry);
+                }
+            }
+            else
+            {
+                // Check if we have a date parameter
+                var uri = new Uri(Navigation.Uri);
+                var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                var dateParam = query["date"];
+                
+                if (!string.IsNullOrEmpty(dateParam) && DateTime.TryParse(dateParam, out var targetDate))
+                {
+                    var targetEntry = allEntries.FirstOrDefault(e => e.Date.Date == targetDate.Date);
+                    if (targetEntry != null)
+                    {
+                        currentIndex = allEntries.IndexOf(targetEntry);
+                    }
+                }
+            }
+
+            if (allEntries.Any())
+            {
+                currentEntry = allEntries[currentIndex];
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToEntry(WaDailySurveyEntry entry)
+    {
+        currentIndex = allEntries.IndexOf(entry);
+        currentEntry = entry;
+        sidebarExpanded = false;
+        StateHasChanged();
+    }
+
+    private void NavigatePrevious()
+    {
+        if (currentIndex > 0)
+        {
+            currentIndex--;
+            currentEntry = allEntries[currentIndex];
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateNext()
+    {
+        if (currentIndex < allEntries.Count - 1)
+        {
+            currentIndex++;
+            currentEntry = allEntries[currentIndex];
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleSidebar()
+    {
+        sidebarExpanded = !sidebarExpanded;
+        StateHasChanged();
+    }
+
+    private string GetSidebarClass()
+    {
+        return $"wa-book-sidebar {(sidebarExpanded ? "wa-sidebar-expanded" : "")}";
+    }
+
+    private string GetEntryClass(WaDailySurveyEntry entry)
+    {
+        return $"wa-sidebar-entry {(entry == currentEntry ? "wa-entry-active" : "")}";
+    }
+
+    private string GetPreviewText(WaDailySurveyEntry entry)
+    {
+        var texts = new[]
+        {
+            entry.WhatWentWell,
+            entry.WhatDidNotGoWell,
+            entry.WhatToChangeTomorrow,
+            entry.Comment
+        };
+
+        var firstText = texts.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
+        if (firstText == null) return "No content";
+
+        return firstText.Length > 50 ? firstText.Substring(0, 50) + "..." : firstText;
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+}
+
+<style>
+    /* Book-like design with beautiful typography */
+    .wa-reflection-book {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #ffffff;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wa-book-header {
+        background: #f8f9fa;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #e9ecef;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .wa-book-title {
+        font-family: Georgia, 'Times New Roman', serif;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .wa-book-container {
+        display: flex;
+        height: calc(100vh - 80px);
+        position: relative;
+    }
+
+    /* Sidebar Styles */
+    .wa-book-sidebar {
+        width: 320px;
+        background: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+        height: 100%;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        position: absolute;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wa-sidebar-expanded {
+        transform: translateX(0);
+    }
+
+    .wa-sidebar-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #ffffff;
+    }
+
+    .wa-sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .wa-month-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .wa-month-header {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .wa-sidebar-entry {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+    }
+
+    .wa-sidebar-entry:hover {
+        background: #e9ecef;
+        transform: translateX(4px);
+    }
+
+    .wa-entry-active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .wa-entry-active .wa-entry-date,
+    .wa-entry-active .wa-entry-preview {
+        color: white !important;
+    }
+
+    .wa-entry-date {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .wa-entry-preview {
+        font-size: 0.75rem;
+        color: #6c757d;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Main Content Styles */
+    .wa-book-content {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 2rem;
+        background: #ffffff;
+    }
+
+    .wa-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+
+    .wa-page-content {
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .wa-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .wa-page-date {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 2rem;
+        color: #2c3e50;
+        font-weight: 400;
+    }
+
+    .wa-edit-button {
+        opacity: 0.6;
+        transition: opacity 0.2s ease;
+    }
+
+    .wa-edit-button:hover {
+        opacity: 1;
+    }
+
+    /* Reflection Content Styles */
+    .wa-reflection-content {
+        margin-bottom: 3rem;
+    }
+
+    .wa-reflection-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .wa-question {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 0.25rem;
+    }
+
+    .wa-question-subtitle {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        font-style: italic;
+        margin-bottom: 1rem;
+    }
+
+    .wa-answer {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.125rem;
+        line-height: 1.8;
+        color: #2c3e50;
+        white-space: pre-wrap;
+    }
+
+    /* Navigation Styles */
+    .wa-page-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .wa-page-info {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .wa-nav-button {
+        min-width: 120px;
+    }
+
+    /* Empty State */
+    .wa-empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    /* Mobile Styles */
+    @@media (max-width: 768px) {
+        .wa-book-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .wa-book-title {
+            font-size: 1.5rem;
+        }
+
+        .wa-book-sidebar {
+            width: 280px;
+        }
+
+        .wa-book-content {
+            padding: 1rem;
+        }
+
+        .wa-page-date {
+            font-size: 1.5rem;
+        }
+
+        .wa-question {
+            font-size: 1.1rem;
+        }
+
+        .wa-answer {
+            font-size: 1rem;
+        }
+
+        .wa-page-navigation {
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .wa-nav-button {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .wa-page-info {
+            width: 100%;
+            text-align: center;
+            order: -1;
+        }
+    }
+
+    /* Desktop Styles */
+    @@media (min-width: 769px) {
+        .wa-book-sidebar {
+            position: relative;
+            transform: translateX(0);
+        }
+
+        .wa-sidebar-close {
+            display: none;
+        }
+
+        .wa-sidebar-toggle-btn {
+            display: none;
+        }
+    }
+
+    /* Print Styles */
+    @@media print {
+        .wa-book-header,
+        .wa-book-sidebar,
+        .wa-page-navigation,
+        .wa-edit-button {
+            display: none !important;
+        }
+
+        .wa-book-content {
+            padding: 0;
+        }
+
+        .wa-page-content {
+            max-width: 100%;
+        }
+
+        .wa-page-date {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .wa-reflection-section {
+            page-break-inside: avoid;
+        }
+    }
+</style>

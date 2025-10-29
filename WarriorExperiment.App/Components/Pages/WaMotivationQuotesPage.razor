@@ -21,9 +21,14 @@
         <RadzenStack Gap="1rem">
             <RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
                 <RadzenColumn Size="8">
-                    <RadzenText TextStyle="TextStyle.Body1" class="rz-color-secondary">
-                        Manage your collection of motivational quotes
-                    </RadzenText>
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Body1" class="rz-color-secondary">
+                            Manage your collection of motivational quotes
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">
+                            Total Quotes: @quotes.Count
+                        </RadzenText>
+                    </RadzenStack>
                 </RadzenColumn>
                 <RadzenColumn Size="4" class="rz-text-align-end">
                     <RadzenButton Text="New Quote" 

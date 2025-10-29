@@ -59,10 +59,10 @@ function processImageFile(file, resolve, reject) {
         return;
     }
     
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (max 20MB)
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
-        reject(new Error('Image file is too large. Please select an image smaller than 5MB.'));
+        reject(new Error('Image file is too large. Please select an image smaller than 20MB.'));
         return;
     }
     

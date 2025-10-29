@@ -224,6 +224,29 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Seed default motivation quotes
+using (var scope = app.Services.CreateScope())
+{
+    var defaultDataService = scope.ServiceProvider.GetRequiredService<WaDefaultDataService>();
+    try
+    {
+        var quotesCreated = await defaultDataService.SeedDefaultMotivationQuotesAsync();
+        if (quotesCreated > 0)
+        {
+            Log.Information("Seeded {Count} default motivation quotes", quotesCreated);
+        }
+        else
+        {
+            Log.Information("Default motivation quotes already exist, skipping seeding");
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while seeding default motivation quotes");
+        // Don't throw - app should still start even if quote seeding fails
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

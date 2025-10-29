@@ -18,8 +18,13 @@
 else
 {
     <RadzenStack Gap="1rem">
-        <RadzenRow JustifyContent="JustifyContent.End">
-            <RadzenColumn Size="12" SizeMD="4" SizeLG="3">
+        <RadzenRow JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+                <RadzenButton Text="Reflection Book" Icon="menu_book" ButtonStyle="ButtonStyle.Info" 
+                            Click="@(() => Navigation.NavigateTo("/reflections"))" 
+                            Style="width: 100%;" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
                 <RadzenButton Text="New Daily Survey" Icon="add" ButtonStyle="ButtonStyle.Primary" 
                             Click="@(() => Navigation.NavigateTo("/daily-survey/edit"))" 
                             Style="width: 100%;" />
@@ -113,8 +118,11 @@ else
                 </RadzenDataGridColumn>
                 
                 <RadzenDataGridColumn TItem="WaDailySurveyEntry" Title="Actions" Frozen="true" 
-                                    Sortable="false" Filterable="false" Width="100px" TextAlign="TextAlign.Center">
+                                    Sortable="false" Filterable="false" Width="140px" TextAlign="TextAlign.Center">
                     <Template Context="entry">
+                        <RadzenButton Icon="menu_book" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small"
+                                    Click="@(() => Navigation.NavigateTo($"/reflections/{entry.Id}"))"
+                                    title="View in reflection book" />
                         <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                                     Click="@(() => Navigation.NavigateTo($"/daily-survey/edit/{entry.Id}"))"
                                     title="Edit survey" />

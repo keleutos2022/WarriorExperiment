@@ -200,6 +200,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYU1vdGl2YXRpb25RdW90ZXNQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaReflectionBookPage.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYVJlZmxlY3Rpb25Cb29rUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/moritz/projects/WarriorExperiment/WarriorExperiment.App/Components/Pages/WaRiteOfPassagePracticeEditPage.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XYVJpdGVPZlBhc3NhZ2VQcmFjdGljZUVkaXRQYWdlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 

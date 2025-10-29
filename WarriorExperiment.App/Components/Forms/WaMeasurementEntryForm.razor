@@ -1,7 +1,9 @@
 @using WarriorExperiment.Persistence.Entities
 @using WarriorExperiment.Persistence.Validators
 @using Blazored.FluentValidation
+@using Microsoft.JSInterop
 @inherits WaBaseComponent
+@inject IJSRuntime JSRuntime
 
 <EditForm Model="@Model" OnValidSubmit="@HandleValidSubmit">
     <FluentValidationValidator />
@@ -24,16 +26,70 @@
                 <!-- Photos Section -->
                 <RadzenText TextStyle="TextStyle.H6">Photos (Optional)</RadzenText>
                 
+                <!-- Front Photo -->
                 <RadzenFormField Text="Front Photo" AllowFloatingLabel="false">
-                    <RadzenFileInput TValue="IReadOnlyList<IBrowserFile>" Change="@OnFrontPhotoChange" Accept="image/*" />
+                    <RadzenStack Gap="0.5rem">
+                        @if (!string.IsNullOrEmpty(Model.FrontPhoto))
+                        {
+                            <div style="position: relative; display: inline-block;">
+                                <img src="data:image/jpeg;base64,@Model.FrontPhoto" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 4px;" />
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+                                            Click="@(() => DeletePhoto("front"))"
+                                            Style="position: absolute; top: 5px; right: 5px;" />
+                            </div>
+                        }
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <RadzenButton Text="Take Photo" Icon="photo_camera" Size="ButtonSize.Small"
+                                        Click="@(() => CapturePhoto("front"))" />
+                            <RadzenButton Text="Choose File" Icon="folder_open" Size="ButtonSize.Small" 
+                                        ButtonStyle="ButtonStyle.Light"
+                                        Click="@(() => SelectFile("front"))" />
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenFormField>
                 
+                <!-- Back Photo -->
                 <RadzenFormField Text="Back Photo" AllowFloatingLabel="false">
-                    <RadzenFileInput TValue="IReadOnlyList<IBrowserFile>" Change="@OnBackPhotoChange" Accept="image/*" />
+                    <RadzenStack Gap="0.5rem">
+                        @if (!string.IsNullOrEmpty(Model.BackPhoto))
+                        {
+                            <div style="position: relative; display: inline-block;">
+                                <img src="data:image/jpeg;base64,@Model.BackPhoto" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 4px;" />
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+                                            Click="@(() => DeletePhoto("back"))"
+                                            Style="position: absolute; top: 5px; right: 5px;" />
+                            </div>
+                        }
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <RadzenButton Text="Take Photo" Icon="photo_camera" Size="ButtonSize.Small"
+                                        Click="@(() => CapturePhoto("back"))" />
+                            <RadzenButton Text="Choose File" Icon="folder_open" Size="ButtonSize.Small" 
+                                        ButtonStyle="ButtonStyle.Light"
+                                        Click="@(() => SelectFile("back"))" />
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenFormField>
                 
+                <!-- Side Photo -->
                 <RadzenFormField Text="Side Photo" AllowFloatingLabel="false">
-                    <RadzenFileInput TValue="IReadOnlyList<IBrowserFile>" Change="@OnSidePhotoChange" Accept="image/*" />
+                    <RadzenStack Gap="0.5rem">
+                        @if (!string.IsNullOrEmpty(Model.SidePhoto))
+                        {
+                            <div style="position: relative; display: inline-block;">
+                                <img src="data:image/jpeg;base64,@Model.SidePhoto" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 4px;" />
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+                                            Click="@(() => DeletePhoto("side"))"
+                                            Style="position: absolute; top: 5px; right: 5px;" />
+                            </div>
+                        }
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <RadzenButton Text="Take Photo" Icon="photo_camera" Size="ButtonSize.Small"
+                                        Click="@(() => CapturePhoto("side"))" />
+                            <RadzenButton Text="Choose File" Icon="folder_open" Size="ButtonSize.Small" 
+                                        ButtonStyle="ButtonStyle.Light"
+                                        Click="@(() => SelectFile("side"))" />
+                        </RadzenStack>
+                    </RadzenStack>
                 </RadzenFormField>
                 
                 <!-- Body Composition Section -->
@@ -172,10 +228,6 @@
     [Parameter] public EventCallback<WaMeasurementEntry> OnValidSubmit { get; set; }
     [CascadingParameter] public WaUser? CurrentUser { get; set; }
     
-    private IReadOnlyList<IBrowserFile>? frontPhotoFiles;
-    private IReadOnlyList<IBrowserFile>? backPhotoFiles;
-    private IReadOnlyList<IBrowserFile>? sidePhotoFiles;
-    
     private void OnWeightChanged(decimal? value)
     {
         CalculateBMI();
@@ -222,55 +274,64 @@
         return Model.GetVisceralFatCategoryColor();
     }
     
-    private void OnFrontPhotoChange(IReadOnlyList<IBrowserFile> files)
+    private async Task CapturePhoto(string photoType)
     {
-        frontPhotoFiles = files;
+        try
+        {
+            var base64Image = await JSRuntime.InvokeAsync<string>("capturePhoto");
+            if (!string.IsNullOrEmpty(base64Image))
+            {
+                SetPhoto(photoType, base64Image);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error capturing photo: {ex.Message}");
+        }
     }
     
-    private void OnBackPhotoChange(IReadOnlyList<IBrowserFile> files)
+    private async Task SelectFile(string photoType)
     {
-        backPhotoFiles = files;
+        try
+        {
+            var base64Image = await JSRuntime.InvokeAsync<string>("selectFile");
+            if (!string.IsNullOrEmpty(base64Image))
+            {
+                SetPhoto(photoType, base64Image);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error selecting file: {ex.Message}");
+        }
     }
     
-    private void OnSidePhotoChange(IReadOnlyList<IBrowserFile> files)
+    private void DeletePhoto(string photoType)
     {
-        sidePhotoFiles = files;
+        SetPhoto(photoType, null);
+        StateHasChanged();
+    }
+    
+    private void SetPhoto(string photoType, string? base64Data)
+    {
+        switch (photoType.ToLower())
+        {
+            case "front":
+                Model.FrontPhoto = base64Data;
+                break;
+            case "back":
+                Model.BackPhoto = base64Data;
+                break;
+            case "side":
+                Model.SidePhoto = base64Data;
+                break;
+        }
     }
     
     private async Task HandleValidSubmit()
     {
-        try
-        {
-            // Convert uploaded files to Base64 strings
-            if (frontPhotoFiles?.Any() == true)
-            {
-                Model.FrontPhoto = await ConvertToBase64(frontPhotoFiles.First());
-            }
-            
-            if (backPhotoFiles?.Any() == true)
-            {
-                Model.BackPhoto = await ConvertToBase64(backPhotoFiles.First());
-            }
-            
-            if (sidePhotoFiles?.Any() == true)
-            {
-                Model.SidePhoto = await ConvertToBase64(sidePhotoFiles.First());
-            }
-            
-            await OnValidSubmit.InvokeAsync(Model);
-        }
-        catch (Exception)
-        {
-            // Handle file processing errors
-            throw;
-        }
-    }
-    
-    private async Task<string> ConvertToBase64(IBrowserFile file)
-    {
-        using var stream = file.OpenReadStream(maxAllowedSize: 5242880L); // 5MB
-        using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream);
-        return Convert.ToBase64String(memoryStream.ToArray());
+        await OnValidSubmit.InvokeAsync(Model);
     }
 }
